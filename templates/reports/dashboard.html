@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Dashboard — TLC Accounting{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block nav_home_active %}active{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold text-dark mb-1">{{ business.name }}</h5>
+        <span class="text-muted small">
+            <i class="bi bi-calendar3 me-1"></i>{{ today|date:"l, j F Y" }}
+        </span>
+    </div>
+    <a href="/admin/" class="btn btn-sm btn-outline-secondary no-print">
+        <i class="bi bi-gear me-1"></i>Administration
+    </a>
+</div>
+
+<!-- ── Stat cards ─────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-wallet2"></i></div>
+            <div class="stat-label">Cash Position</div>
+            <div class="stat-value">{% currency cash_position %}</div>
+            <div class="stat-sub">Account 1010</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="bi bi-arrow-up-circle"></i></div>
+            <div class="stat-label">Revenue This Month</div>
+            <div class="stat-value">{% currency month_revenue %}</div>
+            <div class="stat-sub">{{ today|date:"F Y" }}</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="bi bi-arrow-down-circle"></i></div>
+            <div class="stat-label">Expenses This Month</div>
+            <div class="stat-value">{% currency month_expenses %}</div>
+            <div class="stat-sub">{{ today|date:"F Y" }}</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon {% if month_profit >= 0 %}icon-teal{% else %}icon-red{% endif %}">
+                <i class="bi bi-{% if month_profit >= 0 %}trending-up{% else %}trending-down{% endif %}"></i>
+            </div>
+            <div class="stat-label">Net Profit This Month</div>
+            <div class="stat-value {% if month_profit < 0 %}text-danger{% endif %}">
+                {% currency month_profit %}
+            </div>
+            <div class="stat-sub">Revenue − Expenses</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Second row ─────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon icon-purple mx-auto"><i class="bi bi-fuel-pump"></i></div>
+            <div class="stat-label">Fuel Sales Today</div>
+            <div class="stat-value text-muted">—</div>
+            <div class="stat-sub">Petrol module pending</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon icon-amber mx-auto"><i class="bi bi-map"></i></div>
+            <div class="stat-label">Active Trips</div>
+            <div class="stat-value text-muted">—</div>
+            <div class="stat-sub">Cargo module pending</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon icon-teal mx-auto"><i class="bi bi-cash-coin"></i></div>
+            <div class="stat-label">Salaries Paid (Month)</div>
+            <div class="stat-value">{% currency salary_this_month %}</div>
+            <div class="stat-sub">{{ today|date:"F Y" }}</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon icon-blue mx-auto"><i class="bi bi-people"></i></div>
+            <div class="stat-label">Active Employees</div>
+            <div class="stat-value">{{ active_employees }}</div>
+            <div class="stat-sub">on payroll</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Recent Journal Entries ─────────────────────────── -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-journal-bookmark me-2 text-primary"></i>Recent Journal Entries
+        </span>
+        <a href="/admin/core/journalentry/" class="btn btn-sm btn-outline-primary no-print">
+            View all
+        </a>
+    </div>
+    <div class="content-card-body">
+        {% if recent_entries %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th class="text-end">Amount (Dr)</th>
+                        <th class="text-center">Balanced</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for entry in recent_entries %}
+                <tr>
+                    <td><code class="text-primary">{{ entry.reference }}</code></td>
+                    <td class="text-muted">{{ entry.date|date:"d M Y" }}</td>
+                    <td>{{ entry.description|truncatechars:50 }}</td>
+                    <td>
+                        <span class="badge badge-pill bg-light text-secondary border">
+                            {{ entry.source_type|default:"manual" }}
+                        </span>
+                    </td>
+                    <td class="text-end fw-semibold">{% currency entry.total_debit %}</td>
+                    <td class="text-center">
+                        {% if entry.is_balanced %}
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        {% else %}
+                        <i class="bi bi-x-circle-fill text-danger"></i>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-journal-x" style="font-size:2.5rem;opacity:0.4;"></i>
+            <p class="mt-2 mb-0">No journal entries yet.</p>
+            <small>Entries will appear here as transactions are recorded.</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
