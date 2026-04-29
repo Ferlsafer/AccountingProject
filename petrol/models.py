@@ -77,12 +77,26 @@ class DailyFuelSale(models.Model):
 
 
 class FuelPurchase(models.Model):
+    PAYMENT_CHOICES = [
+        ('cash',   'Cash'),
+        ('bank',   'Bank Transfer'),
+        ('mobile', 'Mobile Money'),
+        ('credit', 'Credit (Supplier Account)'),
+    ]
+    PAYMENT_ACCOUNT_MAP = {
+        'cash':   '1010',
+        'bank':   '1020',
+        'mobile': '1025',
+        'credit': '2020',
+    }
+
     date = models.DateField()
     supplier = models.ForeignKey(FuelSupplier, on_delete=models.PROTECT, related_name='purchases')
     tank = models.ForeignKey(Tank, on_delete=models.PROTECT, related_name='purchases')
     litres = models.DecimalField(max_digits=10, decimal_places=2)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='cash')
     invoice_number = models.CharField(max_length=100, blank=True)
     recorded_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='fuel_purchases')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -98,18 +112,19 @@ class FuelPurchase(models.Model):
 
     def post_to_ledger(self, user):
         self._reverse_ledger_entry()
-        fuel_name = self.tank.fuel_type.name
-        inv_acct  = Account.objects.get(code=FUEL_INVENTORY_MAP.get(fuel_name, '1200'))
-        cash_acct = Account.objects.get(code='1010')
+        fuel_name   = self.tank.fuel_type.name
+        inv_acct    = Account.objects.get(code=FUEL_INVENTORY_MAP.get(fuel_name, '1200'))
+        credit_code = self.PAYMENT_ACCOUNT_MAP[self.payment_method]
+        credit_acct = Account.objects.get(code=credit_code)
         entry = JournalEntry.objects.create(
             date=self.date,
             reference=f"FP-{self.pk}-{self.date.strftime('%Y%m%d')}",
-            description=f"Fuel purchase — {fuel_name} {self.litres}L from {self.supplier}",
+            description=f"Fuel purchase — {fuel_name} {self.litres}L from {self.supplier} ({self.get_payment_method_display()})",
             source_type='fuel_purchase', source_id=self.pk, created_by=user,
         )
         JournalLine.objects.bulk_create([
-            JournalLine(entry=entry, account=inv_acct,  debit=self.total_amount, credit=Decimal('0')),
-            JournalLine(entry=entry, account=cash_acct, debit=Decimal('0'), credit=self.total_amount),
+            JournalLine(entry=entry, account=inv_acct,    debit=self.total_amount, credit=Decimal('0')),
+            JournalLine(entry=entry, account=credit_acct, debit=Decimal('0'),      credit=self.total_amount),
         ])
 
 

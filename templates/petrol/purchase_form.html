@@ -39,6 +39,7 @@
                         <span class="text-muted small fw-semibold"><i class="bi bi-calculator me-1"></i>Total Cost</span>
                         <span id="total-preview" class="fw-bold fs-5 text-danger">TZS 0</span>
                     </div>
+                    <div class="mb-3"><label class="form-label fw-semibold">Payment Method</label>{{ form.payment_method }}</div>
                     <div class="mb-4"><label class="form-label fw-semibold">Invoice Number <span class="text-muted fw-normal">(optional)</span></label>{{ form.invoice_number }}</div>
                     {% if form.errors %}<div class="alert alert-danger small">{{ form.errors }}</div>{% endif %}
                     <div class="d-flex gap-2">

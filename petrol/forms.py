@@ -22,13 +22,14 @@ class DailyFuelSaleForm(forms.ModelForm):
 class FuelPurchaseForm(forms.ModelForm):
     class Meta:
         model = FuelPurchase
-        fields = ['date', 'supplier', 'tank', 'litres', 'unit_price', 'invoice_number']
+        fields = ['date', 'supplier', 'tank', 'litres', 'unit_price', 'payment_method', 'invoice_number']
         widgets = {
             'date':           forms.DateInput(attrs=_date),
             'supplier':       forms.Select(attrs=_sel),
             'tank':           forms.Select(attrs=_sel),
             'litres':         forms.NumberInput(attrs={**_num, 'placeholder': '0.00'}),
             'unit_price':     forms.NumberInput(attrs={**_num, 'placeholder': '0.00'}),
+            'payment_method': forms.Select(attrs=_sel),
             'invoice_number': forms.TextInput(attrs={**_text, 'placeholder': 'Optional'}),
         }
 
