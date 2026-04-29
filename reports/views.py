@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.db.models import Sum
 
 from core.models import Business, JournalEntry, JournalLine, SalaryPayment, Employee
+from petrol.models import DailyFuelSale, CreditSale
 
 
 @login_required
@@ -40,6 +41,12 @@ def dashboard(request):
         paid_date__lte=today,
     ).aggregate(t=Sum('amount'))['t'] or Decimal('0')
 
+    # Today's fuel sales
+    today_fuel_revenue = DailyFuelSale.objects.filter(date=today).aggregate(
+        t=Sum('total_amount'))['t'] or Decimal('0')
+    today_fuel_litres = DailyFuelSale.objects.filter(date=today).aggregate(
+        t=Sum('litres_sold'))['t'] or Decimal('0')
+
     # Recent journal entries
     recent_entries = JournalEntry.objects.select_related('created_by').prefetch_related('lines__account')[:10]
 
@@ -54,6 +61,8 @@ def dashboard(request):
         'month_profit': month_profit,
         'salary_this_month': salary_this_month,
         'active_employees': Employee.objects.filter(is_active=True).count(),
+        'today_fuel_revenue': today_fuel_revenue,
+        'today_fuel_litres': today_fuel_litres,
         'recent_entries': recent_entries,
     }
     return render(request, 'reports/dashboard.html', context)

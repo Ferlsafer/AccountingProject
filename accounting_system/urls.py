@@ -21,5 +21,6 @@ from reports.views import dashboard
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('petrol/', include('petrol.urls')),
     path('', dashboard, name='home'),
 ]

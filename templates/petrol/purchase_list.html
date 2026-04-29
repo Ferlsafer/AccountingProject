@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Fuel Purchases{% endblock %}
+{% block page_title %}Fuel Purchases{% endblock %}
+{% block nav_fuel_purchases_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Fuel Purchases</h5>
+        <span class="text-muted small"><i class="bi bi-truck me-1"></i>Stock deliveries from suppliers</span>
+    </div>
+    <a href="{% url 'petrol:purchase_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Record Purchase
+    </a>
+</div>
+
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4"><label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm"></div>
+        <div class="col-sm-4"><label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm"></div>
+        <div class="col-sm-4"><button type="submit" class="btn btn-sm btn-outline-primary w-100 mt-3">
+            <i class="bi bi-funnel me-1"></i>Filter</button></div>
+    </div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-droplet-fill"></i></div>
+            <div class="stat-label">Total Litres</div>
+            <div class="stat-value">{{ totals.litres|default:0|floatformat:1 }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="bi bi-cash"></i></div>
+            <div class="stat-label">Total Cost</div>
+            <div class="stat-value" style="font-size:1.2rem">{% currency totals.amount|default:0 %}</div>
+        </div>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-table me-2 text-primary"></i>Purchase Log</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th><th>Supplier</th><th>Tank</th><th>Invoice</th>
+                    <th class="text-end">Litres</th><th class="text-end">Unit Price</th><th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in purchases %}
+            <tr>
+                <td class="fw-semibold">{{ p.date|date:"d M Y" }}</td>
+                <td>{{ p.supplier }}</td>
+                <td>{{ p.tank.name }} <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ p.tank.fuel_type }}</span></td>
+                <td class="text-muted small">{{ p.invoice_number|default:"—" }}</td>
+                <td class="text-end">{{ p.litres|floatformat:2 }}</td>
+                <td class="text-end text-muted">{% currency p.unit_price %}</td>
+                <td class="text-end fw-semibold">{% currency p.total_amount %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i>
+                <p class="mt-2 mb-0">No purchases in this period.</p>
+            </td></tr>
+            {% endfor %}
+            </tbody>
+            {% if purchases %}
+            <tfoot class="table-light">
+                <tr class="fw-bold">
+                    <td colspan="4">Totals</td>
+                    <td class="text-end">{{ totals.litres|floatformat:2 }}</td>
+                    <td></td>
+                    <td class="text-end">{% currency totals.amount %}</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Credit Sales{% endblock %}
+{% block page_title %}Credit Sales{% endblock %}
+{% block nav_credit_sales_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Credit Sales</h5>
+        <span class="text-muted small"><i class="bi bi-person-lines-fill me-1"></i>Fuel sold on account</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'petrol:credit_payment_add' %}" class="btn btn-outline-success">
+            <i class="bi bi-cash-coin me-1"></i>Receive Payment
+        </a>
+        <a href="{% url 'petrol:credit_sale_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>New Credit Sale
+        </a>
+    </div>
+</div>
+
+<!-- Customer balances -->
+<div class="content-card mb-4">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-people me-2 text-primary"></i>Outstanding Balances</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Customer</th><th>Phone</th><th class="text-end">Credit Limit</th><th class="text-end">Balance Owed</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for c in customers %}
+            <tr>
+                <td class="fw-semibold">{{ c.name }}</td>
+                <td class="text-muted">{{ c.phone|default:"—" }}</td>
+                <td class="text-end">{% currency c.credit_limit %}</td>
+                <td class="text-end fw-bold {% if c.current_balance > 0 %}text-danger{% endif %}">{% currency c.current_balance %}</td>
+                <td>
+                    {% if c.current_balance == 0 %}
+                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">Cleared</span>
+                    {% else %}
+                    <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25">Outstanding</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-3">No credit customers yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4"><label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm"></div>
+        <div class="col-sm-4"><label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm"></div>
+        <div class="col-sm-4"><button type="submit" class="btn btn-sm btn-outline-primary w-100 mt-3">
+            <i class="bi bi-funnel me-1"></i>Filter</button></div>
+    </div>
+</form>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-table me-2 text-primary"></i>Credit Sales Log</span>
+        {% if totals.amount %}<span class="fw-bold text-danger">Total: {% currency totals.amount %}</span>{% endif %}
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Date</th><th>Customer</th><th>Tank</th><th class="text-end">Litres</th><th class="text-end">Unit Price</th><th class="text-end">Total</th></tr></thead>
+            <tbody>
+            {% for s in sales %}
+            <tr>
+                <td class="fw-semibold">{{ s.date|date:"d M Y" }}</td>
+                <td>{{ s.customer }}</td>
+                <td>{{ s.tank.name }} <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ s.tank.fuel_type }}</span></td>
+                <td class="text-end">{{ s.litres|floatformat:2 }}</td>
+                <td class="text-end text-muted">{% currency s.unit_price %}</td>
+                <td class="text-end fw-semibold text-danger">{% currency s.total_amount %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i><p class="mt-2 mb-0">No credit sales in this period.</p>
+            </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

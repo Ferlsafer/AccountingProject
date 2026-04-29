@@ -69,12 +69,14 @@
 <div class="row g-3 mb-4">
 
     <div class="col-6 col-md-3">
+        <a href="{% url 'petrol:daily_sale_list' %}" class="text-decoration-none">
         <div class="stat-card text-center">
             <div class="stat-icon icon-purple mx-auto"><i class="bi bi-fuel-pump"></i></div>
             <div class="stat-label">Fuel Sales Today</div>
-            <div class="stat-value text-muted">—</div>
-            <div class="stat-sub">Petrol module pending</div>
+            <div class="stat-value">{% currency today_fuel_revenue %}</div>
+            <div class="stat-sub">{{ today_fuel_litres|floatformat:0 }} litres sold</div>
         </div>
+        </a>
     </div>
 
     <div class="col-6 col-md-3">

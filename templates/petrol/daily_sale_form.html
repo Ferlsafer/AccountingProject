@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Record Fuel Sale{% endblock %}
+{% block page_title %}Record Fuel Sale{% endblock %}
+{% block nav_fuel_sales_active %}active{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6 col-xl-5">
+
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'petrol:daily_sale_list' %}" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h5 class="fw-bold mb-0">Record Daily Fuel Sale</h5>
+                <span class="text-muted small">Cash sale at the pump</span>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-fuel-pump me-2 text-primary"></i>Sale Details</span>
+            </div>
+            <div class="p-4">
+                <form method="post" id="sale-form">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Date</label>
+                        {{ form.date }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tank</label>
+                        {{ form.tank }}
+                        <div class="form-text">
+                            {% for tank in tanks %}
+                            <span class="badge bg-light text-dark border me-1">
+                                {{ tank.name }}: {{ tank.current_stock|floatformat:0 }}L available
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Litres Sold</label>
+                            <div class="input-group">
+                                {{ form.litres_sold }}
+                                <span class="input-group-text">L</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Price / Litre</label>
+                            <div class="input-group">
+                                <span class="input-group-text">TZS</span>
+                                {{ form.unit_price }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live total preview -->
+                    <div class="alert alert-light border mb-4 d-flex align-items-center justify-content-between">
+                        <span class="text-muted small fw-semibold"><i class="bi bi-calculator me-1"></i>Total Amount</span>
+                        <span id="total-preview" class="fw-bold fs-5 text-primary">TZS 0</span>
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger small">{{ form.errors }}</div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="bi bi-check-lg me-1"></i>Record Sale
+                        </button>
+                        <a href="{% url 'petrol:daily_sale_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateTotal() {
+    const l = parseFloat(document.getElementById('id_litres_sold').value) || 0;
+    const p = parseFloat(document.getElementById('id_unit_price').value) || 0;
+    document.getElementById('total-preview').textContent = 'TZS ' + Math.round(l * p).toLocaleString();
+}
+document.getElementById('id_litres_sold').addEventListener('input', updateTotal);
+document.getElementById('id_unit_price').addEventListener('input', updateTotal);
+</script>
+{% endblock %}

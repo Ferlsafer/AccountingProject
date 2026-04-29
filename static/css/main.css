@@ -174,6 +174,18 @@ body {
 /* ── Badges ──────────────────────────────────────────── */
 .badge-pill { border-radius: 999px; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; }
 
+/* ── Auth pages (login etc.) ─────────────────────────── */
+body.auth-page #main-content {
+    margin-left: 0;
+}
+body.auth-page .page-body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--content-bg);
+}
+
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
     #sidebar { transform: translateX(-100%); }

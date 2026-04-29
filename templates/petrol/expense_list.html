@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Petrol Expenses{% endblock %}
+{% block page_title %}Petrol Expenses{% endblock %}
+{% block nav_petrol_expenses_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Petrol Station Expenses</h5>
+        <span class="text-muted small"><i class="bi bi-receipt me-1"></i>Operational costs at the station</span>
+    </div>
+    <a href="{% url 'petrol:expense_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Expense
+    </a>
+</div>
+
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4"><label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm"></div>
+        <div class="col-sm-4"><label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm"></div>
+        <div class="col-sm-4"><button type="submit" class="btn btn-sm btn-outline-primary w-100 mt-3">
+            <i class="bi bi-funnel me-1"></i>Filter</button></div>
+    </div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="bi bi-receipt-cutoff"></i></div>
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" style="font-size:1.2rem">{% currency totals.amount|default:0 %}</div>
+        </div>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-table me-2 text-primary"></i>Expenses Log</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="text-end">Amount</th><th>Recorded By</th></tr></thead>
+            <tbody>
+            {% for e in expenses %}
+            <tr>
+                <td class="fw-semibold">{{ e.date|date:"d M Y" }}</td>
+                <td>{{ e.description }}</td>
+                <td><span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ e.get_category_display }}</span></td>
+                <td class="text-end fw-semibold text-danger">{% currency e.amount %}</td>
+                <td class="text-muted small">{{ e.recorded_by.get_full_name|default:e.recorded_by.username }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i><p class="mt-2 mb-0">No expenses in this period.</p>
+            </td></tr>
+            {% endfor %}
+            </tbody>
+            {% if expenses %}
+            <tfoot class="table-light">
+                <tr class="fw-bold"><td colspan="3">Total</td><td class="text-end text-danger">{% currency totals.amount %}</td><td></td></tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

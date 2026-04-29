@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Receive Credit Payment{% endblock %}
+{% block page_title %}Credit Payment{% endblock %}
+{% block nav_credit_sales_active %}active{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6 col-xl-5">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'petrol:credit_sale_list' %}" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+            <div><h5 class="fw-bold mb-0">Receive Credit Payment</h5><span class="text-muted small">Customer settling their account</span></div>
+        </div>
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-cash-coin me-2 text-success"></i>Payment Details</span>
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3"><label class="form-label fw-semibold">Date</label>{{ form.date }}</div>
+                    <div class="mb-3"><label class="form-label fw-semibold">Customer</label>{{ form.customer }}</div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Amount Received</label>
+                        <div class="input-group"><span class="input-group-text">TZS</span>{{ form.amount }}</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Reference / Receipt No. <span class="text-muted fw-normal">(optional)</span></label>
+                        {{ form.reference }}
+                    </div>
+                    {% if form.errors %}<div class="alert alert-danger small">{{ form.errors }}</div>{% endif %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success flex-fill"><i class="bi bi-check-lg me-1"></i>Record Payment</button>
+                        <a href="{% url 'petrol:credit_sale_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
