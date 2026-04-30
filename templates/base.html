@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,159 +11,168 @@
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
+
 <body class="{% if not user.is_authenticated %}auth-page{% endif %}">
 
-{% if user.is_authenticated %}
-<!-- ── Sidebar ──────────────────────────────────────── -->
-<nav id="sidebar">
-    <a class="sidebar-brand" href="{% url 'home' %}">
-        <div class="sidebar-brand-icon"><i class="bi bi-bar-chart-fill"></i></div>
-        <div>
-            <div class="sidebar-brand-text">TLC Accounting</div>
-            <div class="sidebar-brand-sub">Management System</div>
-        </div>
-    </a>
-
-    <div class="sidebar-nav">
-
-        <a href="{% url 'home' %}" class="sidebar-link {% block nav_home_active %}{% endblock %}">
-            <i class="bi bi-speedometer2"></i> Dashboard
-        </a>
-
-        {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'petrol_clerk' %}
-        <div class="sidebar-section-label">Petrol Station</div>
-        <a href="{% url 'petrol:daily_sale_list' %}" class="sidebar-link {% block nav_fuel_sales_active %}{% endblock %}">
-            <i class="bi bi-fuel-pump"></i> Sales Log
-        </a>
-        <a href="{% url 'petrol:purchase_list' %}" class="sidebar-link {% block nav_fuel_purchases_active %}{% endblock %}">
-            <i class="bi bi-truck"></i> Fuel Purchases
-        </a>
-        <a href="{% url 'petrol:credit_sale_list' %}" class="sidebar-link {% block nav_credit_sales_active %}{% endblock %}">
-            <i class="bi bi-person-lines-fill"></i> Credit Customers
-        </a>
-        <a href="{% url 'petrol:expense_list' %}" class="sidebar-link {% block nav_petrol_expenses_active %}{% endblock %}">
-            <i class="bi bi-receipt"></i> Expenses
-        </a>
-        {% endif %}
-
-        {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'cargo_clerk' %}
-        <div class="sidebar-section-label">Cargo</div>
-        <a href="{% url 'cargo:trip_list' %}" class="sidebar-link {% block nav_trips_active %}{% endblock %}">
-            <i class="bi bi-map"></i> Trips
-        </a>
-        <a href="{% url 'cargo:invoice_list' %}" class="sidebar-link {% block nav_invoices_active %}{% endblock %}">
-            <i class="bi bi-file-earmark-text"></i> Invoices
-        </a>
-        <a href="{% url 'cargo:vehicle_expense_list' %}" class="sidebar-link {% block nav_cargo_expenses_active %}{% endblock %}">
-            <i class="bi bi-tools"></i> Vehicle Expenses
-        </a>
-        <a href="{% url 'cargo:customer_list' %}" class="sidebar-link {% block nav_cargo_customers_active %}{% endblock %}">
-            <i class="bi bi-person-vcard"></i> Customers
-        </a>
-        {% endif %}
-
-        {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
-        <div class="sidebar-section-label">Finance</div>
-        <a href="/admin/core/journalentry/" class="sidebar-link">
-            <i class="bi bi-journal-bookmark"></i> Journal Ledger
-        </a>
-        <a href="/admin/core/account/" class="sidebar-link">
-            <i class="bi bi-list-columns"></i> Chart of Accounts
-        </a>
-        <a href="/admin/core/employee/" class="sidebar-link">
-            <i class="bi bi-people"></i> Employees
-        </a>
-        <a href="/admin/core/salarypayment/" class="sidebar-link">
-            <i class="bi bi-cash-coin"></i> Salary Payments
-        </a>
-        {% endif %}
-
-        {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
-        <div class="sidebar-section-label">Reports</div>
-        <a href="#" class="sidebar-link {% block nav_fuel_report_active %}{% endblock %}">
-            <i class="bi bi-graph-up"></i> Fuel Sales Report
-        </a>
-        <a href="#" class="sidebar-link {% block nav_trip_report_active %}{% endblock %}">
-            <i class="bi bi-graph-up-arrow"></i> Trip Profitability
-        </a>
-        <a href="#" class="sidebar-link {% block nav_income_active %}{% endblock %}">
-            <i class="bi bi-file-bar-graph"></i> Income Statement
-        </a>
-        <a href="#" class="sidebar-link {% block nav_trial_active %}{% endblock %}">
-            <i class="bi bi-check2-circle"></i> Trial Balance
-        </a>
-        {% endif %}
-
-        {% if user.is_staff %}
-        <div class="sidebar-section-label">System</div>
-        <a href="/admin/" class="sidebar-link">
-            <i class="bi bi-gear"></i> Administration
-        </a>
-        {% endif %}
-
-    </div>
-
-    <div class="sidebar-footer">
-        <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-circle-fill text-success" style="font-size:0.5rem"></i>
-            <span>{{ user.get_full_name|default:user.username }}</span>
-        </div>
-    </div>
-</nav>
-{% endif %}
-
-<!-- ── Main content (always rendered) ───────────────── -->
-<div id="main-content">
-
     {% if user.is_authenticated %}
-    <div class="topbar no-print">
-        <button class="btn btn-sm btn-outline-secondary d-md-none me-2" id="sidebarToggle">
-            <i class="bi bi-list"></i>
-        </button>
-        <span class="topbar-title">{% block page_title %}{% endblock %}</span>
-        <div class="d-flex align-items-center gap-3 ms-auto">
-            <span class="topbar-user d-none d-sm-inline">
-                <i class="bi bi-person-circle me-1"></i>{{ user.get_full_name|default:user.username }}
-            </span>
-            <form method="post" action="/accounts/logout/" class="m-0">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span class="d-none d-sm-inline ms-1">Log out</span>
-                </button>
-            </form>
+    <!-- ── Sidebar ──────────────────────────────────────── -->
+    <nav id="sidebar">
+        <a class="sidebar-brand" href="{% url 'home' %}">
+            <div class="sidebar-brand-icon"><i class="bi bi-bar-chart-fill"></i></div>
+            <div>
+                <div class="sidebar-brand-text">TBC Management System</div>
+                <div class="sidebar-brand-sub">Management System</div>
+            </div>
+        </a>
+
+        <div class="sidebar-nav">
+
+            <a href="{% url 'home' %}" class="sidebar-link {% block nav_home_active %}{% endblock %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+
+            {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'petrol_clerk' %}
+            <div class="sidebar-section-label">Petrol Station</div>
+            <a href="{% url 'petrol:daily_sale_list' %}"
+                class="sidebar-link {% block nav_fuel_sales_active %}{% endblock %}">
+                <i class="bi bi-fuel-pump"></i> Sales Log
+            </a>
+            <a href="{% url 'petrol:purchase_list' %}"
+                class="sidebar-link {% block nav_fuel_purchases_active %}{% endblock %}">
+                <i class="bi bi-truck"></i> Fuel Purchases
+            </a>
+            <a href="{% url 'petrol:credit_sale_list' %}"
+                class="sidebar-link {% block nav_credit_sales_active %}{% endblock %}">
+                <i class="bi bi-person-lines-fill"></i> Credit Customers
+            </a>
+            <a href="{% url 'petrol:expense_list' %}"
+                class="sidebar-link {% block nav_petrol_expenses_active %}{% endblock %}">
+                <i class="bi bi-receipt"></i> Expenses
+            </a>
+            {% endif %}
+
+            {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'cargo_clerk' %}
+            <div class="sidebar-section-label">Cargo</div>
+            <a href="{% url 'cargo:trip_list' %}" class="sidebar-link {% block nav_trips_active %}{% endblock %}">
+                <i class="bi bi-map"></i> Trips
+            </a>
+            <a href="{% url 'cargo:invoice_list' %}" class="sidebar-link {% block nav_invoices_active %}{% endblock %}">
+                <i class="bi bi-file-earmark-text"></i> Invoices
+            </a>
+            <a href="{% url 'cargo:vehicle_expense_list' %}"
+                class="sidebar-link {% block nav_cargo_expenses_active %}{% endblock %}">
+                <i class="bi bi-tools"></i> Vehicle Expenses
+            </a>
+            <a href="{% url 'cargo:customer_list' %}"
+                class="sidebar-link {% block nav_cargo_customers_active %}{% endblock %}">
+                <i class="bi bi-person-vcard"></i> Customers
+            </a>
+            {% endif %}
+
+            {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
+            <div class="sidebar-section-label">Finance</div>
+            <a href="/admin/core/journalentry/" class="sidebar-link">
+                <i class="bi bi-journal-bookmark"></i> Journal Ledger
+            </a>
+            <a href="/admin/core/account/" class="sidebar-link">
+                <i class="bi bi-list-columns"></i> Chart of Accounts
+            </a>
+            <a href="/admin/core/employee/" class="sidebar-link">
+                <i class="bi bi-people"></i> Employees
+            </a>
+            <a href="/admin/core/salarypayment/" class="sidebar-link">
+                <i class="bi bi-cash-coin"></i> Salary Payments
+            </a>
+            {% endif %}
+
+            {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
+            <div class="sidebar-section-label">Reports</div>
+            <a href="#" class="sidebar-link {% block nav_fuel_report_active %}{% endblock %}">
+                <i class="bi bi-graph-up"></i> Fuel Sales Report
+            </a>
+            <a href="#" class="sidebar-link {% block nav_trip_report_active %}{% endblock %}">
+                <i class="bi bi-graph-up-arrow"></i> Trip Profitability
+            </a>
+            <a href="#" class="sidebar-link {% block nav_income_active %}{% endblock %}">
+                <i class="bi bi-file-bar-graph"></i> Income Statement
+            </a>
+            <a href="#" class="sidebar-link {% block nav_trial_active %}{% endblock %}">
+                <i class="bi bi-check2-circle"></i> Trial Balance
+            </a>
+            {% endif %}
+
+            {% if user.is_staff %}
+            <div class="sidebar-section-label">System</div>
+            <a href="/admin/" class="sidebar-link">
+                <i class="bi bi-gear"></i> Administration
+            </a>
+            {% endif %}
+
         </div>
-    </div>
+
+        <div class="sidebar-footer">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-circle-fill text-success" style="font-size:0.5rem"></i>
+                <span>{{ user.get_full_name|default:user.username }}</span>
+            </div>
+        </div>
+    </nav>
     {% endif %}
 
-    <div class="page-body">
+    <!-- ── Main content (always rendered) ───────────────── -->
+    <div id="main-content">
 
-        {% if messages %}
-        <div class="mb-3">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-                {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill"></i>
-                {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-x-circle-fill"></i>
-                {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
-                {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
-                {{ message }}
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        {% if user.is_authenticated %}
+        <div class="topbar no-print">
+            <button class="btn btn-sm btn-outline-secondary d-md-none me-2" id="sidebarToggle">
+                <i class="bi bi-list"></i>
+            </button>
+            <span class="topbar-title">{% block page_title %}{% endblock %}</span>
+            <div class="d-flex align-items-center gap-3 ms-auto">
+                <span class="topbar-user d-none d-sm-inline">
+                    <i class="bi bi-person-circle me-1"></i>{{ user.get_full_name|default:user.username }}
+                </span>
+                <form method="post" action="/accounts/logout/" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span class="d-none d-sm-inline ms-1">Log out</span>
+                    </button>
+                </form>
             </div>
-            {% endfor %}
         </div>
         {% endif %}
 
-        {% block content %}{% endblock %}
+        <div class="page-body">
 
+            {% if messages %}
+            <div class="mb-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show d-flex align-items-center gap-2"
+                    role="alert">
+                    {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill"></i>
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-x-circle-fill"></i>
+                    {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
+                    {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+
+        </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('open');
-});
-</script>
-{% block extra_js %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
+
 </html>
