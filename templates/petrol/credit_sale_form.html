@@ -25,7 +25,7 @@
                 </span>
             </div>
             <div class="p-4">
-                <form method="post" id="credit-sale-form">
+                <form method="post" id="credit-sale-form" novalidate>
                     {% csrf_token %}
 
                     <div class="mb-3">
@@ -130,11 +130,20 @@
 {% block extra_js %}
 <script>
 // Toggle existing / new customer sections
+function applyCustomerToggle(isNew) {
+    document.getElementById('existing-customer-section').style.display = isNew ? 'none' : '';
+    document.getElementById('new-customer-section').style.display = isNew ? '' : 'none';
+    // Disable the hidden select so it is not validated or submitted
+    document.getElementById('id_customer').disabled = isNew;
+}
+
+// Apply on page load (handles back-button / validation error re-render)
+const initiallyNew = document.getElementById('ct-new').checked;
+applyCustomerToggle(initiallyNew);
+
 document.querySelectorAll('input[name="customer_type"]').forEach(radio => {
     radio.addEventListener('change', function () {
-        const isNew = this.value === 'new';
-        document.getElementById('existing-customer-section').style.display = isNew ? 'none' : '';
-        document.getElementById('new-customer-section').style.display = isNew ? '' : 'none';
+        applyCustomerToggle(this.value === 'new');
     });
 });
 
