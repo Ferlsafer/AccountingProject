@@ -22,10 +22,58 @@ def _date_range(request):
 @login_required
 def daily_sale_list(request):
     date_from, date_to = _date_range(request)
-    qs = DailyFuelSale.objects.filter(date__gte=date_from, date__lte=date_to).select_related('tank__fuel_type', 'recorded_by')
-    totals = qs.aggregate(litres=Sum('litres_sold'), amount=Sum('total_amount'))
+
+    cash_qs = (DailyFuelSale.objects
+               .filter(date__gte=date_from, date__lte=date_to)
+               .select_related('tank__fuel_type', 'recorded_by'))
+
+    credit_qs = (CreditSale.objects
+                 .filter(date__gte=date_from, date__lte=date_to)
+                 .select_related('tank__fuel_type', 'customer', 'recorded_by'))
+
+    # Combine into a uniform list for the template
+    all_sales = []
+    for s in cash_qs:
+        all_sales.append({
+            'date': s.date,
+            'tank': s.tank,
+            'fuel_type': s.tank.fuel_type,
+            'litres': s.litres_sold,
+            'unit_price': s.unit_price,
+            'total_amount': s.total_amount,
+            'sale_type': 'cash',
+            'customer': None,
+            'recorded_by': s.recorded_by,
+        })
+    for s in credit_qs:
+        all_sales.append({
+            'date': s.date,
+            'tank': s.tank,
+            'fuel_type': s.tank.fuel_type,
+            'litres': s.litres,
+            'unit_price': s.unit_price,
+            'total_amount': s.total_amount,
+            'sale_type': 'credit',
+            'customer': s.customer,
+            'recorded_by': s.recorded_by,
+        })
+
+    all_sales.sort(key=lambda x: x['date'], reverse=True)
+
+    cash_totals   = cash_qs.aggregate(litres=Sum('litres_sold'), amount=Sum('total_amount'))
+    credit_totals = credit_qs.aggregate(litres=Sum('litres'),    amount=Sum('total_amount'))
+
+    total_litres = (cash_totals['litres'] or 0) + (credit_totals['litres'] or 0)
+    total_amount = (cash_totals['amount'] or 0) + (credit_totals['amount'] or 0)
+
     return render(request, 'petrol/daily_sale_list.html', {
-        'sales': qs, 'totals': totals, 'date_from': date_from, 'date_to': date_to,
+        'all_sales': all_sales,
+        'total_litres': total_litres,
+        'total_amount': total_amount,
+        'cash_amount': cash_totals['amount'] or 0,
+        'credit_amount': credit_totals['amount'] or 0,
+        'date_from': date_from,
+        'date_to': date_to,
     })
 
 

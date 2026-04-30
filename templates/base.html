@@ -32,13 +32,13 @@
         {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'petrol_clerk' %}
         <div class="sidebar-section-label">Petrol Station</div>
         <a href="{% url 'petrol:daily_sale_list' %}" class="sidebar-link {% block nav_fuel_sales_active %}{% endblock %}">
-            <i class="bi bi-fuel-pump"></i> Daily Sales
+            <i class="bi bi-fuel-pump"></i> Sales Log
         </a>
         <a href="{% url 'petrol:purchase_list' %}" class="sidebar-link {% block nav_fuel_purchases_active %}{% endblock %}">
             <i class="bi bi-truck"></i> Fuel Purchases
         </a>
         <a href="{% url 'petrol:credit_sale_list' %}" class="sidebar-link {% block nav_credit_sales_active %}{% endblock %}">
-            <i class="bi bi-person-lines-fill"></i> Credit Sales
+            <i class="bi bi-person-lines-fill"></i> Credit Customers
         </a>
         <a href="{% url 'petrol:expense_list' %}" class="sidebar-link {% block nav_petrol_expenses_active %}{% endblock %}">
             <i class="bi bi-receipt"></i> Expenses
