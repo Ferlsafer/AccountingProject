@@ -9,37 +9,116 @@
 <div class="row">
     <div class="col-lg-6 col-xl-5">
         <div class="d-flex align-items-center mb-4">
-            <a href="{% url 'petrol:credit_sale_list' %}" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
-            <div><h5 class="fw-bold mb-0">New Credit Sale</h5><span class="text-muted small">Fuel sold on account</span></div>
+            <a href="{% url 'petrol:credit_sale_list' %}" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h5 class="fw-bold mb-0">New Credit Sale</h5>
+                <span class="text-muted small">Fuel sold on account</span>
+            </div>
         </div>
+
         <div class="content-card">
             <div class="content-card-header">
-                <span class="content-card-title"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Sale Details</span>
+                <span class="content-card-title">
+                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>Sale Details
+                </span>
             </div>
             <div class="p-4">
-                <form method="post">
+                <form method="post" id="credit-sale-form">
                     {% csrf_token %}
-                    <div class="mb-3"><label class="form-label fw-semibold">Date</label>{{ form.date }}</div>
-                    <div class="mb-3"><label class="form-label fw-semibold">Customer</label>{{ form.customer }}</div>
-                    <div class="mb-3"><label class="form-label fw-semibold">Tank</label>{{ form.tank }}</div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Date</label>
+                        {{ form.date }}
+                    </div>
+
+                    <!-- ── Customer toggle ──────────────────────── -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold d-block">Customer</label>
+                        <div class="btn-group w-100 mb-2" role="group">
+                            <input type="radio" class="btn-check" name="customer_type"
+                                   id="ct-existing" value="existing"
+                                   {% if customer_type != 'new' %}checked{% endif %}>
+                            <label class="btn btn-outline-primary btn-sm" for="ct-existing">
+                                <i class="bi bi-person-check me-1"></i>Existing Customer
+                            </label>
+
+                            <input type="radio" class="btn-check" name="customer_type"
+                                   id="ct-new" value="new"
+                                   {% if customer_type == 'new' %}checked{% endif %}>
+                            <label class="btn btn-outline-success btn-sm" for="ct-new">
+                                <i class="bi bi-person-plus me-1"></i>New / Walk-in
+                            </label>
+                        </div>
+
+                        <!-- Existing customer dropdown -->
+                        <div id="existing-customer-section" {% if customer_type == 'new' %}style="display:none"{% endif %}>
+                            {{ form.customer }}
+                        </div>
+
+                        <!-- New customer fields -->
+                        <div id="new-customer-section" {% if customer_type != 'new' %}style="display:none"{% endif %}>
+                            <input type="text" name="new_customer_name"
+                                   class="form-control mb-2"
+                                   placeholder="Customer name *"
+                                   value="{{ request.POST.new_customer_name|default:'' }}">
+                            <input type="text" name="new_customer_phone"
+                                   class="form-control"
+                                   placeholder="Phone number (optional)"
+                                   value="{{ request.POST.new_customer_phone|default:'' }}">
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                This customer will be saved and their balance tracked going forward.
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ── end customer toggle ──────────────────── -->
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tank</label>
+                        {{ form.tank }}
+                    </div>
+
                     <div class="row g-3 mb-3">
                         <div class="col-6">
                             <label class="form-label fw-semibold">Litres</label>
-                            <div class="input-group">{{ form.litres }}<span class="input-group-text">L</span></div>
+                            <div class="input-group">
+                                {{ form.litres }}
+                                <span class="input-group-text">L</span>
+                            </div>
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-semibold">Price / Litre</label>
-                            <div class="input-group"><span class="input-group-text">TZS</span>{{ form.unit_price }}</div>
+                            <div class="input-group">
+                                <span class="input-group-text">TZS</span>
+                                {{ form.unit_price }}
+                            </div>
                         </div>
                     </div>
+
                     <div class="alert alert-warning border mb-4 d-flex align-items-center justify-content-between">
-                        <span class="text-muted small fw-semibold"><i class="bi bi-calculator me-1"></i>Amount to Charge</span>
+                        <span class="text-muted small fw-semibold">
+                            <i class="bi bi-calculator me-1"></i>Amount to Charge
+                        </span>
                         <span id="total-preview" class="fw-bold fs-5">TZS 0</span>
                     </div>
-                    {% if form.errors %}<div class="alert alert-danger small">{{ form.errors }}</div>{% endif %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger small">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}{{ error }}<br>{% endfor %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-check-lg me-1"></i>Record Credit Sale</button>
-                        <a href="{% url 'petrol:credit_sale_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="bi bi-check-lg me-1"></i>Record Credit Sale
+                        </button>
+                        <a href="{% url 'petrol:credit_sale_list' %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
                     </div>
                 </form>
             </div>
@@ -50,6 +129,16 @@
 
 {% block extra_js %}
 <script>
+// Toggle existing / new customer sections
+document.querySelectorAll('input[name="customer_type"]').forEach(radio => {
+    radio.addEventListener('change', function () {
+        const isNew = this.value === 'new';
+        document.getElementById('existing-customer-section').style.display = isNew ? 'none' : '';
+        document.getElementById('new-customer-section').style.display = isNew ? '' : 'none';
+    });
+});
+
+// Live total
 function updateTotal() {
     const l = parseFloat(document.getElementById('id_litres').value) || 0;
     const p = parseFloat(document.getElementById('id_unit_price').value) || 0;

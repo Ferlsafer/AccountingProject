@@ -99,7 +99,25 @@ def credit_sale_list(request):
 @login_required
 def credit_sale_add(request):
     if request.method == 'POST':
-        form = CreditSaleForm(request.POST)
+        customer_type = request.POST.get('customer_type', 'existing')
+
+        if customer_type == 'new':
+            new_name = request.POST.get('new_customer_name', '').strip()
+            new_phone = request.POST.get('new_customer_phone', '').strip()
+            if not new_name:
+                messages.error(request, 'Customer name is required when adding a new customer.')
+                form = CreditSaleForm(request.POST)
+                return render(request, 'petrol/credit_sale_form.html', {'form': form, 'customer_type': 'new'})
+            customer, _ = CreditCustomer.objects.get_or_create(
+                name=new_name,
+                defaults={'phone': new_phone},
+            )
+            post_data = request.POST.copy()
+            post_data['customer'] = customer.pk
+            form = CreditSaleForm(post_data)
+        else:
+            form = CreditSaleForm(request.POST)
+
         if form.is_valid():
             with transaction.atomic():
                 sale = form.save(commit=False)
@@ -115,7 +133,7 @@ def credit_sale_add(request):
             return redirect('petrol:credit_sale_list')
     else:
         form = CreditSaleForm(initial={'date': date.today()})
-    return render(request, 'petrol/credit_sale_form.html', {'form': form})
+    return render(request, 'petrol/credit_sale_form.html', {'form': form, 'customer_type': 'existing'})
 
 
 # ── Credit Payments ──────────────────────────────────────────────────────────
