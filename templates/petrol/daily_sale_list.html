@@ -80,7 +80,7 @@
             <tr>
                 <td class="fw-semibold">{{ s.date|date:"d M Y" }}</td>
                 <td>{{ s.tank.name }}</td>
-                <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ s.tank.fuel_type }}</span></td>
+                <td><span class="tlc-badge tlc-badge-blue">{{ s.tank.fuel_type }}</span></td>
                 <td class="text-end">{{ s.litres_sold|floatformat:2 }}</td>
                 <td class="text-end text-muted">{% currency s.unit_price %}</td>
                 <td class="text-end fw-semibold">{% currency s.total_amount %}</td>

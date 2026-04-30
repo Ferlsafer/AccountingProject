@@ -49,7 +49,7 @@
             <tr>
                 <td class="fw-semibold">{{ e.date|date:"d M Y" }}</td>
                 <td>{{ e.description }}</td>
-                <td><span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ e.get_category_display }}</span></td>
+                <td><span class="tlc-badge tlc-badge-gray">{{ e.get_category_display }}</span></td>
                 <td class="text-end fw-semibold text-danger">{% currency e.amount %}</td>
                 <td class="text-muted small">{{ e.recorded_by.get_full_name|default:e.recorded_by.username }}</td>
             </tr>

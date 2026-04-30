@@ -61,12 +61,12 @@
             <tr>
                 <td class="fw-semibold">{{ p.date|date:"d M Y" }}</td>
                 <td>{{ p.supplier }}</td>
-                <td>{{ p.tank.name }} <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ p.tank.fuel_type }}</span></td>
+                <td>{{ p.tank.name }} <span class="tlc-badge tlc-badge-gray">{{ p.tank.fuel_type }}</span></td>
                 <td>
-                    {% if p.payment_method == 'cash' %}<span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25"><i class="bi bi-cash me-1"></i>Cash</span>
-                    {% elif p.payment_method == 'bank' %}<span class="badge bg-primary bg-opacity-15 text-primary border border-primary border-opacity-25"><i class="bi bi-bank me-1"></i>Bank</span>
-                    {% elif p.payment_method == 'mobile' %}<span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25"><i class="bi bi-phone me-1"></i>Mobile</span>
-                    {% elif p.payment_method == 'credit' %}<span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25"><i class="bi bi-clock-history me-1"></i>Credit</span>
+                    {% if p.payment_method == 'cash' %}<span class="tlc-badge tlc-badge-green"><i class="bi bi-cash"></i>Cash</span>
+                    {% elif p.payment_method == 'bank' %}<span class="tlc-badge tlc-badge-blue"><i class="bi bi-bank"></i>Bank</span>
+                    {% elif p.payment_method == 'mobile' %}<span class="tlc-badge tlc-badge-amber"><i class="bi bi-phone"></i>Mobile</span>
+                    {% elif p.payment_method == 'credit' %}<span class="tlc-badge tlc-badge-red"><i class="bi bi-clock-history"></i>Credit</span>
                     {% endif %}
                 </td>
                 <td class="text-muted small">{{ p.invoice_number|default:"—" }}</td>

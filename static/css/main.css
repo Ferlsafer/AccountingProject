@@ -172,7 +172,27 @@ body {
 .alert-info     { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
 
 /* ── Badges ──────────────────────────────────────────── */
+/* Use these instead of Bootstrap's bg-opacity/text-* combos — those hide text */
 .badge-pill { border-radius: 999px; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; }
+
+.tlc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.tlc-badge-green  { background: #dcfce7; color: #166534; border-color: #86efac; }
+.tlc-badge-blue   { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.tlc-badge-amber  { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.tlc-badge-red    { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.tlc-badge-purple { background: #f3e8ff; color: #6b21a8; border-color: #d8b4fe; }
+.tlc-badge-gray   { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+.tlc-badge-teal   { background: #ccfbf1; color: #0f766e; border-color: #5eead4; }
 
 /* ── Centered form cards ─────────────────────────────── */
 .row.justify-content-center > [class*="col"] .content-card {

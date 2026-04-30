@@ -139,9 +139,7 @@
                     <td class="text-muted">{{ entry.date|date:"d M Y" }}</td>
                     <td>{{ entry.description|truncatechars:50 }}</td>
                     <td>
-                        <span class="badge badge-pill bg-light text-secondary border">
-                            {{ entry.source_type|default:"manual" }}
-                        </span>
+                        <span class="tlc-badge tlc-badge-gray">{{ entry.source_type|default:"manual" }}</span>
                     </td>
                     <td class="text-end fw-semibold">{% currency entry.total_debit %}</td>
                     <td class="text-center">
