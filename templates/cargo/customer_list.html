@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Cargo Customers{% endblock %}
+{% block page_title %}Cargo Customers{% endblock %}
+{% block nav_cargo_customers_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Cargo Customers</h5>
+        <span class="text-muted small"><i class="bi bi-person-vcard me-1"></i>All registered cargo customers</span>
+    </div>
+    <a href="{% url 'cargo:customer_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Customer
+    </a>
+</div>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-people me-2 text-primary"></i>Customer List
+        </span>
+        <span class="text-muted small">{{ customers|length }} customer{{ customers|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th class="text-end">Trips</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for c in customers %}
+            <tr>
+                <td class="fw-semibold">{{ c.name }}</td>
+                <td class="text-muted">{{ c.phone|default:"—" }}</td>
+                <td class="text-muted">{{ c.email|default:"—" }}</td>
+                <td class="text-muted small">{{ c.address|default:"—" }}</td>
+                <td class="text-end text-muted">{{ c.trips.count }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center py-5 text-muted">
+                    <i class="bi bi-people" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No customers yet.</p>
+                    <a href="{% url 'cargo:customer_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Customer</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -47,14 +47,17 @@
 
         {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'cargo_clerk' %}
         <div class="sidebar-section-label">Cargo</div>
-        <a href="#" class="sidebar-link {% block nav_trips_active %}{% endblock %}">
+        <a href="{% url 'cargo:trip_list' %}" class="sidebar-link {% block nav_trips_active %}{% endblock %}">
             <i class="bi bi-map"></i> Trips
         </a>
-        <a href="#" class="sidebar-link {% block nav_invoices_active %}{% endblock %}">
+        <a href="{% url 'cargo:invoice_list' %}" class="sidebar-link {% block nav_invoices_active %}{% endblock %}">
             <i class="bi bi-file-earmark-text"></i> Invoices
         </a>
-        <a href="#" class="sidebar-link {% block nav_cargo_expenses_active %}{% endblock %}">
+        <a href="{% url 'cargo:vehicle_expense_list' %}" class="sidebar-link {% block nav_cargo_expenses_active %}{% endblock %}">
             <i class="bi bi-tools"></i> Vehicle Expenses
+        </a>
+        <a href="{% url 'cargo:customer_list' %}" class="sidebar-link {% block nav_cargo_customers_active %}{% endblock %}">
+            <i class="bi bi-person-vcard"></i> Customers
         </a>
         {% endif %}
 

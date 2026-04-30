@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Trips{% endblock %}
+{% block page_title %}Trips{% endblock %}
+{% block nav_trips_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Trips</h5>
+        <span class="text-muted small"><i class="bi bi-map me-1"></i>All cargo trips</span>
+    </div>
+    <a href="{% url 'cargo:trip_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>New Trip
+    </a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-3">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-truck"></i></div>
+            <div class="stat-label">Total Trips</div>
+            <div class="stat-value">{{ trips|length }}</div>
+            <div class="stat-sub">in period</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-label">Freight Revenue</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency totals.freight|default:0 %}</div>
+            <div class="stat-sub">total freight</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-amber"><i class="bi bi-hourglass-split"></i></div>
+            <div class="stat-label">In Progress</div>
+            <div class="stat-value">{{ trips|length }}</div>
+            <div class="stat-sub">active trips</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-teal"><i class="bi bi-check2-circle"></i></div>
+            <div class="stat-label">Completed</div>
+            <div class="stat-value">—</div>
+            <div class="stat-sub">this period</div>
+        </div>
+    </div>
+</div>
+
+<!-- Trips Table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-table me-2 text-primary"></i>Trip List
+        </span>
+        <span class="text-muted small">{{ trips|length }} trip{{ trips|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Route</th>
+                    <th>Customer</th>
+                    <th>Vehicle</th>
+                    <th>Driver</th>
+                    <th>Status</th>
+                    <th class="text-end">Freight</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for trip in trips %}
+            <tr>
+                <td class="fw-semibold">{{ trip.date|date:"d M Y" }}</td>
+                <td>
+                    <span class="fw-semibold">{{ trip.origin }}</span>
+                    <i class="bi bi-arrow-right text-muted mx-1"></i>
+                    <span>{{ trip.destination }}</span>
+                </td>
+                <td>{{ trip.customer }}</td>
+                <td class="text-muted small">{{ trip.vehicle.plate_number }}</td>
+                <td class="text-muted small">{{ trip.driver }}</td>
+                <td>
+                    {% if trip.status == 'planned' %}
+                    <span class="tlc-badge tlc-badge-blue">Planned</span>
+                    {% elif trip.status == 'in_progress' %}
+                    <span class="tlc-badge tlc-badge-amber">In Progress</span>
+                    {% elif trip.status == 'completed' %}
+                    <span class="tlc-badge tlc-badge-green">Completed</span>
+                    {% else %}
+                    <span class="tlc-badge tlc-badge-red">Cancelled</span>
+                    {% endif %}
+                </td>
+                <td class="text-end fw-semibold">{% currency trip.freight_amount %}</td>
+                <td>
+                    <a href="{% url 'cargo:trip_detail' trip.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No trips in this period.</p>
+                    <a href="{% url 'cargo:trip_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Trip</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            {% if trips %}
+            <tfoot class="table-light">
+                <tr class="fw-bold">
+                    <td colspan="6">Totals</td>
+                    <td class="text-end">{% currency totals.freight|default:0 %}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

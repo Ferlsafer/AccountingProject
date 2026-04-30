@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}New Trip{% endblock %}
+{% block page_title %}New Trip{% endblock %}
+{% block nav_trips_active %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8 col-xl-7">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'cargo:trip_list' %}" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h5 class="fw-bold mb-0">New Trip</h5>
+                <span class="text-muted small">Plan a cargo trip</span>
+            </div>
+        </div>
+
+        <div class="content-card form-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-map me-2 text-primary"></i>Trip Details
+                </span>
+            </div>
+            <div class="p-4">
+                <form method="post" id="trip-form" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Date <span class="text-danger">*</span></label>
+                            {{ form.date }}
+                            {% if form.date.errors %}<div class="invalid-feedback d-block">{{ form.date.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- ── Customer toggle ──────────────────────── -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small d-block">Customer <span class="text-danger">*</span></label>
+                        <div class="btn-group w-100 mb-2" role="group">
+                            <input type="radio" class="btn-check" name="customer_type"
+                                   id="ct-existing" value="existing"
+                                   {% if customer_type != 'new' %}checked{% endif %}>
+                            <label class="btn btn-outline-primary btn-sm" for="ct-existing">
+                                <i class="bi bi-person-check me-1"></i>Existing Customer
+                            </label>
+                            <input type="radio" class="btn-check" name="customer_type"
+                                   id="ct-new" value="new"
+                                   {% if customer_type == 'new' %}checked{% endif %}>
+                            <label class="btn btn-outline-success btn-sm" for="ct-new">
+                                <i class="bi bi-person-plus me-1"></i>New Customer
+                            </label>
+                        </div>
+
+                        <div id="existing-customer-section" {% if customer_type == 'new' %}style="display:none"{% endif %}>
+                            {{ form.customer }}
+                            {% if form.customer.errors %}<div class="invalid-feedback d-block">{{ form.customer.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div id="new-customer-section" {% if customer_type != 'new' %}style="display:none"{% endif %}>
+                            <input type="text" name="new_customer_name"
+                                   class="form-control mb-2"
+                                   placeholder="Customer name *"
+                                   value="{{ request.POST.new_customer_name|default:'' }}">
+                            <input type="text" name="new_customer_phone"
+                                   class="form-control"
+                                   placeholder="Phone number (optional)"
+                                   value="{{ request.POST.new_customer_phone|default:'' }}">
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Customer will be saved and available for future trips.
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ── end customer toggle ──────────────────── -->
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Vehicle <span class="text-danger">*</span></label>
+                            {{ form.vehicle }}
+                            {% if form.vehicle.errors %}<div class="invalid-feedback d-block">{{ form.vehicle.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Driver <span class="text-danger">*</span></label>
+                            {{ form.driver }}
+                            {% if form.driver.errors %}<div class="invalid-feedback d-block">{{ form.driver.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Origin <span class="text-danger">*</span></label>
+                            {{ form.origin }}
+                            {% if form.origin.errors %}<div class="invalid-feedback d-block">{{ form.origin.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Destination <span class="text-danger">*</span></label>
+                            {{ form.destination }}
+                            {% if form.destination.errors %}<div class="invalid-feedback d-block">{{ form.destination.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Freight Amount (TZS) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">TZS</span>
+                            {{ form.freight_amount }}
+                        </div>
+                        {% if form.freight_amount.errors %}<div class="invalid-feedback d-block">{{ form.freight_amount.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Cargo Description</label>
+                        {{ form.cargo_description }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Notes</label>
+                        {{ form.notes }}
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Create Trip
+                        </button>
+                        <a href="{% url 'cargo:trip_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function applyCustomerToggle(isNew) {
+    document.getElementById('existing-customer-section').style.display = isNew ? 'none' : '';
+    document.getElementById('new-customer-section').style.display = isNew ? '' : 'none';
+    document.getElementById('id_customer').disabled = isNew;
+}
+
+const initiallyNew = document.getElementById('ct-new').checked;
+applyCustomerToggle(initiallyNew);
+
+document.querySelectorAll('input[name="customer_type"]').forEach(radio => {
+    radio.addEventListener('change', function () {
+        applyCustomerToggle(this.value === 'new');
+    });
+});
+</script>
+{% endblock %}

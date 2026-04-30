@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Trip — {{ trip }}{% endblock %}
+{% block page_title %}Trip Detail{% endblock %}
+{% block nav_trips_active %}active{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+        <h5 class="fw-bold mb-1">
+            {{ trip.origin }} <i class="bi bi-arrow-right text-primary"></i> {{ trip.destination }}
+        </h5>
+        <span class="text-muted small"><i class="bi bi-calendar me-1"></i>{{ trip.date|date:"d M Y" }}</span>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        {% if trip.status == 'planned' %}
+        <form method="post" action="{% url 'cargo:trip_start' trip.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-play-fill me-1"></i>Start Trip
+            </button>
+        </form>
+        <form method="post" action="{% url 'cargo:trip_cancel' trip.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-outline-danger btn-sm" onclick="return confirm('Cancel this trip?')">
+                <i class="bi bi-x-lg me-1"></i>Cancel
+            </button>
+        </form>
+        {% elif trip.status == 'in_progress' %}
+        <form method="post" action="{% url 'cargo:trip_complete' trip.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-success btn-sm">
+                <i class="bi bi-check2-circle me-1"></i>Mark Complete
+            </button>
+        </form>
+        <form method="post" action="{% url 'cargo:trip_cancel' trip.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-outline-danger btn-sm" onclick="return confirm('Cancel this trip?')">
+                <i class="bi bi-x-lg me-1"></i>Cancel
+            </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'cargo:trip_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- Left column: trip info + expenses -->
+    <div class="col-lg-8">
+
+        <!-- Trip Info -->
+        <div class="content-card mb-4">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-info-circle me-2 text-primary"></i>Trip Details</span>
+                {% if trip.status == 'planned' %}
+                <span class="tlc-badge tlc-badge-blue">Planned</span>
+                {% elif trip.status == 'in_progress' %}
+                <span class="tlc-badge tlc-badge-amber">In Progress</span>
+                {% elif trip.status == 'completed' %}
+                <span class="tlc-badge tlc-badge-green">Completed</span>
+                {% else %}
+                <span class="tlc-badge tlc-badge-red">Cancelled</span>
+                {% endif %}
+            </div>
+            <div class="p-4">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="small text-muted fw-semibold mb-1">Customer</div>
+                        <div>{{ trip.customer }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="small text-muted fw-semibold mb-1">Vehicle</div>
+                        <div>{{ trip.vehicle }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="small text-muted fw-semibold mb-1">Driver</div>
+                        <div>{{ trip.driver }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="small text-muted fw-semibold mb-1">Freight Amount</div>
+                        <div class="fw-bold text-success">{% currency trip.freight_amount %}</div>
+                    </div>
+                    {% if trip.cargo_description %}
+                    <div class="col-12">
+                        <div class="small text-muted fw-semibold mb-1">Cargo</div>
+                        <div>{{ trip.cargo_description }}</div>
+                    </div>
+                    {% endif %}
+                    {% if trip.notes %}
+                    <div class="col-12">
+                        <div class="small text-muted fw-semibold mb-1">Notes</div>
+                        <div class="text-muted">{{ trip.notes }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Trip Expenses -->
+        <div class="content-card mb-4">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-receipt me-2 text-primary"></i>Trip Expenses</span>
+                <span class="text-muted small">{{ expenses|length }} expense{{ expenses|length|pluralize }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                            <th>By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for exp in expenses %}
+                    <tr>
+                        <td>{{ exp.date|date:"d M" }}</td>
+                        <td><span class="tlc-badge tlc-badge-gray">{{ exp.get_category_display }}</span></td>
+                        <td>{{ exp.description }}</td>
+                        <td class="text-end">{% currency exp.amount %}</td>
+                        <td class="text-muted small">{{ exp.recorded_by.get_full_name|default:exp.recorded_by.username }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-3 text-muted">No expenses yet.</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    {% if expenses %}
+                    <tfoot class="table-light">
+                        <tr class="fw-bold">
+                            <td colspan="3">Total Expenses</td>
+                            <td class="text-end text-danger">{% currency trip.total_expenses %}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+
+            {% if trip.status != 'cancelled' %}
+            <!-- Add Expense Form -->
+            <div class="p-3 border-top">
+                <div class="small fw-semibold text-muted mb-2">
+                    <i class="bi bi-plus-circle me-1"></i>Add Expense
+                </div>
+                <form method="post" action="{% url 'cargo:trip_expense_add' trip.pk %}">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        <div class="col-sm-2">
+                            {{ expense_form.date }}
+                        </div>
+                        <div class="col-sm-3">
+                            {{ expense_form.category }}
+                        </div>
+                        <div class="col-sm-4">
+                            {{ expense_form.description }}
+                        </div>
+                        <div class="col-sm-2">
+                            {{ expense_form.amount }}
+                        </div>
+                        <div class="col-sm-1">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Right column: financials + invoice -->
+    <div class="col-lg-4">
+
+        <!-- Financial Summary -->
+        <div class="content-card mb-4">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-graph-up me-2 text-primary"></i>Financials</span>
+            </div>
+            <div class="p-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Freight Revenue</span>
+                    <span class="fw-bold text-success">{% currency trip.freight_amount %}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Expenses</span>
+                    <span class="fw-bold text-danger">{% currency trip.total_expenses %}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">Net Profit</span>
+                    {% with profit=trip.profit %}
+                    <span class="fw-bold {% if profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {% currency profit %}
+                    </span>
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice -->
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Invoice</span>
+                {% if invoice %}
+                    {% if invoice.is_paid %}
+                    <span class="tlc-badge tlc-badge-green">Paid</span>
+                    {% else %}
+                    <span class="tlc-badge tlc-badge-amber">Unpaid</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="p-4">
+                {% if invoice %}
+                <div class="mb-3">
+                    <div class="small text-muted fw-semibold mb-1">Invoice No.</div>
+                    <div class="fw-bold">{{ invoice.number }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted fw-semibold mb-1">Amount</div>
+                    <div class="fw-bold text-success">{% currency invoice.amount %}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted fw-semibold mb-1">Invoice Date</div>
+                    <div>{{ invoice.date|date:"d M Y" }}</div>
+                </div>
+                {% if invoice.is_paid %}
+                <div class="mb-3">
+                    <div class="small text-muted fw-semibold mb-1">Paid On</div>
+                    <div>{{ invoice.paid_date|date:"d M Y" }} via {{ invoice.get_payment_method_display }}</div>
+                </div>
+                {% else %}
+                <form method="post" action="{% url 'cargo:invoice_pay' invoice.pk %}">
+                    {% csrf_token %}
+                    {% for field in pay_form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors.0 }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-check2-circle me-1"></i>Mark as Paid
+                    </button>
+                </form>
+                {% endif %}
+                {% elif trip.status == 'completed' %}
+                <p class="text-muted small">Invoice will appear here once generated.</p>
+                {% else %}
+                <p class="text-muted small">Invoice is generated automatically when the trip is marked complete.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

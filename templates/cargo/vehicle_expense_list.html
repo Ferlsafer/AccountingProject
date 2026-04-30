@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Vehicle Expenses{% endblock %}
+{% block page_title %}Vehicle Expenses{% endblock %}
+{% block nav_cargo_expenses_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Vehicle Expenses</h5>
+        <span class="text-muted small"><i class="bi bi-tools me-1"></i>Maintenance, repairs, and running costs</span>
+    </div>
+    <a href="{% url 'cargo:vehicle_expense_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Expense
+    </a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">Vehicle</label>
+            <select name="vehicle" class="form-select form-select-sm">
+                <option value="">All Vehicles</option>
+                {% for v in vehicles %}
+                <option value="{{ v.pk }}" {% if vehicle_filter == v.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ v.plate_number }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-3">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="bi bi-tools"></i></div>
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency totals.amount|default:0 %}</div>
+            <div class="stat-sub">in period</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-card-list"></i></div>
+            <div class="stat-label">Records</div>
+            <div class="stat-value">{{ expenses|length }}</div>
+            <div class="stat-sub">expense entries</div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-table me-2 text-primary"></i>Expense Records
+        </span>
+        <span class="text-muted small">{{ expenses|length }} record{{ expenses|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Vehicle</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th class="text-end">Amount</th>
+                    <th>By</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for exp in expenses %}
+            <tr>
+                <td class="fw-semibold">{{ exp.date|date:"d M Y" }}</td>
+                <td><span class="tlc-badge tlc-badge-blue">{{ exp.vehicle.plate_number }}</span></td>
+                <td><span class="tlc-badge tlc-badge-gray">{{ exp.get_category_display }}</span></td>
+                <td>{{ exp.description }}</td>
+                <td class="text-end fw-semibold">{% currency exp.amount %}</td>
+                <td class="text-muted small">{{ exp.recorded_by.get_full_name|default:exp.recorded_by.username }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No vehicle expenses in this period.</p>
+                    <a href="{% url 'cargo:vehicle_expense_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Expense</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            {% if expenses %}
+            <tfoot class="table-light">
+                <tr class="fw-bold">
+                    <td colspan="4">Total</td>
+                    <td class="text-end">{% currency totals.amount|default:0 %}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

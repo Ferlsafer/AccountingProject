@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Invoices{% endblock %}
+{% block page_title %}Invoices{% endblock %}
+{% block nav_invoices_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Invoices</h5>
+        <span class="text-muted small"><i class="bi bi-file-earmark-text me-1"></i>All cargo invoices</span>
+    </div>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">Status</label>
+            <select name="paid" class="form-select form-select-sm">
+                <option value="">All</option>
+                <option value="0" {% if paid_filter == '0' %}selected{% endif %}>Unpaid</option>
+                <option value="1" {% if paid_filter == '1' %}selected{% endif %}>Paid</option>
+            </select>
+        </div>
+        <div class="col-sm-3">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="stat-label">Total Invoiced</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency totals.amount|default:0 %}</div>
+            <div class="stat-sub">in period</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="bi bi-check2-circle"></i></div>
+            <div class="stat-label">Paid</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency paid_total %}</div>
+            <div class="stat-sub">received</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon icon-amber"><i class="bi bi-hourglass-split"></i></div>
+            <div class="stat-label">Outstanding</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency unpaid_total %}</div>
+            <div class="stat-sub">awaiting payment</div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-table me-2 text-primary"></i>Invoice List
+        </span>
+        <span class="text-muted small">{{ invoices|length }} invoice{{ invoices|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Route</th>
+                    <th class="text-end">Amount</th>
+                    <th>Status</th>
+                    <th>Paid Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for inv in invoices %}
+            <tr>
+                <td class="fw-semibold">{{ inv.number }}</td>
+                <td>{{ inv.date|date:"d M Y" }}</td>
+                <td>{{ inv.trip.customer }}</td>
+                <td class="text-muted small">
+                    {{ inv.trip.origin }} → {{ inv.trip.destination }}
+                </td>
+                <td class="text-end fw-semibold">{% currency inv.amount %}</td>
+                <td>
+                    {% if inv.is_paid %}
+                    <span class="tlc-badge tlc-badge-green">Paid</span>
+                    {% else %}
+                    <span class="tlc-badge tlc-badge-amber">Unpaid</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted small">
+                    {% if inv.paid_date %}{{ inv.paid_date|date:"d M Y" }}{% else %}—{% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'cargo:trip_detail' inv.trip.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    {% if not inv.is_paid %}
+                    <a href="{% url 'cargo:invoice_pay' inv.pk %}" class="btn btn-sm btn-success">
+                        <i class="bi bi-cash"></i>
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No invoices in this period.</p>
+                    <p class="small">Invoices are created automatically when a trip is marked complete.</p>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            {% if invoices %}
+            <tfoot class="table-light">
+                <tr class="fw-bold">
+                    <td colspan="4">Total</td>
+                    <td class="text-end">{% currency totals.amount|default:0 %}</td>
+                    <td colspan="3"></td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}
