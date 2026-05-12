@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Customer, JobOrder
+from .models import Customer, JobOrder, Quotation, QuotationLine
 
 
 @admin.register(Customer)
@@ -16,3 +16,19 @@ class JobOrderAdmin(admin.ModelAdmin):
     search_fields = ('reference', 'customer__name', 'origin', 'destination', 'cargo_description')
     readonly_fields = ('reference', 'created_by', 'created_at')
     date_hierarchy = 'date'
+
+
+class QuotationLineInline(admin.TabularInline):
+    model = QuotationLine
+    extra = 0
+    fields = ('description', 'quantity', 'unit_price')
+
+
+@admin.register(Quotation)
+class QuotationAdmin(admin.ModelAdmin):
+    list_display = ('reference', 'date', 'customer', 'status', 'valid_until', 'created_by')
+    list_filter = ('status',)
+    search_fields = ('reference', 'customer__name')
+    readonly_fields = ('reference', 'created_by', 'created_at')
+    date_hierarchy = 'date'
+    inlines = [QuotationLineInline]

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Quotations{% endblock %}
+{% block page_title %}Quotations{% endblock %}
+{% block nav_sales_quotations_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Quotations</h5>
+        <span class="text-muted small"><i class="bi bi-file-earmark-text me-1"></i>All quotations</span>
+    </div>
+    <a href="{% url 'sales:quotation_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>New Quotation
+    </a>
+</div>
+
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All</option>
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <label class="form-label small fw-semibold">Customer</label>
+            <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Search customer…">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+            <a href="{% url 'sales:quotation_list' %}" class="btn btn-sm btn-outline-secondary ms-1">Clear</a>
+        </div>
+    </div>
+</form>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Quotations</span>
+        <span class="text-muted small">{{ quotations|length }} record{{ quotations|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Valid Until</th>
+                    <th>Status</th>
+                    <th class="text-end">Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for q in quotations %}
+            <tr>
+                <td class="fw-semibold">
+                    <a href="{% url 'sales:quotation_detail' q.pk %}" class="text-decoration-none">{{ q.reference }}</a>
+                </td>
+                <td class="text-muted small">{{ q.date|date:"d M Y" }}</td>
+                <td>{{ q.customer.name }}</td>
+                <td class="text-muted small">{{ q.valid_until|date:"d M Y" }}</td>
+                <td>
+                    {% if q.status == 'draft' %}<span class="badge bg-secondary">Draft</span>
+                    {% elif q.status == 'sent' %}<span class="badge bg-info text-dark">Sent</span>
+                    {% elif q.status == 'accepted' %}<span class="badge bg-success">Accepted</span>
+                    {% elif q.status == 'rejected' %}<span class="badge bg-danger">Rejected</span>
+                    {% elif q.status == 'expired' %}<span class="badge bg-warning text-dark">Expired</span>
+                    {% endif %}
+                </td>
+                <td class="text-end fw-semibold">{{ q.total|floatformat:0 }}</td>
+                <td class="text-end">
+                    <a href="{% url 'sales:quotation_detail' q.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-file-earmark-text" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No quotations in this period.</p>
+                    <a href="{% url 'sales:quotation_create' %}" class="btn btn-sm btn-outline-primary mt-2">Create First Quotation</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

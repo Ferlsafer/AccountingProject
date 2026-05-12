@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Customer, JobOrder
-from .forms import CustomerForm, JobOrderForm
+from .models import Customer, JobOrder, Quotation
+from .forms import CustomerForm, JobOrderForm, QuotationForm, QuotationLineFormSet
 
 
 @login_required
@@ -148,3 +148,129 @@ def job_order_transition(request, pk):
     job.save()
     messages.success(request, f"Job Order {job.reference} moved to {job.get_status_display()}.")
     return redirect('sales:job_order_detail', pk=pk)
+
+
+# ── Quotations ────────────────────────────────────────────────────────────────
+
+_QUO_TRANSITIONS = {
+    'draft':    ['sent', 'rejected'],
+    'sent':     ['accepted', 'rejected', 'expired'],
+    'accepted': [],
+    'rejected': [],
+    'expired':  [],
+}
+
+
+@login_required
+def quotation_list(request):
+    today = today_date.today()
+    date_from = request.GET.get('date_from') or today.replace(day=1).isoformat()
+    date_to = request.GET.get('date_to') or today.isoformat()
+    status_filter = request.GET.get('status', '')
+    q = request.GET.get('q', '').strip()
+
+    qs = (Quotation.objects
+          .filter(date__gte=date_from, date__lte=date_to)
+          .select_related('customer', 'job_order', 'created_by'))
+    if status_filter:
+        qs = qs.filter(status=status_filter)
+    if q:
+        qs = qs.filter(customer__name__icontains=q)
+
+    return render(request, 'sales/quotation_list.html', {
+        'quotations': qs,
+        'date_from': date_from,
+        'date_to': date_to,
+        'status_filter': status_filter,
+        'q': q,
+        'status_choices': Quotation.STATUS_CHOICES,
+    })
+
+
+@login_required
+def quotation_create(request):
+    if request.method == 'POST':
+        form = QuotationForm(request.POST)
+        formset = QuotationLineFormSet(request.POST)
+        if form.is_valid() and formset.is_valid():
+            quotation = form.save(commit=False)
+            quotation.created_by = request.user
+            quotation.save()
+            formset.instance = quotation
+            formset.save()
+            messages.success(request, f"Quotation {quotation.reference} created.")
+            return redirect('sales:quotation_detail', pk=quotation.pk)
+    else:
+        form = QuotationForm(initial={'date': today_date.today()})
+        formset = QuotationLineFormSet()
+    return render(request, 'sales/quotation_form.html', {
+        'form': form, 'formset': formset, 'title': 'New Quotation',
+    })
+
+
+@login_required
+def quotation_detail(request, pk):
+    quotation = get_object_or_404(Quotation, pk=pk)
+    labels = dict(Quotation.STATUS_CHOICES)
+    allowed_next = [
+        (val, labels[val]) for val in _QUO_TRANSITIONS.get(quotation.status, [])
+    ]
+    return render(request, 'sales/quotation_detail.html', {
+        'quotation': quotation,
+        'allowed_next': allowed_next,
+    })
+
+
+@login_required
+def quotation_edit(request, pk):
+    quotation = get_object_or_404(Quotation, pk=pk)
+    if quotation.status in ('accepted', 'rejected', 'expired'):
+        messages.error(request, "This quotation can no longer be edited.")
+        return redirect('sales:quotation_detail', pk=pk)
+    if request.method == 'POST':
+        form = QuotationForm(request.POST, instance=quotation)
+        formset = QuotationLineFormSet(request.POST, instance=quotation)
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            messages.success(request, f"Quotation {quotation.reference} updated.")
+            return redirect('sales:quotation_detail', pk=pk)
+    else:
+        form = QuotationForm(instance=quotation)
+        formset = QuotationLineFormSet(instance=quotation)
+    return render(request, 'sales/quotation_form.html', {
+        'form': form, 'formset': formset,
+        'title': 'Edit Quotation', 'quotation': quotation,
+    })
+
+
+@login_required
+def quotation_transition(request, pk):
+    if request.method != 'POST':
+        return redirect('sales:quotation_detail', pk=pk)
+    quotation = get_object_or_404(Quotation, pk=pk)
+    new_status = request.POST.get('status')
+    if new_status not in _QUO_TRANSITIONS.get(quotation.status, []):
+        messages.error(request, "Invalid status transition.")
+        return redirect('sales:quotation_detail', pk=pk)
+    quotation.status = new_status
+    quotation.save()
+    # If accepted and linked to a job order, advance job order to 'accepted'
+    if new_status == 'accepted' and quotation.job_order:
+        job = quotation.job_order
+        if job.status in ('draft', 'quoted'):
+            job.status = 'accepted'
+            job.save()
+    messages.success(request, f"Quotation {quotation.reference} marked as {quotation.get_status_display()}.")
+    return redirect('sales:quotation_detail', pk=pk)
+
+
+@login_required
+def quotation_print(request, pk):
+    quotation = get_object_or_404(Quotation, pk=pk)
+    from core.models import Business
+    business = Business.objects.first()
+    return render(request, 'sales/quotation_print.html', {
+        'quotation': quotation,
+        'business': business,
+    })

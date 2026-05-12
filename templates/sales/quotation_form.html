@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block nav_sales_quotations_active %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+        <form method="post">
+            {% csrf_token %}
+            {{ formset.management_form }}
+
+            <!-- Header card -->
+            <div class="content-card form-card mb-4">
+                <div class="content-card-header">
+                    <span class="content-card-title">
+                        <i class="bi bi-file-earmark-plus me-2 text-primary"></i>{{ title }}
+                    </span>
+                    {% if quotation %}<span class="text-muted small">{{ quotation.reference }}</span>{% endif %}
+                </div>
+                <div class="p-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="{{ form.date.id_for_label }}" class="form-label fw-semibold small">Date <span class="text-danger">*</span></label>
+                            {{ form.date }}
+                            {% if form.date.errors %}<div class="invalid-feedback d-block">{{ form.date.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label for="{{ form.valid_until.id_for_label }}" class="form-label fw-semibold small">Valid Until <span class="text-danger">*</span></label>
+                            {{ form.valid_until }}
+                            {% if form.valid_until.errors %}<div class="invalid-feedback d-block">{{ form.valid_until.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.customer.id_for_label }}" class="form-label fw-semibold small">Customer <span class="text-danger">*</span></label>
+                            {{ form.customer }}
+                            {% if form.customer.errors %}<div class="invalid-feedback d-block">{{ form.customer.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.job_order.id_for_label }}" class="form-label fw-semibold small">Job Order <span class="text-muted">(optional)</span></label>
+                            {{ form.job_order }}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label fw-semibold small">Notes</label>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Line items card -->
+            <div class="content-card mb-4">
+                <div class="content-card-header">
+                    <span class="content-card-title"><i class="bi bi-list-ul me-2 text-primary"></i>Line Items</span>
+                </div>
+                <div class="p-3">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-2" id="formset-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:45%">Description</th>
+                                    <th style="width:15%">Quantity</th>
+                                    <th style="width:20%">Unit Price</th>
+                                    <th style="width:15%" class="text-end">Amount</th>
+                                    <th style="width:5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for line_form in formset %}
+                            <tr class="formset-row {% if line_form.instance.pk %}existing-row{% endif %}">
+                                {% for hidden in line_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <td>{{ line_form.description }}</td>
+                                <td>{{ line_form.quantity }}</td>
+                                <td>{{ line_form.unit_price }}</td>
+                                <td class="text-end align-middle line-amount text-muted">—</td>
+                                <td class="align-middle text-center">
+                                    {% if line_form.DELETE %}
+                                    <label class="text-danger" title="Delete">
+                                        {{ line_form.DELETE }}
+                                    </label>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light fw-semibold">
+                                    <td colspan="3" class="text-end">Subtotal</td>
+                                    <td class="text-end" id="subtotal-display">—</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>Save Quotation
+                </button>
+                {% if quotation %}
+                <a href="{% url 'sales:quotation_detail' quotation.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                {% else %}
+                <a href="{% url 'sales:quotation_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    function fmt(n) {
+        return isNaN(n) ? '—' : Math.round(n).toLocaleString();
+    }
+    function recalc() {
+        var subtotal = 0;
+        document.querySelectorAll('#formset-table tbody tr').forEach(function (row) {
+            var delCb = row.querySelector('input[type=checkbox]');
+            if (delCb && delCb.checked) {
+                row.querySelector('.line-amount').textContent = '—';
+                return;
+            }
+            var qty = parseFloat(row.querySelector('[name$="-quantity"]').value) || 0;
+            var price = parseFloat(row.querySelector('[name$="-unit_price"]').value) || 0;
+            var amt = qty * price;
+            row.querySelector('.line-amount').textContent = fmt(amt);
+            subtotal += amt;
+        });
+        document.getElementById('subtotal-display').textContent = fmt(subtotal);
+    }
+    document.getElementById('formset-table').addEventListener('input', recalc);
+    recalc();
+}());
+</script>
+{% endblock %}

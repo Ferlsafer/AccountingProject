@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}{{ quotation.reference }}{% endblock %}
+{% block page_title %}Quotation Detail{% endblock %}
+{% block nav_sales_quotations_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">{{ quotation.reference }}</h5>
+        <span class="text-muted small">{{ quotation.date|date:"d M Y" }} &mdash; {{ quotation.customer.name }}</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'sales:quotation_print' quotation.pk %}" class="btn btn-outline-secondary" target="_blank">
+            <i class="bi bi-printer me-1"></i>Print
+        </a>
+        {% if quotation.status == 'draft' or quotation.status == 'sent' %}
+        <a href="{% url 'sales:quotation_edit' quotation.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        {% endif %}
+        <a href="{% url 'sales:quotation_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left: header info + lines -->
+    <div class="col-md-8">
+        <div class="content-card mb-4">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Details</span>
+                <span>
+                    {% if quotation.status == 'draft' %}<span class="badge bg-secondary">Draft</span>
+                    {% elif quotation.status == 'sent' %}<span class="badge bg-info text-dark">Sent</span>
+                    {% elif quotation.status == 'accepted' %}<span class="badge bg-success">Accepted</span>
+                    {% elif quotation.status == 'rejected' %}<span class="badge bg-danger">Rejected</span>
+                    {% elif quotation.status == 'expired' %}<span class="badge bg-warning text-dark">Expired</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="p-4">
+                <div class="row mb-3">
+                    <div class="col-sm-6">
+                        <span class="text-muted small d-block">Customer</span>
+                        <strong><a href="{% url 'sales:customer_detail' quotation.customer.pk %}">{{ quotation.customer.name }}</a></strong>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="text-muted small d-block">Date</span>
+                        {{ quotation.date|date:"d M Y" }}
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="text-muted small d-block">Valid Until</span>
+                        {{ quotation.valid_until|date:"d M Y" }}
+                    </div>
+                </div>
+                {% if quotation.job_order %}
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Job Order</span>
+                    <a href="{% url 'sales:job_order_detail' quotation.job_order.pk %}">{{ quotation.job_order.reference }}</a>
+                </div>
+                {% endif %}
+
+                <!-- Line items -->
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-end" style="width:80px">Qty</th>
+                            <th class="text-end" style="width:120px">Unit Price</th>
+                            <th class="text-end" style="width:130px">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for line in quotation.lines.all %}
+                    <tr>
+                        <td>{{ line.description }}</td>
+                        <td class="text-end">{{ line.quantity|floatformat:2 }}</td>
+                        <td class="text-end">{{ line.unit_price|floatformat:0 }}</td>
+                        <td class="text-end fw-semibold">{{ line.amount|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr class="fw-semibold">
+                            <td colspan="3" class="text-end">Subtotal</td>
+                            <td class="text-end">{{ quotation.subtotal|floatformat:0 }}</td>
+                        </tr>
+                        <tr class="fw-bold fs-6">
+                            <td colspan="3" class="text-end">Total</td>
+                            <td class="text-end">{{ quotation.total|floatformat:0 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                {% if quotation.notes %}
+                <div class="mt-3 text-muted small"><strong>Notes:</strong> {{ quotation.notes }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: status actions -->
+    <div class="col-md-4">
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-arrow-right-circle me-2 text-primary"></i>Actions</span>
+            </div>
+            <div class="p-4">
+                {% if allowed_next %}
+                <p class="text-muted small mb-3">Move this quotation to:</p>
+                <div class="d-flex flex-column gap-2">
+                    {% for next_val, next_label in allowed_next %}
+                    <form method="post" action="{% url 'sales:quotation_transition' quotation.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="{{ next_val }}">
+                        <button type="submit"
+                            class="btn w-100 {% if next_val == 'rejected' or next_val == 'expired' %}btn-outline-danger{% elif next_val == 'accepted' %}btn-success{% else %}btn-outline-primary{% endif %}">
+                            <i class="bi bi-arrow-right me-1"></i>Mark as {{ next_label }}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small">
+                    {% if quotation.status == 'accepted' %}<i class="bi bi-check-circle text-success me-1"></i>Accepted.
+                    {% elif quotation.status == 'rejected' %}<i class="bi bi-x-circle text-danger me-1"></i>Rejected.
+                    {% elif quotation.status == 'expired' %}<i class="bi bi-clock text-warning me-1"></i>Expired.
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

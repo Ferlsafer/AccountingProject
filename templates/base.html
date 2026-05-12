@@ -77,6 +77,9 @@
             <a href="{% url 'sales:job_order_list' %}" class="sidebar-link {% block nav_sales_job_orders_active %}{% endblock %}">
                 <i class="bi bi-clipboard2-check"></i> Job Orders
             </a>
+            <a href="{% url 'sales:quotation_list' %}" class="sidebar-link {% block nav_sales_quotations_active %}{% endblock %}">
+                <i class="bi bi-file-earmark-text"></i> Quotations
+            </a>
             {% endif %}
 
             {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}

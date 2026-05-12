@@ -57,3 +57,60 @@ class JobOrder(models.Model):
             from sales.utils import generate_reference
             self.reference = generate_reference('JOB')
         super().save(*args, **kwargs)
+
+
+class Quotation(models.Model):
+    STATUS_CHOICES = [
+        ('draft',    'Draft'),
+        ('sent',     'Sent'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('expired',  'Expired'),
+    ]
+    reference = models.CharField(max_length=30, unique=True)
+    date = models.DateField()
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='quotations')
+    job_order = models.ForeignKey(JobOrder, on_delete=models.SET_NULL, null=True, blank=True, related_name='quotations')
+    valid_until = models.DateField()
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
+    vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    vat_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='quotations')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-id']
+
+    def __str__(self):
+        return f"{self.reference} — {self.customer}"
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            from sales.utils import generate_reference
+            self.reference = generate_reference('QUO')
+        super().save(*args, **kwargs)
+
+    @property
+    def subtotal(self):
+        from decimal import Decimal
+        return sum((line.amount for line in self.lines.all()), Decimal('0'))
+
+    @property
+    def total(self):
+        return self.subtotal + self.vat_amount
+
+
+class QuotationLine(models.Model):
+    quotation = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name='lines')
+    description = models.CharField(max_length=255)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=15, decimal_places=2)
+    vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+
+    @property
+    def amount(self):
+        return self.quantity * self.unit_price
+
+    def __str__(self):
+        return f"{self.description} x {self.quantity} @ {self.unit_price}"

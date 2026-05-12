@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ quotation.reference }} — Print{% endblock %}
+{% block page_title %}Print Quotation{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    #sidebar, #main-content > .topbar, .no-print { display: none !important; }
+    #main-content { margin: 0 !important; padding: 0 !important; }
+    body { background: white !important; }
+    .quo-doc { border: none !important; box-shadow: none !important; max-width: 100% !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+    <span class="text-muted small">Preview — use Print button or Ctrl+P</span>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-primary btn-sm">
+            <i class="bi bi-printer me-1"></i>Print
+        </button>
+        <a href="{% url 'sales:quotation_detail' quotation.pk %}" class="btn btn-outline-secondary btn-sm">Back</a>
+    </div>
+</div>
+
+<div class="quo-doc content-card p-5 mx-auto" style="max-width:800px;">
+    <!-- Company header -->
+    <div class="d-flex justify-content-between align-items-start mb-5">
+        <div>
+            {% if business %}
+            <h4 class="fw-bold mb-1">{{ business.name }}</h4>
+            {% if business.address %}<div class="text-muted small">{{ business.address }}</div>{% endif %}
+            {% if business.phone %}<div class="text-muted small">Tel: {{ business.phone }}</div>{% endif %}
+            {% if business.email %}<div class="text-muted small">{{ business.email }}</div>{% endif %}
+            {% if business.tin %}<div class="text-muted small">TIN: {{ business.tin }}</div>{% endif %}
+            {% endif %}
+        </div>
+        <div class="text-end">
+            <h3 class="fw-bold text-primary mb-1">QUOTATION</h3>
+            <div class="fw-semibold">{{ quotation.reference }}</div>
+            <div class="text-muted small">Date: {{ quotation.date|date:"d M Y" }}</div>
+            <div class="text-muted small">Valid Until: {{ quotation.valid_until|date:"d M Y" }}</div>
+        </div>
+    </div>
+
+    <!-- Bill to -->
+    <div class="mb-4">
+        <div class="text-muted small text-uppercase fw-semibold mb-1">Bill To</div>
+        <div class="fw-semibold">{{ quotation.customer.name }}</div>
+        {% if quotation.customer.address %}<div class="text-muted small">{{ quotation.customer.address }}</div>{% endif %}
+        {% if quotation.customer.phone %}<div class="text-muted small">Tel: {{ quotation.customer.phone }}</div>{% endif %}
+        {% if quotation.customer.tin %}<div class="text-muted small">TIN: {{ quotation.customer.tin }}</div>{% endif %}
+    </div>
+
+    <!-- Line items -->
+    <table class="table table-bordered mb-4" style="font-size:0.92rem;">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Description</th>
+                <th class="text-end" style="width:80px">Qty</th>
+                <th class="text-end" style="width:130px">Unit Price</th>
+                <th class="text-end" style="width:130px">Amount (TZS)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for line in quotation.lines.all %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ line.description }}</td>
+            <td class="text-end">{{ line.quantity|floatformat:2 }}</td>
+            <td class="text-end">{{ line.unit_price|floatformat:0 }}</td>
+            <td class="text-end fw-semibold">{{ line.amount|floatformat:0 }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="fw-semibold table-light">
+                <td colspan="4" class="text-end">Subtotal</td>
+                <td class="text-end">{{ quotation.subtotal|floatformat:0 }}</td>
+            </tr>
+            <tr class="fw-bold">
+                <td colspan="4" class="text-end">TOTAL (TZS)</td>
+                <td class="text-end fs-6">{{ quotation.total|floatformat:0 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    {% if quotation.notes %}
+    <div class="mb-4">
+        <div class="text-muted small text-uppercase fw-semibold mb-1">Notes</div>
+        <div class="small">{{ quotation.notes }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="row mt-5 pt-4 border-top">
+        <div class="col-6">
+            <div class="text-muted small mb-4">Authorised Signature</div>
+            <div style="border-top:1px solid #999;width:200px;"></div>
+            {% if business %}<div class="small mt-1">{{ business.name }}</div>{% endif %}
+        </div>
+        <div class="col-6 text-end">
+            <div class="text-muted small">This quotation is valid until <strong>{{ quotation.valid_until|date:"d M Y" }}</strong>.</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
