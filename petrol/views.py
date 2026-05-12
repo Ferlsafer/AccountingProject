@@ -196,7 +196,8 @@ def purchase_approve(request, pk):
             purchase.reviewed_at = timezone.now()
             purchase.save()
             purchase.tank.current_stock += purchase.litres
-            purchase.tank.save(update_fields=['current_stock'])
+            purchase.tank.last_purchase_price = purchase.unit_price
+            purchase.tank.save(update_fields=['current_stock', 'last_purchase_price'])
             purchase.post_to_ledger(request.user)
         messages.success(request, f"Purchase approved and posted to ledger — {purchase.litres}L from {purchase.supplier}.")
         return redirect('petrol:purchase_list')

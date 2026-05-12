@@ -20,6 +20,7 @@ class Tank(models.Model):
     capacity = models.DecimalField(max_digits=10, decimal_places=2, help_text='Litres')
     current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
     selling_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), help_text='Current selling price per litre (set by management)')
+    last_purchase_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Cost per litre from last approved purchase (auto-updated)')
     is_active = models.BooleanField(default=True)
 
     class Meta:
