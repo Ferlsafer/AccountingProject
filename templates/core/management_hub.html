@@ -5,151 +5,110 @@
 {% block nav_management_active %}active{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h5 class="fw-bold mb-1">Management</h5>
-        <span class="text-muted small"><i class="bi bi-building-gear me-1"></i>{{ business.name }} — system administration</span>
-    </div>
+
+<!-- Header banner -->
+<div class="mgmt-hero mb-5">
+    <div class="mgmt-hero-icon"><i class="bi bi-building-gear"></i></div>
+    <h4 class="mgmt-hero-title">System Management</h4>
+    <p class="mgmt-hero-sub">{{ business.name }}</p>
 </div>
 
 <!-- People -->
-<div class="small fw-semibold text-uppercase text-muted mb-2 ps-1" style="letter-spacing:.06em">People</div>
-<div class="row g-3 mb-4">
+<div class="mgmt-section-label">People</div>
+<div class="row g-4 justify-content-center mb-5">
 
     <div class="col-sm-6 col-lg-4">
         <a href="{% url 'core:user_list' %}" class="text-decoration-none">
-            <div class="content-card p-4 h-100 management-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="stat-icon icon-blue"><i class="bi bi-person-gear"></i></div>
-                    <div>
-                        <div class="fw-bold">User Accounts</div>
-                        <div class="text-muted small">System login &amp; roles</div>
-                    </div>
+            <div class="mgmt-card">
+                <div class="mgmt-card-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">
+                    <i class="bi bi-person-gear"></i>
                 </div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="fs-3 fw-bold text-primary">{{ user_count }}</span>
-                    <span class="text-muted small">active user{{ user_count|pluralize }}</span>
-                </div>
-                <div class="mt-3 text-primary small fw-semibold">
-                    Manage users <i class="bi bi-arrow-right ms-1"></i>
-                </div>
+                <div class="mgmt-card-count">{{ user_count }}</div>
+                <div class="mgmt-card-title">User Accounts</div>
+                <div class="mgmt-card-sub">System logins &amp; roles</div>
+                <div class="mgmt-card-cta">Manage <i class="bi bi-arrow-right"></i></div>
             </div>
         </a>
     </div>
 
     <div class="col-sm-6 col-lg-4">
         <a href="{% url 'core:employee_list' %}" class="text-decoration-none">
-            <div class="content-card p-4 h-100 management-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="stat-icon icon-teal"><i class="bi bi-id-card"></i></div>
-                    <div>
-                        <div class="fw-bold">Employees</div>
-                        <div class="text-muted small">Staff records &amp; salaries</div>
-                    </div>
+            <div class="mgmt-card">
+                <div class="mgmt-card-icon" style="background:linear-gradient(135deg,#14b8a6,#0f766e)">
+                    <i class="bi bi-id-card"></i>
                 </div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="fs-3 fw-bold text-primary">{{ employee_count }}</span>
-                    <span class="text-muted small">active employee{{ employee_count|pluralize }}</span>
-                </div>
-                <div class="mt-3 text-primary small fw-semibold">
-                    Manage employees <i class="bi bi-arrow-right ms-1"></i>
-                </div>
+                <div class="mgmt-card-count">{{ employee_count }}</div>
+                <div class="mgmt-card-title">Employees</div>
+                <div class="mgmt-card-sub">Staff records &amp; salaries</div>
+                <div class="mgmt-card-cta">Manage <i class="bi bi-arrow-right"></i></div>
             </div>
         </a>
     </div>
 
 </div>
 
-<!-- Cargo -->
-<div class="small fw-semibold text-uppercase text-muted mb-2 ps-1" style="letter-spacing:.06em">Cargo Fleet</div>
-<div class="row g-3 mb-4">
+<!-- Cargo Fleet -->
+<div class="mgmt-section-label">Cargo Fleet</div>
+<div class="row g-4 justify-content-center mb-5">
 
     <div class="col-sm-6 col-lg-4">
         <a href="{% url 'cargo:vehicle_list' %}" class="text-decoration-none">
-            <div class="content-card p-4 h-100 management-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="stat-icon icon-blue"><i class="bi bi-truck"></i></div>
-                    <div>
-                        <div class="fw-bold">Vehicles</div>
-                        <div class="text-muted small">Trucks &amp; fleet register</div>
-                    </div>
+            <div class="mgmt-card">
+                <div class="mgmt-card-icon" style="background:linear-gradient(135deg,#6366f1,#4338ca)">
+                    <i class="bi bi-truck"></i>
                 </div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="fs-3 fw-bold text-primary">{{ vehicle_count }}</span>
-                    <span class="text-muted small">active vehicle{{ vehicle_count|pluralize }}</span>
-                </div>
-                <div class="mt-3 text-primary small fw-semibold">
-                    Manage vehicles <i class="bi bi-arrow-right ms-1"></i>
-                </div>
+                <div class="mgmt-card-count">{{ vehicle_count }}</div>
+                <div class="mgmt-card-title">Vehicles</div>
+                <div class="mgmt-card-sub">Trucks &amp; fleet register</div>
+                <div class="mgmt-card-cta">Manage <i class="bi bi-arrow-right"></i></div>
             </div>
         </a>
     </div>
 
     <div class="col-sm-6 col-lg-4">
         <a href="{% url 'cargo:driver_list' %}" class="text-decoration-none">
-            <div class="content-card p-4 h-100 management-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="stat-icon icon-amber"><i class="bi bi-person-badge"></i></div>
-                    <div>
-                        <div class="fw-bold">Drivers</div>
-                        <div class="text-muted small">Licence numbers &amp; contacts</div>
-                    </div>
+            <div class="mgmt-card">
+                <div class="mgmt-card-icon" style="background:linear-gradient(135deg,#f59e0b,#b45309)">
+                    <i class="bi bi-person-badge"></i>
                 </div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="fs-3 fw-bold text-primary">{{ driver_count }}</span>
-                    <span class="text-muted small">active driver{{ driver_count|pluralize }}</span>
-                </div>
-                <div class="mt-3 text-primary small fw-semibold">
-                    Manage drivers <i class="bi bi-arrow-right ms-1"></i>
-                </div>
+                <div class="mgmt-card-count">{{ driver_count }}</div>
+                <div class="mgmt-card-title">Drivers</div>
+                <div class="mgmt-card-sub">Licences &amp; contacts</div>
+                <div class="mgmt-card-cta">Manage <i class="bi bi-arrow-right"></i></div>
             </div>
         </a>
     </div>
 
 </div>
 
-<!-- Petrol -->
-<div class="small fw-semibold text-uppercase text-muted mb-2 ps-1" style="letter-spacing:.06em">Petrol Station</div>
-<div class="row g-3 mb-4">
+<!-- Petrol Station -->
+<div class="mgmt-section-label">Petrol Station</div>
+<div class="row g-4 justify-content-center mb-5">
 
     <div class="col-sm-6 col-lg-4">
         <a href="{% url 'petrol:tank_list' %}" class="text-decoration-none">
-            <div class="content-card p-4 h-100 management-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="stat-icon icon-green"><i class="bi bi-fuel-pump"></i></div>
-                    <div>
-                        <div class="fw-bold">Fuel Tanks</div>
-                        <div class="text-muted small">Tank capacity &amp; stock</div>
-                    </div>
+            <div class="mgmt-card">
+                <div class="mgmt-card-icon" style="background:linear-gradient(135deg,#22c55e,#15803d)">
+                    <i class="bi bi-fuel-pump"></i>
                 </div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="fs-3 fw-bold text-primary">{{ tank_count }}</span>
-                    <span class="text-muted small">active tank{{ tank_count|pluralize }}</span>
-                </div>
-                <div class="mt-3 text-primary small fw-semibold">
-                    Manage tanks <i class="bi bi-arrow-right ms-1"></i>
-                </div>
+                <div class="mgmt-card-count">{{ tank_count }}</div>
+                <div class="mgmt-card-title">Fuel Tanks</div>
+                <div class="mgmt-card-sub">Capacity &amp; stock levels</div>
+                <div class="mgmt-card-cta">Manage <i class="bi bi-arrow-right"></i></div>
             </div>
         </a>
     </div>
 
     <div class="col-sm-6 col-lg-4">
         <a href="{% url 'petrol:supplier_list' %}" class="text-decoration-none">
-            <div class="content-card p-4 h-100 management-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="stat-icon icon-purple"><i class="bi bi-building"></i></div>
-                    <div>
-                        <div class="fw-bold">Fuel Suppliers</div>
-                        <div class="text-muted small">Supplier contacts &amp; info</div>
-                    </div>
+            <div class="mgmt-card">
+                <div class="mgmt-card-icon" style="background:linear-gradient(135deg,#a855f7,#7e22ce)">
+                    <i class="bi bi-building"></i>
                 </div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="fs-3 fw-bold text-primary">{{ supplier_count }}</span>
-                    <span class="text-muted small">supplier{{ supplier_count|pluralize }}</span>
-                </div>
-                <div class="mt-3 text-primary small fw-semibold">
-                    Manage suppliers <i class="bi bi-arrow-right ms-1"></i>
-                </div>
+                <div class="mgmt-card-count">{{ supplier_count }}</div>
+                <div class="mgmt-card-title">Fuel Suppliers</div>
+                <div class="mgmt-card-sub">Supplier contacts &amp; info</div>
+                <div class="mgmt-card-cta">Manage <i class="bi bi-arrow-right"></i></div>
             </div>
         </a>
     </div>
@@ -157,49 +116,39 @@
 </div>
 
 <!-- Finance -->
-<div class="small fw-semibold text-uppercase text-muted mb-2 ps-1" style="letter-spacing:.06em">Finance</div>
-<div class="row g-3 mb-4">
+<div class="mgmt-section-label">Finance</div>
+<div class="row g-4 justify-content-center mb-5">
 
     <div class="col-sm-6 col-lg-4">
         <a href="{% url 'core:account_list' %}" class="text-decoration-none">
-            <div class="content-card p-4 h-100 management-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="stat-icon icon-red"><i class="bi bi-list-columns"></i></div>
-                    <div>
-                        <div class="fw-bold">Chart of Accounts</div>
-                        <div class="text-muted small">Ledger accounts &amp; codes</div>
-                    </div>
+            <div class="mgmt-card">
+                <div class="mgmt-card-icon" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
+                    <i class="bi bi-list-columns"></i>
                 </div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="fs-3 fw-bold text-primary">{{ account_count }}</span>
-                    <span class="text-muted small">active account{{ account_count|pluralize }}</span>
-                </div>
-                <div class="mt-3 text-primary small fw-semibold">
-                    Manage accounts <i class="bi bi-arrow-right ms-1"></i>
-                </div>
+                <div class="mgmt-card-count">{{ account_count }}</div>
+                <div class="mgmt-card-title">Chart of Accounts</div>
+                <div class="mgmt-card-sub">Ledger accounts &amp; codes</div>
+                <div class="mgmt-card-cta">Manage <i class="bi bi-arrow-right"></i></div>
             </div>
         </a>
     </div>
 
     <div class="col-sm-6 col-lg-4">
         <a href="{% url 'core:business_settings' %}" class="text-decoration-none">
-            <div class="content-card p-4 h-100 management-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="stat-icon icon-gray"><i class="bi bi-building-gear"></i></div>
-                    <div>
-                        <div class="fw-bold">Business Settings</div>
-                        <div class="text-muted small">Name, TIN, currency</div>
-                    </div>
+            <div class="mgmt-card">
+                <div class="mgmt-card-icon" style="background:linear-gradient(135deg,#64748b,#334155)">
+                    <i class="bi bi-sliders"></i>
                 </div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="fw-bold text-truncate" style="max-width:160px">{{ business.name }}</span>
+                <div class="mgmt-card-count" style="font-size:1rem;font-weight:600;color:#1e293b;margin-bottom:4px">
+                    {{ business.name|truncatechars:20 }}
                 </div>
-                <div class="mt-3 text-primary small fw-semibold">
-                    Edit settings <i class="bi bi-arrow-right ms-1"></i>
-                </div>
+                <div class="mgmt-card-title">Business Settings</div>
+                <div class="mgmt-card-sub">Name, TIN &amp; currency</div>
+                <div class="mgmt-card-cta">Edit settings <i class="bi bi-arrow-right"></i></div>
             </div>
         </a>
     </div>
 
 </div>
+
 {% endblock %}
