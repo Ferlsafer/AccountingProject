@@ -1,10 +1,18 @@
 from datetime import date, timedelta
 from decimal import Decimal
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Sum, Q
+
+
+def _is_finance(user):
+    return user.is_staff or (
+        hasattr(user, 'profile') and user.profile.role in ('admin', 'accountant')
+    )
+
+finance_required = user_passes_test(_is_finance, login_url='/accounts/login/')
 
 from core.models import Business, Account, JournalEntry, JournalLine, SalaryPayment, Employee, BankReconciliation
 from petrol.models import DailyFuelSale, CreditSale, CreditPayment, PetrolExpense, FuelType, Tank, CreditCustomer, FuelPurchase, FuelSupplier
@@ -122,7 +130,7 @@ def dashboard(request):
     return render(request, 'reports/dashboard.html', context)
 
 
-@login_required
+@finance_required
 def journal_ledger(request):
     today = date.today()
     date_from = request.GET.get('date_from') or today.replace(day=1).isoformat()
@@ -263,7 +271,7 @@ def trip_report(request):
 
 # ── Expenses by Category ──────────────────────────────────────────────────────
 
-@login_required
+@finance_required
 def expense_report(request):
     date_from, date_to = _dr(request)
 
@@ -301,7 +309,7 @@ def expense_report(request):
 
 # ── Income Statement ──────────────────────────────────────────────────────────
 
-@login_required
+@finance_required
 def income_statement(request):
     date_from, date_to = _dr(request)
 
@@ -350,7 +358,7 @@ def income_statement(request):
 
 # ── Trial Balance ─────────────────────────────────────────────────────────────
 
-@login_required
+@finance_required
 def trial_balance(request):
     today = date.today()
     as_of = request.GET.get('as_of') or today.isoformat()
@@ -387,7 +395,7 @@ def trial_balance(request):
 
 # ── Balance Sheet ─────────────────────────────────────────────────────────────
 
-@login_required
+@finance_required
 def balance_sheet(request):
     today = date.today()
     as_at = request.GET.get('as_at') or today.isoformat()
@@ -437,7 +445,7 @@ def balance_sheet(request):
 
 # ── AR Aging ──────────────────────────────────────────────────────────────────
 
-@login_required
+@finance_required
 def ar_aging(request):
     today = date.today()
     business = Business.get_solo()
@@ -516,7 +524,7 @@ def ar_aging(request):
 
 # ── Supplier AP ───────────────────────────────────────────────────────────────
 
-@login_required
+@finance_required
 def supplier_ap(request):
     today = date.today()
     business = Business.get_solo()
@@ -557,7 +565,7 @@ def supplier_ap(request):
 
 # ── Cash Position ─────────────────────────────────────────────────────────────
 
-@login_required
+@finance_required
 def cash_position(request):
     today = date.today()
     business = Business.get_solo()
@@ -635,7 +643,7 @@ def cash_position(request):
 
 # ── Bank Reconciliation ───────────────────────────────────────────────────────
 
-@login_required
+@finance_required
 def reconciliation_list(request):
     # Only cash/bank accounts are reconcilable (asset accounts starting with 10)
     cash_accounts = Account.objects.filter(type='asset', code__startswith='10', is_active=True)
@@ -647,7 +655,7 @@ def reconciliation_list(request):
     })
 
 
-@login_required
+@finance_required
 def reconciliation_create(request):
     if request.method != 'POST':
         return redirect('reports:reconciliation_list')
@@ -671,7 +679,7 @@ def reconciliation_create(request):
     return redirect('reports:reconciliation_detail', pk=recon.pk)
 
 
-@login_required
+@finance_required
 def reconciliation_detail(request, pk):
     recon = get_object_or_404(BankReconciliation, pk=pk)
 
@@ -688,27 +696,36 @@ def reconciliation_detail(request, pk):
     ).select_related('entry').order_by('entry__date', 'entry__id')
 
     if request.method == 'POST' and not recon.is_locked:
-        action = request.POST.get('action')
+        from django.db import transaction as db_transaction
+        action     = request.POST.get('action')
         ticked_ids = set(int(x) for x in request.POST.getlist('cleared'))
+        all_ids    = {line.pk for line in lines}
+        now        = timezone.now()
 
-        now = timezone.now()
-        for line in lines:
-            if line.pk in ticked_ids:
-                line.is_reconciled = True
-                line.reconciled_at = now
-                line.reconciled_by = request.user
-                line.reconciliation = recon
-            else:
-                line.is_reconciled = False
-                line.reconciled_at = None
-                line.reconciled_by = None
-                line.reconciliation = None
-            line.save(update_fields=['is_reconciled', 'reconciled_at', 'reconciled_by', 'reconciliation'])
+        with db_transaction.atomic():
+            # Clear selected lines — two bulk UPDATEs instead of N individual saves
+            if ticked_ids:
+                JournalLine.objects.filter(pk__in=ticked_ids & all_ids).update(
+                    is_reconciled=True,
+                    reconciled_at=now,
+                    reconciled_by=request.user,
+                    reconciliation=recon,
+                )
+            # Unclear lines that were unticked (only those previously tied to this recon)
+            JournalLine.objects.filter(
+                pk__in=(all_ids - ticked_ids), reconciliation=recon
+            ).update(
+                is_reconciled=False,
+                reconciled_at=None,
+                reconciled_by=None,
+                reconciliation=None,
+            )
+            if action == 'lock':
+                recon.is_locked = True
+                recon.locked_at = now
+                recon.save(update_fields=['is_locked', 'locked_at'])
 
         if action == 'lock':
-            recon.is_locked = True
-            recon.locked_at = now
-            recon.save(update_fields=['is_locked', 'locked_at'])
             messages.success(request, 'Reconciliation locked and finalised.')
             return redirect('reports:reconciliation_list')
 
@@ -746,7 +763,7 @@ def reconciliation_detail(request, pk):
 
 # ── VAT Return ────────────────────────────────────────────────────────────────
 
-@login_required
+@finance_required
 def vat_return(request):
     date_from, date_to = _dr(request)
 

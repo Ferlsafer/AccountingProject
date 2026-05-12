@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.db.models import Sum
 from core.models import Account, JournalEntry, JournalLine
 
+VAT_FRACTION = Decimal('18') / Decimal('118')
+
 
 class Vehicle(models.Model):
     plate_number = models.CharField(max_length=20, unique=True)
@@ -200,7 +202,6 @@ class Invoice(models.Model):
 
     def post_to_ledger(self, user):
         self._reverse_ledger_entry()
-        VAT_FRACTION = Decimal('18') / Decimal('118')
         cash_acct = Account.objects.get(code=self.PAYMENT_ACCOUNT_MAP[self.payment_method])
         rev_acct  = Account.objects.get(code='4040')
         vat_acct  = Account.objects.get(code='2030')

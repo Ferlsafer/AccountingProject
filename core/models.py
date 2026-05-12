@@ -85,6 +85,10 @@ class JournalEntry(models.Model):
     class Meta:
         verbose_name_plural = 'Journal entries'
         ordering = ['-date', '-created_at']
+        indexes = [
+            models.Index(fields=['date']),
+            models.Index(fields=['source_type', 'source_id']),
+        ]
 
     @property
     def total_debit(self):
@@ -118,6 +122,9 @@ class JournalLine(models.Model):
         'BankReconciliation', null=True, blank=True,
         on_delete=models.SET_NULL, related_name='cleared_lines'
     )
+
+    class Meta:
+        indexes = [models.Index(fields=['is_reconciled'])]
 
     def __str__(self):
         return f"{self.account} | Dr {self.debit} Cr {self.credit}"

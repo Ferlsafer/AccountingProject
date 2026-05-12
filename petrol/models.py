@@ -3,8 +3,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from core.models import Account, JournalEntry, JournalLine
 
-FUEL_REVENUE_MAP  = {'Petrol': '4010', 'Diesel': '4020', 'Kerosene': '4030'}
+FUEL_REVENUE_MAP   = {'Petrol': '4010', 'Diesel': '4020', 'Kerosene': '4030'}
 FUEL_INVENTORY_MAP = {'Petrol': '1210', 'Diesel': '1220', 'Kerosene': '1230'}
+VAT_FRACTION       = Decimal('18') / Decimal('118')  # extract VAT from inclusive price
 
 
 class FuelType(models.Model):
@@ -63,7 +64,7 @@ class DailyFuelSale(models.Model):
 
     def post_to_ledger(self, user):
         self._reverse_ledger_entry()
-        VAT_FRACTION = Decimal('18') / Decimal('118')
+
         fuel_name = self.tank.fuel_type.name
         cash_acct = Account.objects.get(code='1010')
         rev_acct  = Account.objects.get(code=FUEL_REVENUE_MAP.get(fuel_name, '4050'))
@@ -141,6 +142,10 @@ class FuelPurchase(models.Model):
 
     class Meta:
         ordering = ['-date', '-created_at']
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['date']),
+        ]
 
     def __str__(self):
         return f"{self.date} — {self.supplier} — {self.litres}L"
@@ -150,7 +155,6 @@ class FuelPurchase(models.Model):
 
     def post_to_ledger(self, user):
         self._reverse_ledger_entry()
-        VAT_FRACTION = Decimal('18') / Decimal('118')
         fuel_name   = self.tank.fuel_type.name
         inv_acct    = Account.objects.get(code=FUEL_INVENTORY_MAP.get(fuel_name, '1200'))
         vat_acct    = Account.objects.get(code='1140')
@@ -209,7 +213,6 @@ class CreditSale(models.Model):
 
     def post_to_ledger(self, user):
         self._reverse_ledger_entry()
-        VAT_FRACTION = Decimal('18') / Decimal('118')
         fuel_name = self.tank.fuel_type.name
         recv_acct = Account.objects.get(code='1110')
         rev_acct  = Account.objects.get(code=FUEL_REVENUE_MAP.get(fuel_name, '4050'))
