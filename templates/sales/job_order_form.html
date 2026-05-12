@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block nav_sales_job_orders_active %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="content-card form-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-clipboard2-plus me-2 text-primary"></i>{{ title }}
+                </span>
+                {% if job %}<span class="text-muted small">{{ job.reference }}</span>{% endif %}
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.date.id_for_label }}" class="form-label fw-semibold small">Date <span class="text-danger">*</span></label>
+                            {{ form.date }}
+                            {% if form.date.errors %}<div class="invalid-feedback d-block">{{ form.date.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <label for="{{ form.customer.id_for_label }}" class="form-label fw-semibold small">Customer <span class="text-danger">*</span></label>
+                            {{ form.customer }}
+                            {% if form.customer.errors %}<div class="invalid-feedback d-block">{{ form.customer.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.origin.id_for_label }}" class="form-label fw-semibold small">Origin <span class="text-danger">*</span></label>
+                            {{ form.origin }}
+                            {% if form.origin.errors %}<div class="invalid-feedback d-block">{{ form.origin.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.destination.id_for_label }}" class="form-label fw-semibold small">Destination <span class="text-danger">*</span></label>
+                            {{ form.destination }}
+                            {% if form.destination.errors %}<div class="invalid-feedback d-block">{{ form.destination.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <label for="{{ form.cargo_description.id_for_label }}" class="form-label fw-semibold small">Cargo Description <span class="text-danger">*</span></label>
+                            {{ form.cargo_description }}
+                            {% if form.cargo_description.errors %}<div class="invalid-feedback d-block">{{ form.cargo_description.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.estimated_weight_tons.id_for_label }}" class="form-label fw-semibold small">Est. Weight (tons)</label>
+                            {{ form.estimated_weight_tons }}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label fw-semibold small">Notes</label>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Save Job Order
+                        </button>
+                        {% if job %}
+                        <a href="{% url 'sales:job_order_detail' job.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        {% else %}
+                        <a href="{% url 'sales:job_order_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

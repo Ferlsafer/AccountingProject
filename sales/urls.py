@@ -10,7 +10,12 @@ urlpatterns = [
     path('customers/<int:pk>/', views.customer_detail, name='customer_detail'),
     path('customers/<int:pk>/edit/', views.customer_edit, name='customer_edit'),
 
-    # Step 7: job orders
+    # Job Orders
+    path('job-orders/',                      views.job_order_list,       name='job_order_list'),
+    path('job-orders/add/',                  views.job_order_create,     name='job_order_create'),
+    path('job-orders/<int:pk>/',             views.job_order_detail,     name='job_order_detail'),
+    path('job-orders/<int:pk>/edit/',        views.job_order_edit,       name='job_order_edit'),
+    path('job-orders/<int:pk>/transition/',  views.job_order_transition, name='job_order_transition'),
     # Step 8: quotations
     # Step 9: delivery notes
     # Step 10: receipts

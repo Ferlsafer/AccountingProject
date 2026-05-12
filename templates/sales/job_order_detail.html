@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.reference }}{% endblock %}
+{% block page_title %}Job Order Detail{% endblock %}
+{% block nav_sales_job_orders_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">{{ job.reference }}</h5>
+        <span class="text-muted small">{{ job.date|date:"d M Y" }} &mdash; {{ job.customer.name }}</span>
+    </div>
+    <div class="d-flex gap-2">
+        {% if job.status != 'completed' and job.status != 'cancelled' %}
+        <a href="{% url 'sales:job_order_edit' job.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        {% endif %}
+        <a href="{% url 'sales:job_order_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Details card -->
+    <div class="col-md-7">
+        <div class="content-card h-100">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-clipboard2 me-2 text-primary"></i>Job Details</span>
+                <span>
+                    {% if job.status == 'draft' %}<span class="badge bg-secondary">Draft</span>
+                    {% elif job.status == 'quoted' %}<span class="badge bg-info text-dark">Quoted</span>
+                    {% elif job.status == 'accepted' %}<span class="badge bg-primary">Accepted</span>
+                    {% elif job.status == 'in_progress' %}<span class="badge bg-warning text-dark">In Progress</span>
+                    {% elif job.status == 'completed' %}<span class="badge bg-success">Completed</span>
+                    {% elif job.status == 'cancelled' %}<span class="badge bg-danger">Cancelled</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted small">Reference</dt>
+                    <dd class="col-sm-8 fw-semibold">{{ job.reference }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Customer</dt>
+                    <dd class="col-sm-8">
+                        <a href="{% url 'sales:customer_detail' job.customer.pk %}">{{ job.customer.name }}</a>
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small">Origin</dt>
+                    <dd class="col-sm-8">{{ job.origin }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Destination</dt>
+                    <dd class="col-sm-8">{{ job.destination }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Cargo</dt>
+                    <dd class="col-sm-8">{{ job.cargo_description }}</dd>
+
+                    {% if job.estimated_weight_tons %}
+                    <dt class="col-sm-4 text-muted small">Est. Weight</dt>
+                    <dd class="col-sm-8">{{ job.estimated_weight_tons }} tons</dd>
+                    {% endif %}
+
+                    {% if job.notes %}
+                    <dt class="col-sm-4 text-muted small">Notes</dt>
+                    <dd class="col-sm-8">{{ job.notes }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-4 text-muted small">Created by</dt>
+                    <dd class="col-sm-8 text-muted">{{ job.created_by.get_full_name|default:job.created_by.username }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Created at</dt>
+                    <dd class="col-sm-8 text-muted small">{{ job.created_at|date:"d M Y H:i" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status transitions card -->
+    <div class="col-md-5">
+        <div class="content-card h-100">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-arrow-right-circle me-2 text-primary"></i>Status Actions</span>
+            </div>
+            <div class="p-4">
+                {% if allowed_next %}
+                <p class="text-muted small mb-3">Move this job order to the next stage:</p>
+                <div class="d-flex flex-column gap-2">
+                    {% for next_val, next_label in allowed_next %}
+                    <form method="post" action="{% url 'sales:job_order_transition' job.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="{{ next_val }}">
+                        <button type="submit"
+                            class="btn w-100 {% if next_val == 'cancelled' %}btn-outline-danger{% elif next_val == 'completed' %}btn-success{% else %}btn-outline-primary{% endif %}">
+                            <i class="bi bi-arrow-right me-1"></i>Mark as {{ next_label }}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small">
+                    {% if job.status == 'completed' %}
+                    <i class="bi bi-check-circle text-success me-1"></i>This job order is complete.
+                    {% elif job.status == 'cancelled' %}
+                    <i class="bi bi-x-circle text-danger me-1"></i>This job order was cancelled.
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

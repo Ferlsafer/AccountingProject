@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -22,3 +23,37 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class JobOrder(models.Model):
+    STATUS_CHOICES = [
+        ('draft',       'Draft'),
+        ('quoted',      'Quoted'),
+        ('accepted',    'Accepted'),
+        ('in_progress', 'In Progress'),
+        ('completed',   'Completed'),
+        ('cancelled',   'Cancelled'),
+    ]
+    reference = models.CharField(max_length=30, unique=True)
+    date = models.DateField()
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='job_orders')
+    origin = models.CharField(max_length=100)
+    destination = models.CharField(max_length=100)
+    cargo_description = models.CharField(max_length=255)
+    estimated_weight_tons = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    notes = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='job_orders')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-id']
+
+    def __str__(self):
+        return f"{self.reference} — {self.customer}"
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            from sales.utils import generate_reference
+            self.reference = generate_reference('JOB')
+        super().save(*args, **kwargs)

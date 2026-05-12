@@ -1,5 +1,5 @@
 from django import forms
-from .models import Customer
+from .models import Customer, JobOrder
 
 
 class CustomerForm(forms.ModelForm):
@@ -15,4 +15,20 @@ class CustomerForm(forms.ModelForm):
             'customer_type': forms.Select(attrs={'class': 'form-select'}),
             'credit_limit': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class JobOrderForm(forms.ModelForm):
+    class Meta:
+        model = JobOrder
+        fields = ['date', 'customer', 'origin', 'destination', 'cargo_description',
+                  'estimated_weight_tons', 'notes']
+        widgets = {
+            'date':                   forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'customer':               forms.Select(attrs={'class': 'form-select'}),
+            'origin':                 forms.TextInput(attrs={'class': 'form-control'}),
+            'destination':            forms.TextInput(attrs={'class': 'form-control'}),
+            'cargo_description':      forms.TextInput(attrs={'class': 'form-control'}),
+            'estimated_weight_tons':  forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'notes':                  forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }

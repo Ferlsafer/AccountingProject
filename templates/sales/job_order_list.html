@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Job Orders{% endblock %}
+{% block page_title %}Job Orders{% endblock %}
+{% block nav_sales_job_orders_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Job Orders</h5>
+        <span class="text-muted small"><i class="bi bi-clipboard2-check me-1"></i>Cargo job orders</span>
+    </div>
+    <a href="{% url 'sales:job_order_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>New Job Order
+    </a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All</option>
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <label class="form-label small fw-semibold">Customer</label>
+            <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Search customer…">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+            <a href="{% url 'sales:job_order_list' %}" class="btn btn-sm btn-outline-secondary ms-1">Clear</a>
+        </div>
+    </div>
+</form>
+
+<!-- Table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-clipboard2-check me-2 text-primary"></i>Job Orders</span>
+        <span class="text-muted small">{{ job_orders|length }} record{{ job_orders|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Route</th>
+                    <th>Cargo</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for job in job_orders %}
+            <tr>
+                <td class="fw-semibold">
+                    <a href="{% url 'sales:job_order_detail' job.pk %}" class="text-decoration-none">{{ job.reference }}</a>
+                </td>
+                <td class="text-muted small">{{ job.date|date:"d M Y" }}</td>
+                <td>{{ job.customer.name }}</td>
+                <td class="text-muted small">{{ job.origin }} → {{ job.destination }}</td>
+                <td class="text-muted small">{{ job.cargo_description|truncatechars:40 }}</td>
+                <td>
+                    {% if job.status == 'draft' %}<span class="badge bg-secondary">Draft</span>
+                    {% elif job.status == 'quoted' %}<span class="badge bg-info text-dark">Quoted</span>
+                    {% elif job.status == 'accepted' %}<span class="badge bg-primary">Accepted</span>
+                    {% elif job.status == 'in_progress' %}<span class="badge bg-warning text-dark">In Progress</span>
+                    {% elif job.status == 'completed' %}<span class="badge bg-success">Completed</span>
+                    {% elif job.status == 'cancelled' %}<span class="badge bg-danger">Cancelled</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <a href="{% url 'sales:job_order_detail' job.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-clipboard2-check" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No job orders in this period.</p>
+                    <a href="{% url 'sales:job_order_create' %}" class="btn btn-sm btn-outline-primary mt-2">Create First Job Order</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
