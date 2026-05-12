@@ -166,9 +166,9 @@ class Command(BaseCommand):
         diesel   = FuelType.objects.create(name='Diesel')
         kerosene = FuelType.objects.create(name='Kerosene')
 
-        tank_p = Tank.objects.create(name='Tank A — Petrol',   fuel_type=petrol,   capacity=_d(20000), current_stock=_d(0))
-        tank_d = Tank.objects.create(name='Tank B — Diesel',   fuel_type=diesel,   capacity=_d(30000), current_stock=_d(0))
-        tank_k = Tank.objects.create(name='Tank C — Kerosene', fuel_type=kerosene, capacity=_d(10000), current_stock=_d(0))
+        tank_p = Tank.objects.create(name='Tank A — Petrol',   fuel_type=petrol,   capacity=_d(20000), current_stock=_d(0), selling_price=_d(3200))
+        tank_d = Tank.objects.create(name='Tank B — Diesel',   fuel_type=diesel,   capacity=_d(30000), current_stock=_d(0), selling_price=_d(3100))
+        tank_k = Tank.objects.create(name='Tank C — Kerosene', fuel_type=kerosene, capacity=_d(10000), current_stock=_d(0), selling_price=_d(2800))
 
         puma = FuelSupplier.objects.create(
             name='Puma Energy Tanzania Ltd',
@@ -206,9 +206,12 @@ class Command(BaseCommand):
                 payment_method=method,
                 invoice_number=f'PI-{day_ago}-{tank.pk}',
                 recorded_by=admin,
+                status='approved',
+                reviewed_by=admin,
             )
             tank.current_stock += litres
-            tank.save(update_fields=['current_stock'])
+            tank.last_purchase_price = unit_price
+            tank.save(update_fields=['current_stock', 'last_purchase_price'])
             fp.post_to_ledger(admin)
 
         # ── Daily cash fuel sales (30 days) ────────────────────────────────────
