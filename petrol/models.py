@@ -63,19 +63,39 @@ class DailyFuelSale(models.Model):
 
     def post_to_ledger(self, user):
         self._reverse_ledger_entry()
+        VAT_FRACTION = Decimal('18') / Decimal('118')
         fuel_name = self.tank.fuel_type.name
         cash_acct = Account.objects.get(code='1010')
         rev_acct  = Account.objects.get(code=FUEL_REVENUE_MAP.get(fuel_name, '4050'))
+        vat_acct  = Account.objects.get(code='2030')
+        cogs_acct = Account.objects.get(code='5050')
+        inv_acct  = Account.objects.get(code=FUEL_INVENTORY_MAP.get(fuel_name, '1200'))
+
+        vat    = (self.total_amount * VAT_FRACTION).quantize(Decimal('0.01'))
+        net_rev = self.total_amount - vat
+
+        # COGS at net purchase cost (ex-VAT)
+        last_price = self.tank.last_purchase_price or Decimal('0')
+        net_cost   = (last_price * Decimal('100') / Decimal('118')).quantize(Decimal('0.01'))
+        cogs       = (self.litres_sold * net_cost).quantize(Decimal('0.01'))
+
         entry = JournalEntry.objects.create(
             date=self.date,
             reference=f"FS-{self.pk}-{self.date.strftime('%Y%m%d')}",
             description=f"Fuel sale — {fuel_name} {self.litres_sold}L @ {self.unit_price}/L",
             source_type='daily_fuel_sale', source_id=self.pk, created_by=user,
         )
-        JournalLine.objects.bulk_create([
+        lines = [
             JournalLine(entry=entry, account=cash_acct, debit=self.total_amount, credit=Decimal('0')),
-            JournalLine(entry=entry, account=rev_acct,  debit=Decimal('0'), credit=self.total_amount),
-        ])
+            JournalLine(entry=entry, account=rev_acct,  debit=Decimal('0'),      credit=net_rev),
+            JournalLine(entry=entry, account=vat_acct,  debit=Decimal('0'),      credit=vat),
+        ]
+        if cogs > 0:
+            lines += [
+                JournalLine(entry=entry, account=cogs_acct, debit=cogs,           credit=Decimal('0')),
+                JournalLine(entry=entry, account=inv_acct,  debit=Decimal('0'),   credit=cogs),
+            ]
+        JournalLine.objects.bulk_create(lines)
 
 
 class FuelPurchase(models.Model):
@@ -130,10 +150,16 @@ class FuelPurchase(models.Model):
 
     def post_to_ledger(self, user):
         self._reverse_ledger_entry()
+        VAT_FRACTION = Decimal('18') / Decimal('118')
         fuel_name   = self.tank.fuel_type.name
         inv_acct    = Account.objects.get(code=FUEL_INVENTORY_MAP.get(fuel_name, '1200'))
+        vat_acct    = Account.objects.get(code='1140')
         credit_code = self.PAYMENT_ACCOUNT_MAP[self.payment_method]
         credit_acct = Account.objects.get(code=credit_code)
+
+        vat     = (self.total_amount * VAT_FRACTION).quantize(Decimal('0.01'))
+        net_inv = self.total_amount - vat
+
         entry = JournalEntry.objects.create(
             date=self.date,
             reference=f"FP-{self.pk}-{self.date.strftime('%Y%m%d')}",
@@ -141,7 +167,8 @@ class FuelPurchase(models.Model):
             source_type='fuel_purchase', source_id=self.pk, created_by=user,
         )
         JournalLine.objects.bulk_create([
-            JournalLine(entry=entry, account=inv_acct,    debit=self.total_amount, credit=Decimal('0')),
+            JournalLine(entry=entry, account=inv_acct,    debit=net_inv,           credit=Decimal('0')),
+            JournalLine(entry=entry, account=vat_acct,    debit=vat,               credit=Decimal('0')),
             JournalLine(entry=entry, account=credit_acct, debit=Decimal('0'),      credit=self.total_amount),
         ])
 
@@ -182,19 +209,38 @@ class CreditSale(models.Model):
 
     def post_to_ledger(self, user):
         self._reverse_ledger_entry()
+        VAT_FRACTION = Decimal('18') / Decimal('118')
         fuel_name = self.tank.fuel_type.name
         recv_acct = Account.objects.get(code='1110')
         rev_acct  = Account.objects.get(code=FUEL_REVENUE_MAP.get(fuel_name, '4050'))
+        vat_acct  = Account.objects.get(code='2030')
+        cogs_acct = Account.objects.get(code='5050')
+        inv_acct  = Account.objects.get(code=FUEL_INVENTORY_MAP.get(fuel_name, '1200'))
+
+        vat     = (self.total_amount * VAT_FRACTION).quantize(Decimal('0.01'))
+        net_rev = self.total_amount - vat
+
+        last_price = self.tank.last_purchase_price or Decimal('0')
+        net_cost   = (last_price * Decimal('100') / Decimal('118')).quantize(Decimal('0.01'))
+        cogs       = (self.litres * net_cost).quantize(Decimal('0.01'))
+
         entry = JournalEntry.objects.create(
             date=self.date,
             reference=f"CS-{self.pk}-{self.date.strftime('%Y%m%d')}",
             description=f"Credit sale — {self.customer} — {fuel_name} {self.litres}L",
             source_type='credit_sale', source_id=self.pk, created_by=user,
         )
-        JournalLine.objects.bulk_create([
+        lines = [
             JournalLine(entry=entry, account=recv_acct, debit=self.total_amount, credit=Decimal('0')),
-            JournalLine(entry=entry, account=rev_acct,  debit=Decimal('0'), credit=self.total_amount),
-        ])
+            JournalLine(entry=entry, account=rev_acct,  debit=Decimal('0'),      credit=net_rev),
+            JournalLine(entry=entry, account=vat_acct,  debit=Decimal('0'),      credit=vat),
+        ]
+        if cogs > 0:
+            lines += [
+                JournalLine(entry=entry, account=cogs_acct, debit=cogs,         credit=Decimal('0')),
+                JournalLine(entry=entry, account=inv_acct,  debit=Decimal('0'), credit=cogs),
+            ]
+        JournalLine.objects.bulk_create(lines)
 
 
 class CreditPayment(models.Model):

@@ -151,6 +151,9 @@
             <a href="{% url 'reports:reconciliation_list' %}" class="sidebar-link {% block nav_reconciliation_active %}{% endblock %}">
                 <i class="bi bi-journal-check"></i> Reconciliation
             </a>
+            <a href="{% url 'reports:vat_return' %}" class="sidebar-link {% block nav_vat_return_active %}{% endblock %}">
+                <i class="bi bi-percent"></i> VAT Return
+            </a>
             {% endif %}
 
             {% with role=user.profile.role %}

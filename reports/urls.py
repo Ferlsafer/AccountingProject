@@ -17,4 +17,5 @@ urlpatterns = [
     path('reconciliation/',              views.reconciliation_list,    name='reconciliation_list'),
     path('reconciliation/new/',          views.reconciliation_create,  name='reconciliation_create'),
     path('reconciliation/<int:pk>/',     views.reconciliation_detail,  name='reconciliation_detail'),
+    path('vat-return/',                  views.vat_return,             name='vat_return'),
 ]

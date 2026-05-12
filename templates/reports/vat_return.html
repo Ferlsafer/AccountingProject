@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}VAT Return{% endblock %}
+{% block page_title %}VAT Return{% endblock %}
+{% block nav_vat_return_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 no-print">
+    <div>
+        <h5 class="fw-bold mb-1">VAT Return</h5>
+        <span class="text-muted small">Output vs input VAT — {{ date_from }} to {{ date_to }}</span>
+    </div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-printer me-1"></i>Print
+    </button>
+</div>
+
+<!-- Period filter -->
+<form method="get" class="content-card p-3 mb-4 no-print">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Apply
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="bi bi-receipt-cutoff"></i></div>
+            <div class="stat-label">Output VAT Collected</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency output_vat %}</div>
+            <div class="stat-sub">From customers</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="bi bi-bag-check"></i></div>
+            <div class="stat-label">Input VAT Recoverable</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency input_vat %}</div>
+            <div class="stat-sub">On fuel purchases</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon {% if net_vat >= 0 %}icon-amber{% else %}icon-teal{% endif %}">
+                <i class="bi bi-bank"></i>
+            </div>
+            <div class="stat-label">Net VAT {% if net_vat >= 0 %}Payable{% else %}Refundable{% endif %}</div>
+            <div class="stat-value {% if net_vat >= 0 %}text-danger{% else %}text-success{% endif %}" style="font-size:1.1rem">
+                {% currency net_vat %}
+            </div>
+            <div class="stat-sub">{% if net_vat >= 0 %}Owed to TRA{% else %}Claimable from TRA{% endif %}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-label">Taxable Turnover</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency taxable_sales %}</div>
+            <div class="stat-sub">Net revenue (ex-VAT)</div>
+        </div>
+    </div>
+</div>
+
+<div class="content-card p-4 mb-4" style="background:linear-gradient(135deg,#1e2d50,#2563eb);border:none;">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="text-white-50 small fw-semibold text-uppercase">VAT Return Summary — {{ date_from }} to {{ date_to }}</div>
+            <div class="text-white fw-bold mt-1" style="font-size:1.6rem">
+                {% if net_vat >= 0 %}Pay TRA{% else %}Claim from TRA{% endif %}
+            </div>
+        </div>
+        <div class="col-auto text-end">
+            <div class="text-white-50 small">Net VAT</div>
+            <div class="fw-bold" style="font-size:2rem;color:{% if net_vat >= 0 %}#f87171{% else %}#4ade80{% endif %}">
+                {% currency net_vat %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Output VAT breakdown -->
+    <div class="col-md-6">
+        <div class="content-card h-100">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-receipt-cutoff me-2 text-danger"></i>Output VAT Collected</span>
+                <span class="fw-bold text-danger">{% currency output_vat %}</span>
+            </div>
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Source</th>
+                        <th class="text-end">VAT Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for src, amt in output_by_source.items %}
+                <tr>
+                    <td class="text-capitalize">
+                        {% if src == 'daily_fuel_sale' %}Cash Fuel Sales
+                        {% elif src == 'credit_sale' %}Credit Fuel Sales
+                        {% elif src == 'invoice_payment' %}Cargo Freight
+                        {% else %}{{ src|title }}{% endif %}
+                    </td>
+                    <td class="text-end fw-semibold">{% currency amt %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2" class="text-muted text-center py-3">No output VAT for this period.</td></tr>
+                {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr class="fw-bold">
+                        <td>Total Output VAT</td>
+                        <td class="text-end text-danger">{% currency output_vat %}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Input VAT breakdown -->
+    <div class="col-md-6">
+        <div class="content-card h-100">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-bag-check me-2 text-success"></i>Input VAT Recoverable</span>
+                <span class="fw-bold text-success">{% currency input_vat %}</span>
+            </div>
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Source</th>
+                        <th class="text-end">VAT Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for row in input_lines %}
+                <tr>
+                    <td class="text-capitalize">
+                        {% if row.entry__source_type == 'fuel_purchase' %}Fuel Purchases from Suppliers
+                        {% else %}{{ row.entry__source_type|title }}{% endif %}
+                    </td>
+                    <td class="text-end fw-semibold">{% if row.total %}{% currency row.total %}{% else %}—{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2" class="text-muted text-center py-3">No input VAT for this period.</td></tr>
+                {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr class="fw-bold">
+                        <td>Total Input VAT</td>
+                        <td class="text-end text-success">{% currency input_vat %}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- TRA Filing Box -->
+<div class="content-card mt-4 p-4">
+    <div class="content-card-header mb-3" style="padding:0 0 12px;border-bottom:1px solid #f1f5f9">
+        <span class="content-card-title"><i class="bi bi-file-earmark-text me-2 text-primary"></i>TRA VAT Return Figures</span>
+        <span class="text-muted small">Use these numbers when filing with TRA</span>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded-3">
+                <div class="small text-muted fw-semibold mb-1">Box 1 — Taxable Sales (ex-VAT)</div>
+                <div class="fw-bold fs-5">{% currency taxable_sales %}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded-3">
+                <div class="small text-muted fw-semibold mb-1">Box 2 — Output VAT</div>
+                <div class="fw-bold fs-5 text-danger">{% currency output_vat %}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded-3">
+                <div class="small text-muted fw-semibold mb-1">Box 3 — Input VAT Claimable</div>
+                <div class="fw-bold fs-5 text-success">{% currency input_vat %}</div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="p-3 rounded-3 {% if net_vat >= 0 %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 border {% if net_vat >= 0 %}border-danger{% else %}border-success{% endif %}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small fw-semibold {% if net_vat >= 0 %}text-danger{% else %}text-success{% endif %}">
+                            Box 4 — Net VAT {% if net_vat >= 0 %}Payable to TRA{% else %}Refund due from TRA{% endif %}
+                        </div>
+                        <div class="text-muted small">Output VAT − Input VAT</div>
+                    </div>
+                    <div class="fw-bold fs-4 {% if net_vat >= 0 %}text-danger{% else %}text-success{% endif %}">
+                        {% currency net_vat %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -305,34 +305,46 @@ def expense_report(request):
 def income_statement(request):
     date_from, date_to = _dr(request)
 
-    revenue_lines = (JournalLine.objects
+    revenue_lines = list(JournalLine.objects
                      .filter(account__code__startswith='4',
                              entry__date__gte=date_from, entry__date__lte=date_to)
                      .values('account__code', 'account__name')
                      .annotate(total=Sum('credit'))
                      .order_by('account__code'))
 
-    expense_lines = (JournalLine.objects
+    cogs_lines = list(JournalLine.objects
+                     .filter(account__code='5050',
+                             entry__date__gte=date_from, entry__date__lte=date_to)
+                     .values('account__code', 'account__name')
+                     .annotate(total=Sum('debit')))
+
+    opex_lines = list(JournalLine.objects
                      .filter(account__code__startswith='5',
                              entry__date__gte=date_from, entry__date__lte=date_to)
+                     .exclude(account__code='5050')
                      .values('account__code', 'account__name')
                      .annotate(total=Sum('debit'))
                      .order_by('account__code'))
 
     total_revenue  = sum(r['total'] for r in revenue_lines)
-    total_expenses = sum(e['total'] for e in expense_lines)
-    net_profit     = total_revenue - total_expenses
+    total_cogs     = sum(c['total'] for c in cogs_lines)
+    gross_profit   = total_revenue - total_cogs
+    total_opex     = sum(e['total'] for e in opex_lines)
+    net_profit     = gross_profit - total_opex
     business       = Business.get_solo()
 
     return render(request, 'reports/income_statement.html', {
         'revenue_lines': revenue_lines,
-        'expense_lines': expense_lines,
+        'cogs_lines':    cogs_lines,
+        'opex_lines':    opex_lines,
         'total_revenue': total_revenue,
-        'total_expenses': total_expenses,
-        'net_profit': net_profit,
-        'business': business,
-        'date_from': date_from,
-        'date_to': date_to,
+        'total_cogs':    total_cogs,
+        'gross_profit':  gross_profit,
+        'total_opex':    total_opex,
+        'net_profit':    net_profit,
+        'business':      business,
+        'date_from':     date_from,
+        'date_to':       date_to,
     })
 
 
@@ -729,4 +741,53 @@ def reconciliation_detail(request, pk):
         'cleared_balance': cleared_total,
         'difference': difference,
         'today': date.today(),
+    })
+
+
+# ── VAT Return ────────────────────────────────────────────────────────────────
+
+@login_required
+def vat_return(request):
+    date_from, date_to = _dr(request)
+
+    # Output VAT: credits posted to account 2030 (collected from customers)
+    output_lines = list(JournalLine.objects
+        .filter(account__code='2030', entry__date__gte=date_from, entry__date__lte=date_to)
+        .values('entry__source_type')
+        .annotate(total=Sum('credit'))
+        .order_by('entry__source_type'))
+
+    output_vat = sum(r['total'] for r in output_lines if r['total'])
+
+    # Breakdown by source
+    output_by_source = {r['entry__source_type']: r['total'] for r in output_lines if r['total']}
+
+    # Input VAT: debits posted to account 1140 (paid on purchases, reclaimable)
+    input_lines = list(JournalLine.objects
+        .filter(account__code='1140', entry__date__gte=date_from, entry__date__lte=date_to)
+        .values('entry__source_type')
+        .annotate(total=Sum('debit'))
+        .order_by('entry__source_type'))
+
+    input_vat = sum(r['total'] for r in input_lines if r['total'])
+
+    net_vat = output_vat - input_vat  # positive = payable to TRA
+
+    # Taxable turnover = net revenue for the period (revenue accounts)
+    taxable_sales = JournalLine.objects.filter(
+        account__code__startswith='4',
+        entry__date__gte=date_from, entry__date__lte=date_to,
+    ).aggregate(t=Sum('credit'))['t'] or Decimal('0')
+
+    return render(request, 'reports/vat_return.html', {
+        'date_from':       date_from,
+        'date_to':         date_to,
+        'output_vat':      output_vat,
+        'output_by_source': output_by_source,
+        'input_vat':       input_vat,
+        'input_lines':     input_lines,
+        'net_vat':         net_vat,
+        'taxable_sales':   taxable_sales,
+        'today':           date.today(),
+        'business':        Business.get_solo(),
     })

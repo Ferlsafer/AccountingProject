@@ -200,8 +200,14 @@ class Invoice(models.Model):
 
     def post_to_ledger(self, user):
         self._reverse_ledger_entry()
+        VAT_FRACTION = Decimal('18') / Decimal('118')
         cash_acct = Account.objects.get(code=self.PAYMENT_ACCOUNT_MAP[self.payment_method])
         rev_acct  = Account.objects.get(code='4040')
+        vat_acct  = Account.objects.get(code='2030')
+
+        vat     = (self.amount * VAT_FRACTION).quantize(Decimal('0.01'))
+        net_rev = self.amount - vat
+
         entry = JournalEntry.objects.create(
             date=self.paid_date,
             reference=f"INVP-{self.pk}-{self.paid_date.strftime('%Y%m%d')}",
@@ -209,6 +215,7 @@ class Invoice(models.Model):
             source_type='invoice_payment', source_id=self.pk, created_by=user,
         )
         JournalLine.objects.bulk_create([
-            JournalLine(entry=entry, account=cash_acct, debit=self.amount,        credit=Decimal('0')),
-            JournalLine(entry=entry, account=rev_acct,  debit=Decimal('0'), credit=self.amount),
+            JournalLine(entry=entry, account=cash_acct, debit=self.amount,  credit=Decimal('0')),
+            JournalLine(entry=entry, account=rev_acct,  debit=Decimal('0'), credit=net_rev),
+            JournalLine(entry=entry, account=vat_acct,  debit=Decimal('0'), credit=vat),
         ])
