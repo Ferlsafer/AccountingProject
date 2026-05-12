@@ -129,27 +129,42 @@
             </a>
             {% endif %}
 
-            {% if user.is_staff %}
+            {% with role=user.profile.role %}
+            {% if user.is_staff or role == 'admin' or role == 'cargo_clerk' or role == 'petrol_clerk' or role == 'accountant' %}
             <div class="sidebar-section-label">Settings</div>
+            {% if user.is_staff or role == 'admin' %}
             <a href="{% url 'core:user_list' %}" class="sidebar-link {% block nav_users_active %}{% endblock %}">
                 <i class="bi bi-person-gear"></i> User Accounts
             </a>
+            {% endif %}
+            {% if user.is_staff or role == 'admin' or role == 'cargo_clerk' %}
             <a href="{% url 'cargo:vehicle_list' %}" class="sidebar-link {% block nav_vehicles_active %}{% endblock %}">
                 <i class="bi bi-truck"></i> Vehicles
             </a>
             <a href="{% url 'cargo:driver_list' %}" class="sidebar-link {% block nav_drivers_active %}{% endblock %}">
                 <i class="bi bi-person-badge"></i> Drivers
             </a>
+            {% endif %}
+            {% if user.is_staff or role == 'admin' or role == 'petrol_clerk' %}
             <a href="{% url 'petrol:tank_list' %}" class="sidebar-link {% block nav_tanks_active %}{% endblock %}">
                 <i class="bi bi-fuel-pump"></i> Fuel Tanks
             </a>
             <a href="{% url 'petrol:supplier_list' %}" class="sidebar-link {% block nav_suppliers_active %}{% endblock %}">
                 <i class="bi bi-building"></i> Fuel Suppliers
             </a>
+            {% endif %}
+            {% if user.is_staff or role == 'admin' or role == 'accountant' %}
+            <a href="{% url 'core:account_list' %}" class="sidebar-link {% block nav_accounts_settings_active %}{% endblock %}">
+                <i class="bi bi-list-columns"></i> Chart of Accounts
+            </a>
+            {% endif %}
+            {% if user.is_staff or role == 'admin' %}
             <a href="{% url 'core:business_settings' %}" class="sidebar-link {% block nav_business_active %}{% endblock %}">
                 <i class="bi bi-building-gear"></i> Business Settings
             </a>
             {% endif %}
+            {% endif %}
+            {% endwith %}
 
         </div>
 

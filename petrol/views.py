@@ -3,6 +3,10 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+
+
+def _can_manage_petrol(user):
+    return user.is_staff or getattr(user, 'profile', None) and user.profile.role in ('admin', 'petrol_clerk')
 from django.db.models import Sum
 from django.shortcuts import render, redirect
 
@@ -251,12 +255,18 @@ def expense_add(request):
 
 @login_required
 def tank_list(request):
+    if not _can_manage_petrol(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     tanks = Tank.objects.select_related('fuel_type').all()
     return render(request, 'petrol/tank_list.html', {'tanks': tanks})
 
 
 @login_required
 def tank_add(request):
+    if not _can_manage_petrol(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     if request.method == 'POST':
         form = TankForm(request.POST)
         if form.is_valid():
@@ -270,6 +280,9 @@ def tank_add(request):
 
 @login_required
 def tank_edit(request, pk):
+    if not _can_manage_petrol(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     tank = get_object_or_404(Tank, pk=pk)
     if request.method == 'POST':
         form = TankForm(request.POST, instance=tank)
@@ -286,12 +299,18 @@ def tank_edit(request, pk):
 
 @login_required
 def supplier_list(request):
+    if not _can_manage_petrol(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     suppliers = FuelSupplier.objects.all()
     return render(request, 'petrol/supplier_list.html', {'suppliers': suppliers})
 
 
 @login_required
 def supplier_add(request):
+    if not _can_manage_petrol(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     if request.method == 'POST':
         form = FuelSupplierForm(request.POST)
         if form.is_valid():
@@ -305,6 +324,9 @@ def supplier_add(request):
 
 @login_required
 def supplier_edit(request, pk):
+    if not _can_manage_petrol(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     supplier = get_object_or_404(FuelSupplier, pk=pk)
     if request.method == 'POST':
         form = FuelSupplierForm(request.POST, instance=supplier)

@@ -3,6 +3,10 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+
+
+def _can_manage_cargo(user):
+    return user.is_staff or getattr(user, 'profile', None) and user.profile.role in ('admin', 'cargo_clerk')
 from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 
@@ -22,12 +26,18 @@ def _date_range(request):
 
 @login_required
 def vehicle_list(request):
+    if not _can_manage_cargo(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     vehicles = Vehicle.objects.all()
     return render(request, 'cargo/vehicle_list.html', {'vehicles': vehicles})
 
 
 @login_required
 def vehicle_add(request):
+    if not _can_manage_cargo(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     if request.method == 'POST':
         form = VehicleForm(request.POST)
         if form.is_valid():
@@ -41,6 +51,9 @@ def vehicle_add(request):
 
 @login_required
 def vehicle_edit(request, pk):
+    if not _can_manage_cargo(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     vehicle = get_object_or_404(Vehicle, pk=pk)
     if request.method == 'POST':
         form = VehicleForm(request.POST, instance=vehicle)
@@ -57,12 +70,18 @@ def vehicle_edit(request, pk):
 
 @login_required
 def driver_list(request):
+    if not _can_manage_cargo(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     drivers = Driver.objects.all()
     return render(request, 'cargo/driver_list.html', {'drivers': drivers})
 
 
 @login_required
 def driver_add(request):
+    if not _can_manage_cargo(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     if request.method == 'POST':
         form = DriverForm(request.POST)
         if form.is_valid():
@@ -76,6 +95,9 @@ def driver_add(request):
 
 @login_required
 def driver_edit(request, pk):
+    if not _can_manage_cargo(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     driver = get_object_or_404(Driver, pk=pk)
     if request.method == 'POST':
         form = DriverForm(request.POST, instance=driver)

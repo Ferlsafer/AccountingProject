@@ -280,10 +280,21 @@ def petty_cash_statement(request):
     })
 
 
+def _can_manage_accounts(user):
+    return user.is_staff or getattr(user, 'profile', None) and user.profile.role in ('admin', 'accountant')
+
+
+def _is_admin(user):
+    return user.is_staff or getattr(user, 'profile', None) and user.profile.role == 'admin'
+
+
 # ── Chart of Accounts — add/edit ──────────────────────────────────────────────
 
 @login_required
 def account_add(request):
+    if not _can_manage_accounts(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     if request.method == 'POST':
         form = AccountForm(request.POST)
         if form.is_valid():
@@ -297,6 +308,9 @@ def account_add(request):
 
 @login_required
 def account_edit(request, pk):
+    if not _can_manage_accounts(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     account = get_object_or_404(Account, pk=pk)
     if request.method == 'POST':
         form = AccountForm(request.POST, instance=account)
@@ -313,6 +327,9 @@ def account_edit(request, pk):
 
 @login_required
 def business_settings(request):
+    if not _is_admin(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     business = Business.get_solo()
     if request.method == 'POST':
         form = BusinessForm(request.POST, instance=business)
