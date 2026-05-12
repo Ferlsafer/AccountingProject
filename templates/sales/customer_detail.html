@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }}{% endblock %}
+{% block page_title %}Customer Detail{% endblock %}
+{% block nav_sales_customers_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">{{ customer.name }}</h5>
+        <span class="text-muted small"><i class="bi bi-person me-1"></i>Customer profile</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'sales:customer_edit' customer.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        <a href="{% url 'sales:customer_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="content-card h-100">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-person-vcard me-2 text-primary"></i>Contact Info</span>
+            </div>
+            <div class="p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted small">Name</dt>
+                    <dd class="col-sm-8 fw-semibold">{{ customer.name }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Phone</dt>
+                    <dd class="col-sm-8">{{ customer.phone|default:"—" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Email</dt>
+                    <dd class="col-sm-8">{{ customer.email|default:"—" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Address</dt>
+                    <dd class="col-sm-8">{{ customer.address|default:"—" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">TIN</dt>
+                    <dd class="col-sm-8">{{ customer.tin|default:"—" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="content-card h-100">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-sliders me-2 text-primary"></i>Account Settings</span>
+            </div>
+            <div class="p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5 text-muted small">Customer Type</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge {% if customer.customer_type == 'both' %}bg-primary{% elif customer.customer_type == 'cargo' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %}">
+                            {{ customer.get_customer_type_display }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-5 text-muted small">Credit Limit</dt>
+                    <dd class="col-sm-7 fw-semibold">{{ customer.credit_limit|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-5 text-muted small">Status</dt>
+                    <dd class="col-sm-7">
+                        {% if customer.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-5 text-muted small">Created</dt>
+                    <dd class="col-sm-7 text-muted small">{{ customer.created_at|date:"d M Y" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

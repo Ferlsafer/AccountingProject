@@ -69,6 +69,13 @@
             </a>
             {% endif %}
 
+            {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'cargo_clerk' %}
+            <div class="sidebar-section-label">Sales</div>
+            <a href="{% url 'sales:customer_list' %}" class="sidebar-link {% block nav_sales_customers_active %}{% endblock %}">
+                <i class="bi bi-people"></i> Customers
+            </a>
+            {% endif %}
+
             {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
             <div class="sidebar-section-label">Finance</div>
             <a href="{% url 'reports:journal_ledger' %}" class="sidebar-link {% block nav_ledger_active %}{% endblock %}">
