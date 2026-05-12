@@ -141,6 +141,17 @@ body {
 .icon-purple { background: #faf5ff; color: #7c3aed; }
 .icon-amber  { background: #fffbeb; color: #d97706; }
 .icon-teal   { background: #f0fdfa; color: #0d9488; }
+.icon-gray   { background: #f1f5f9; color: #64748b; }
+
+/* ── Management hub cards ────────────────────────────── */
+.management-card {
+    transition: box-shadow .15s, transform .15s;
+    cursor: pointer;
+}
+.management-card:hover {
+    box-shadow: 0 4px 16px rgba(37,99,235,.12);
+    transform: translateY(-2px);
+}
 
 /* ── Content card ────────────────────────────────────── */
 .content-card {

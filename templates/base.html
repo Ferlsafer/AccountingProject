@@ -133,8 +133,8 @@
             {% if user.is_staff or role == 'admin' or role == 'cargo_clerk' or role == 'petrol_clerk' or role == 'accountant' %}
             <div class="sidebar-section-label">Settings</div>
             {% if user.is_staff or role == 'admin' %}
-            <a href="{% url 'core:user_list' %}" class="sidebar-link {% block nav_users_active %}{% endblock %}">
-                <i class="bi bi-person-gear"></i> User Accounts
+            <a href="{% url 'core:management_hub' %}" class="sidebar-link {% block nav_management_active %}{% endblock %}">
+                <i class="bi bi-building-gear"></i> Management
             </a>
             {% endif %}
             {% if user.is_staff or role == 'admin' or role == 'cargo_clerk' %}
@@ -160,7 +160,7 @@
             {% endif %}
             {% if user.is_staff or role == 'admin' %}
             <a href="{% url 'core:business_settings' %}" class="sidebar-link {% block nav_business_active %}{% endblock %}">
-                <i class="bi bi-building-gear"></i> Business Settings
+                <i class="bi bi-sliders"></i> Business Settings
             </a>
             {% endif %}
             {% endif %}

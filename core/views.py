@@ -11,6 +11,28 @@ from .models import Account, Business, Employee, SalaryPayment, UserProfile, Pet
 from .forms import EmployeeForm, SalaryPaymentForm, UserCreateForm, UserEditForm, PettyCashTransactionForm, AccountForm, BusinessForm
 
 
+# ── Management Hub ────────────────────────────────────────────────────────────
+
+@login_required
+def management_hub(request):
+    if not _is_admin(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
+    from cargo.models import Vehicle, Driver
+    from petrol.models import Tank, FuelSupplier
+    ctx = {
+        'user_count':     User.objects.filter(is_active=True).count(),
+        'vehicle_count':  Vehicle.objects.filter(is_active=True).count(),
+        'driver_count':   Driver.objects.filter(is_active=True).count(),
+        'tank_count':     Tank.objects.filter(is_active=True).count(),
+        'supplier_count': FuelSupplier.objects.count(),
+        'account_count':  Account.objects.filter(is_active=True).count(),
+        'employee_count': Employee.objects.filter(is_active=True).count(),
+        'business':       Business.get_solo(),
+    }
+    return render(request, 'core/management_hub.html', ctx)
+
+
 # ── User Management ───────────────────────────────────────────────────────────
 
 @login_required

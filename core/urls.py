@@ -21,4 +21,5 @@ urlpatterns = [
     path('accounts/add/',            views.account_add,       name='account_add'),
     path('accounts/<int:pk>/edit/',  views.account_edit,      name='account_edit'),
     path('settings/',                views.business_settings, name='business_settings'),
+    path('management/',              views.management_hub,    name='management_hub'),
 ]
