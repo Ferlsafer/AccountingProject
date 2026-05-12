@@ -199,7 +199,19 @@ def credit_payment_add(request):
                 payment.customer.save(update_fields=['current_balance'])
                 payment.post_to_ledger(request.user)
             messages.success(request, f"Payment of TZS {payment.amount:,.0f} recorded for {payment.customer}")
-            return redirect('petrol:credit_sale_list')
+            from sales.views import create_receipt_for_payment
+            receipt, created = create_receipt_for_payment(
+                request.user,
+                customer_name=payment.customer.name,
+                amount=payment.amount,
+                against_type='petrol_credit_payment',
+                against_id=payment.pk,
+            )
+            if created:
+                return redirect('sales:receipt_print', pk=receipt.pk)
+            from urllib.parse import urlencode
+            qs = urlencode({'against_type': 'petrol_credit_payment', 'against_id': payment.pk, 'amount': payment.amount})
+            return redirect(f'/sales/receipts/add/?{qs}')
     else:
         form = CreditPaymentForm(initial={'date': date.today()})
     return render(request, 'petrol/credit_payment_form.html', {'form': form})

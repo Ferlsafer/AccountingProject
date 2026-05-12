@@ -364,6 +364,29 @@ def delivery_note_print(request, pk):
     return render(request, 'sales/delivery_note_print.html', {'dn': dn, 'business': business})
 
 
+# ── Receipt helper ───────────────────────────────────────────────────────────
+
+def create_receipt_for_payment(user, customer_name, amount, against_type, against_id):
+    """Auto-create a Receipt for an existing payment if a matching sales.Customer exists.
+    Returns (receipt, created). If no matching customer, returns (None, False).
+    """
+    customer = Customer.objects.filter(name__iexact=customer_name).first()
+    if not customer:
+        return None, False
+    from sales.utils import generate_reference
+    receipt = Receipt(
+        date=__import__('datetime').date.today(),
+        customer=customer,
+        amount=amount,
+        payment_method='cash',
+        against_type=against_type,
+        against_id=against_id,
+        created_by=user,
+    )
+    receipt.save()
+    return receipt, True
+
+
 # ── Receipts ──────────────────────────────────────────────────────────────────
 
 @login_required
@@ -388,16 +411,12 @@ def receipt_list(request):
 
 
 @login_required
-def receipt_create(request, customer_pk=None, amount=None, against_type=None, against_id=None):
+def receipt_create(request):
     initial = {'date': today_date.today()}
-    if customer_pk:
-        initial['customer'] = customer_pk
-    if amount:
-        initial['amount'] = amount
-    if against_type:
-        initial['against_type'] = against_type
-    if against_id:
-        initial['against_id'] = against_id
+    for key in ('customer', 'amount', 'against_type', 'against_id'):
+        val = request.GET.get(key)
+        if val:
+            initial[key] = val
 
     if request.method == 'POST':
         form = ReceiptForm(request.POST)
