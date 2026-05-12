@@ -29,6 +29,10 @@ urlpatterns = [
     path('delivery-notes/<int:pk>/',          views.delivery_note_detail, name='delivery_note_detail'),
     path('delivery-notes/<int:pk>/edit/',     views.delivery_note_edit,   name='delivery_note_edit'),
     path('delivery-notes/<int:pk>/print/',    views.delivery_note_print,  name='delivery_note_print'),
-    # Step 10: receipts
+    # Receipts
+    path('receipts/',                   views.receipt_list,   name='receipt_list'),
+    path('receipts/add/',               views.receipt_create, name='receipt_create'),
+    path('receipts/<int:pk>/',          views.receipt_detail, name='receipt_detail'),
+    path('receipts/<int:pk>/print/',    views.receipt_print,  name='receipt_print'),
     # Step 12: unified invoices
 ]

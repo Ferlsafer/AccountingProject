@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ receipt.reference }} — Print{% endblock %}
+{% block page_title %}Print Receipt{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    #sidebar, #main-content > .topbar, .no-print { display: none !important; }
+    #main-content { margin: 0 !important; padding: 0 !important; }
+    body { background: white !important; }
+    .rec-doc { border: none !important; box-shadow: none !important; max-width: 100% !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+    <span class="text-muted small">Preview — Ctrl+P to print</span>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-primary btn-sm">
+            <i class="bi bi-printer me-1"></i>Print
+        </button>
+        <a href="{% url 'sales:receipt_detail' receipt.pk %}" class="btn btn-outline-secondary btn-sm">Back</a>
+    </div>
+</div>
+
+<div class="rec-doc content-card p-5 mx-auto" style="max-width:600px;">
+    <!-- Header -->
+    <div class="text-center mb-4 pb-3 border-bottom">
+        {% if business %}
+        <h4 class="fw-bold mb-1">{{ business.name }}</h4>
+        {% if business.address %}<div class="text-muted small">{{ business.address }}</div>{% endif %}
+        {% if business.phone %}<div class="text-muted small">Tel: {{ business.phone }}</div>{% endif %}
+        {% if business.tin %}<div class="text-muted small">TIN: {{ business.tin }}</div>{% endif %}
+        {% endif %}
+        <h3 class="fw-bold text-primary mt-3 mb-0">RECEIPT</h3>
+        <div class="fw-semibold">{{ receipt.reference }}</div>
+    </div>
+
+    <!-- Details -->
+    <table class="table table-sm mb-4">
+        <tbody>
+            <tr>
+                <th class="text-muted" style="width:40%">Date</th>
+                <td>{{ receipt.date|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <th class="text-muted">Received From</th>
+                <td class="fw-semibold">{{ receipt.customer.name }}</td>
+            </tr>
+            <tr>
+                <th class="text-muted">Payment Method</th>
+                <td>{{ receipt.get_payment_method_display }}</td>
+            </tr>
+            <tr>
+                <th class="text-muted">In Payment Of</th>
+                <td>{{ receipt.get_against_type_display }}{% if receipt.against_id %} — Ref #{{ receipt.against_id }}{% endif %}</td>
+            </tr>
+            {% if receipt.notes %}
+            <tr>
+                <th class="text-muted">Notes</th>
+                <td>{{ receipt.notes }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Amount box -->
+    <div class="text-center p-4 mb-4 rounded" style="background:#f0f7ff;border:2px solid #0d6efd;">
+        <div class="text-muted small text-uppercase fw-semibold mb-1">Amount Received</div>
+        <div class="fs-2 fw-bold text-primary">TZS {{ receipt.amount|floatformat:0 }}</div>
+    </div>
+
+    <!-- Signature -->
+    <div class="row mt-4 pt-3 border-top">
+        <div class="col-6">
+            <div class="text-muted small mb-3">Received by</div>
+            <div style="border-top:1px solid #999;width:160px;"></div>
+            <div class="small mt-1 text-muted">Signature</div>
+        </div>
+        <div class="col-6 text-end text-muted small">
+            <div>{{ receipt.reference }}</div>
+            <div>{{ receipt.date|date:"d M Y" }}</div>
+            {% if business %}<div>{{ business.name }}</div>{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

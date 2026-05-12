@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Customer, JobOrder, Quotation, QuotationLine, DeliveryNote
+from .models import Customer, JobOrder, Quotation, QuotationLine, DeliveryNote, Receipt
 
 
 class CustomerForm(forms.ModelForm):
@@ -87,4 +87,20 @@ class DeliveryNoteForm(forms.ModelForm):
             'recipient_name':   forms.TextInput(attrs={'class': 'form-control'}),
             'recipient_signature_received': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'notes':            forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+class ReceiptForm(forms.ModelForm):
+    class Meta:
+        model = Receipt
+        fields = ['date', 'customer', 'amount', 'payment_method',
+                  'against_type', 'against_id', 'notes']
+        widgets = {
+            'date':           forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'customer':       forms.Select(attrs={'class': 'form-select'}),
+            'amount':         forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'payment_method': forms.Select(attrs={'class': 'form-select'}),
+            'against_type':   forms.Select(attrs={'class': 'form-select'}),
+            'against_id':     forms.NumberInput(attrs={'class': 'form-control'}),
+            'notes':          forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }

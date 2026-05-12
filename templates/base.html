@@ -83,6 +83,9 @@
             <a href="{% url 'sales:delivery_note_list' %}" class="sidebar-link {% block nav_sales_delivery_notes_active %}{% endblock %}">
                 <i class="bi bi-truck"></i> Delivery Notes
             </a>
+            <a href="{% url 'sales:receipt_list' %}" class="sidebar-link {% block nav_sales_receipts_active %}{% endblock %}">
+                <i class="bi bi-receipt"></i> Receipts
+            </a>
             {% endif %}
 
             {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}

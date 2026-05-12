@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Customer, JobOrder, Quotation, DeliveryNote
-from .forms import CustomerForm, JobOrderForm, QuotationForm, QuotationLineFormSet, DeliveryNoteForm
+from .models import Customer, JobOrder, Quotation, DeliveryNote, Receipt
+from .forms import CustomerForm, JobOrderForm, QuotationForm, QuotationLineFormSet, DeliveryNoteForm, ReceiptForm
 
 
 @login_required
@@ -362,3 +362,66 @@ def delivery_note_print(request, pk):
     from core.models import Business
     business = Business.objects.first()
     return render(request, 'sales/delivery_note_print.html', {'dn': dn, 'business': business})
+
+
+# ── Receipts ──────────────────────────────────────────────────────────────────
+
+@login_required
+def receipt_list(request):
+    today = today_date.today()
+    date_from = request.GET.get('date_from') or today.replace(day=1).isoformat()
+    date_to = request.GET.get('date_to') or today.isoformat()
+    q = request.GET.get('q', '').strip()
+
+    qs = (Receipt.objects
+          .filter(date__gte=date_from, date__lte=date_to)
+          .select_related('customer', 'created_by'))
+    if q:
+        qs = qs.filter(customer__name__icontains=q)
+
+    return render(request, 'sales/receipt_list.html', {
+        'receipts': qs,
+        'date_from': date_from,
+        'date_to': date_to,
+        'q': q,
+    })
+
+
+@login_required
+def receipt_create(request, customer_pk=None, amount=None, against_type=None, against_id=None):
+    initial = {'date': today_date.today()}
+    if customer_pk:
+        initial['customer'] = customer_pk
+    if amount:
+        initial['amount'] = amount
+    if against_type:
+        initial['against_type'] = against_type
+    if against_id:
+        initial['against_id'] = against_id
+
+    if request.method == 'POST':
+        form = ReceiptForm(request.POST)
+        if form.is_valid():
+            receipt = form.save(commit=False)
+            receipt.created_by = request.user
+            receipt.save()
+            messages.success(request, f"Receipt {receipt.reference} created.")
+            return redirect('sales:receipt_print', pk=receipt.pk)
+    else:
+        form = ReceiptForm(initial=initial)
+
+    return render(request, 'sales/receipt_form.html', {'form': form, 'title': 'New Receipt'})
+
+
+@login_required
+def receipt_detail(request, pk):
+    receipt = get_object_or_404(Receipt, pk=pk)
+    return render(request, 'sales/receipt_detail.html', {'receipt': receipt})
+
+
+@login_required
+def receipt_print(request, pk):
+    receipt = get_object_or_404(Receipt, pk=pk)
+    from core.models import Business
+    business = Business.objects.first()
+    return render(request, 'sales/receipt_print.html', {'receipt': receipt, 'business': business})

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}{{ receipt.reference }}{% endblock %}
+{% block page_title %}Receipt Detail{% endblock %}
+{% block nav_sales_receipts_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">{{ receipt.reference }}</h5>
+        <span class="text-muted small">{{ receipt.date|date:"d M Y" }} &mdash; {{ receipt.customer.name }}</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'sales:receipt_print' receipt.pk %}" class="btn btn-outline-secondary" target="_blank">
+            <i class="bi bi-printer me-1"></i>Print
+        </a>
+        <a href="{% url 'sales:receipt_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-receipt me-2 text-primary"></i>Receipt Details</span>
+            </div>
+            <div class="p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted small">Reference</dt>
+                    <dd class="col-sm-8 fw-semibold">{{ receipt.reference }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Customer</dt>
+                    <dd class="col-sm-8"><a href="{% url 'sales:customer_detail' receipt.customer.pk %}">{{ receipt.customer.name }}</a></dd>
+
+                    <dt class="col-sm-4 text-muted small">Amount</dt>
+                    <dd class="col-sm-8 fw-bold fs-5">TZS {{ receipt.amount|floatformat:0 }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Payment Method</dt>
+                    <dd class="col-sm-8"><span class="badge bg-secondary">{{ receipt.get_payment_method_display }}</span></dd>
+
+                    <dt class="col-sm-4 text-muted small">Against</dt>
+                    <dd class="col-sm-8">{{ receipt.get_against_type_display }}{% if receipt.against_id %} — #{{ receipt.against_id }}{% endif %}</dd>
+
+                    {% if receipt.notes %}
+                    <dt class="col-sm-4 text-muted small">Notes</dt>
+                    <dd class="col-sm-8">{{ receipt.notes }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-4 text-muted small">Recorded by</dt>
+                    <dd class="col-sm-8 text-muted">{{ receipt.created_by.get_full_name|default:receipt.created_by.username }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Recorded at</dt>
+                    <dd class="col-sm-8 text-muted small">{{ receipt.created_at|date:"d M Y H:i" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

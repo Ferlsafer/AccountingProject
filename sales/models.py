@@ -143,3 +143,41 @@ class DeliveryNote(models.Model):
             from sales.utils import generate_reference
             self.reference = generate_reference('DN')
         super().save(*args, **kwargs)
+
+
+class Receipt(models.Model):
+    PAYMENT_METHODS = [
+        ('cash',        'Cash'),
+        ('bank',        'Bank Transfer'),
+        ('mpesa',       'M-Pesa'),
+        ('tigopesa',    'Tigo Pesa'),
+        ('airtelmoney', 'Airtel Money'),
+    ]
+    AGAINST_TYPES = [
+        ('cargo_invoice',        'Cargo Invoice'),
+        ('petrol_credit_payment','Petrol Credit Payment'),
+        ('other',                'Other'),
+    ]
+    reference = models.CharField(max_length=30, unique=True)
+    date = models.DateField()
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='receipts')
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
+    against_type = models.CharField(max_length=30, choices=AGAINST_TYPES)
+    against_id = models.IntegerField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='receipts')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-id']
+
+    def __str__(self):
+        return f"{self.reference} — {self.customer}"
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            from sales.utils import generate_reference
+            self.reference = generate_reference('REC')
+        super().save(*args, **kwargs)
