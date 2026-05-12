@@ -34,5 +34,6 @@ urlpatterns = [
     path('receipts/add/',               views.receipt_create, name='receipt_create'),
     path('receipts/<int:pk>/',          views.receipt_detail, name='receipt_detail'),
     path('receipts/<int:pk>/print/',    views.receipt_print,  name='receipt_print'),
-    # Step 12: unified invoices
+    # Unified Invoices
+    path('invoices/', views.unified_invoices, name='unified_invoices'),
 ]

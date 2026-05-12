@@ -444,3 +444,77 @@ def receipt_print(request, pk):
     from core.models import Business
     business = Business.objects.first()
     return render(request, 'sales/receipt_print.html', {'receipt': receipt, 'business': business})
+
+
+# ── Unified Invoices ──────────────────────────────────────────────────────────
+
+@login_required
+def unified_invoices(request):
+    from cargo.models import Invoice as CargoInvoice
+    from petrol.models import CreditSale
+
+    today = today_date.today()
+    date_from = request.GET.get('date_from') or today.replace(day=1).isoformat()
+    date_to = request.GET.get('date_to') or today.isoformat()
+    source_filter = request.GET.get('source', '')
+    status_filter = request.GET.get('status', '')
+    q = request.GET.get('q', '').strip()
+
+    rows = []
+
+    if source_filter != 'petrol':
+        cargo_qs = (CargoInvoice.objects
+                    .filter(date__gte=date_from, date__lte=date_to)
+                    .select_related('trip__customer'))
+        if q:
+            cargo_qs = cargo_qs.filter(trip__customer__name__icontains=q)
+        if status_filter == 'paid':
+            cargo_qs = cargo_qs.filter(is_paid=True)
+        elif status_filter == 'unpaid':
+            cargo_qs = cargo_qs.filter(is_paid=False)
+        for inv in cargo_qs:
+            from django.urls import reverse
+            rows.append({
+                'source': 'cargo',
+                'reference': inv.number,
+                'date': inv.date,
+                'customer_name': inv.trip.customer.name,
+                'amount': inv.amount,
+                'is_paid': inv.is_paid,
+                'detail_url': reverse('cargo:invoice_print', args=[inv.pk]),
+                'pay_url': reverse('cargo:invoice_pay', args=[inv.pk]) if not inv.is_paid else None,
+            })
+
+    if source_filter != 'cargo':
+        petrol_qs = (CreditSale.objects
+                     .filter(date__gte=date_from, date__lte=date_to)
+                     .select_related('customer'))
+        if q:
+            petrol_qs = petrol_qs.filter(customer__name__icontains=q)
+        # CreditSale has no is_paid flag — treat each as unpaid unless a CreditPayment covers it
+        # For display purposes: show all credit sales; status filter 'paid' hides them
+        if status_filter == 'paid':
+            petrol_qs = petrol_qs.none()
+        from django.urls import reverse
+        for sale in petrol_qs:
+            rows.append({
+                'source': 'petrol',
+                'reference': f"CS-{sale.pk}",
+                'date': sale.date,
+                'customer_name': sale.customer.name,
+                'amount': sale.total_amount,
+                'is_paid': False,
+                'detail_url': reverse('petrol:credit_sale_list'),
+                'pay_url': None,
+            })
+
+    rows.sort(key=lambda r: r['date'], reverse=True)
+
+    return render(request, 'sales/unified_invoices.html', {
+        'rows': rows,
+        'date_from': date_from,
+        'date_to': date_to,
+        'source_filter': source_filter,
+        'status_filter': status_filter,
+        'q': q,
+    })

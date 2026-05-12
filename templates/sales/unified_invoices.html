@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}All Invoices{% endblock %}
+{% block page_title %}All Invoices{% endblock %}
+{% block nav_sales_invoices_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">All Invoices</h5>
+        <span class="text-muted small"><i class="bi bi-files me-1"></i>Cargo invoices and petrol credit sales</span>
+    </div>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">Source</label>
+            <select name="source" class="form-select form-select-sm">
+                <option value="" {% if not source_filter %}selected{% endif %}>All</option>
+                <option value="cargo" {% if source_filter == 'cargo' %}selected{% endif %}>Cargo</option>
+                <option value="petrol" {% if source_filter == 'petrol' %}selected{% endif %}>Petrol</option>
+            </select>
+        </div>
+        <div class="col-sm-4 col-md-2">
+            <label class="form-label small fw-semibold">Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="" {% if not status_filter %}selected{% endif %}>All</option>
+                <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid</option>
+                <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
+            </select>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <label class="form-label small fw-semibold">Customer</label>
+            <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Search customer…">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+            <a href="{% url 'sales:unified_invoices' %}" class="btn btn-sm btn-outline-secondary ms-1">Clear</a>
+        </div>
+    </div>
+</form>
+
+<!-- Table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-files me-2 text-primary"></i>Invoices</span>
+        <span class="text-muted small">{{ rows|length }} record{{ rows|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th class="text-end">Amount</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+            <tr>
+                <td class="fw-semibold">{{ row.reference }}</td>
+                <td class="text-muted small">{{ row.date|date:"d M Y" }}</td>
+                <td>{{ row.customer_name }}</td>
+                <td>
+                    {% if row.source == 'cargo' %}
+                    <span class="badge bg-primary">Cargo</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">Petrol</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if row.is_paid %}
+                    <span class="badge bg-success">Paid</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Unpaid</span>
+                    {% endif %}
+                </td>
+                <td class="text-end fw-semibold">{{ row.amount|floatformat:0 }}</td>
+                <td class="text-end">
+                    <a href="{{ row.detail_url }}" class="btn btn-sm btn-outline-secondary">View</a>
+                    {% if row.pay_url %}
+                    <a href="{{ row.pay_url }}" class="btn btn-sm btn-outline-success ms-1">Pay</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-files" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No invoices found for this period.</p>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -71,6 +71,9 @@
 
             {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'cargo_clerk' %}
             <div class="sidebar-section-label">Sales</div>
+            <a href="{% url 'sales:unified_invoices' %}" class="sidebar-link {% block nav_sales_invoices_active %}{% endblock %}">
+                <i class="bi bi-files"></i> All Invoices
+            </a>
             <a href="{% url 'sales:customer_list' %}" class="sidebar-link {% block nav_sales_customers_active %}{% endblock %}">
                 <i class="bi bi-people"></i> Customers
             </a>
