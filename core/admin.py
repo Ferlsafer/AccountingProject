@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.db import transaction
-from .models import Business, UserProfile, Account, JournalEntry, JournalLine, Employee, SalaryPayment
+from .models import Business, UserProfile, Account, JournalEntry, JournalLine, Employee, SalaryPayment, PettyCashTransaction
 
 admin.site.site_header = 'TBC Accounting'
 admin.site.site_title = 'TBC Accounting'
@@ -128,6 +128,24 @@ class SalaryPaymentAdmin(admin.ModelAdmin):
             obj.posted_by = request.user
             super().save_model(request, obj, form, change)
             obj.post_to_ledger(request.user)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+# ── Petty Cash ────────────────────────────────────────────────────────────────
+
+@admin.register(PettyCashTransaction)
+class PettyCashTransactionAdmin(admin.ModelAdmin):
+    list_display = ['date', 'transaction_type', 'amount', 'expense_category', 'description', 'created_by']
+    list_filter = ['transaction_type', 'date']
+    search_fields = ['description', 'expense_category', 'receipt_reference']
+    date_hierarchy = 'date'
+    readonly_fields = ['created_by', 'created_at']
+    list_per_page = 30
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def has_delete_permission(self, request, obj=None):
         return False
