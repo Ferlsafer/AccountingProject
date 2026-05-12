@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Balance Sheet{% endblock %}
+{% block page_title %}Balance Sheet{% endblock %}
+{% block nav_balance_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 no-print">
+    <div>
+        <h5 class="fw-bold mb-1">Balance Sheet</h5>
+        <span class="text-muted small">Financial position as at a given date</span>
+    </div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-printer me-1"></i>Print
+    </button>
+</div>
+
+<form method="get" class="content-card p-3 mb-4 no-print">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">As at date</label>
+            <input type="date" name="as_at" value="{{ as_at }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <button type="submit" class="btn btn-sm btn-primary w-100 mt-3">
+                <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+            </button>
+        </div>
+    </div>
+</form>
+
+{% if not balanced %}
+<div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    Balance sheet does not balance — check for unposted transactions or missing accounts.
+</div>
+{% endif %}
+
+<div class="text-center mb-4 d-none d-print-block">
+    <h4 class="fw-bold">{{ business.name }}</h4>
+    <h5>Balance Sheet</h5>
+    <p class="text-muted">As at {{ as_at }}</p>
+</div>
+
+<div class="row g-4">
+    <!-- LEFT: Assets -->
+    <div class="col-md-6">
+        <div class="content-card h-100">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-boxes me-2 text-success"></i>Assets</span>
+                <span class="fw-bold text-success">{% currency total_assets %}</span>
+            </div>
+            <table class="table table-sm mb-0">
+                <tbody>
+                {% for row in assets %}
+                <tr>
+                    <td class="ps-3 text-muted small">{{ row.account.code }}</td>
+                    <td>{{ row.account.name }}</td>
+                    <td class="text-end fw-semibold">{% currency row.balance %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center text-muted py-3">No asset balances</td></tr>
+                {% endfor %}
+                </tbody>
+                <tfoot class="table-success">
+                    <tr class="fw-bold">
+                        <td colspan="2" class="ps-3">Total Assets</td>
+                        <td class="text-end">{% currency total_assets %}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- RIGHT: Liabilities + Equity -->
+    <div class="col-md-6">
+        <div class="content-card mb-4">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-credit-card me-2 text-danger"></i>Liabilities</span>
+                <span class="fw-bold text-danger">{% currency total_liabilities %}</span>
+            </div>
+            <table class="table table-sm mb-0">
+                <tbody>
+                {% for row in liabilities %}
+                <tr>
+                    <td class="ps-3 text-muted small">{{ row.account.code }}</td>
+                    <td>{{ row.account.name }}</td>
+                    <td class="text-end fw-semibold">{% currency row.balance %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center text-muted py-3">No liability balances</td></tr>
+                {% endfor %}
+                </tbody>
+                <tfoot class="table-danger">
+                    <tr class="fw-bold">
+                        <td colspan="2" class="ps-3">Total Liabilities</td>
+                        <td class="text-end">{% currency total_liabilities %}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-bank me-2 text-primary"></i>Equity</span>
+                <span class="fw-bold text-primary">{% currency total_equity %}</span>
+            </div>
+            <table class="table table-sm mb-0">
+                <tbody>
+                {% for row in equity %}
+                <tr>
+                    <td class="ps-3 text-muted small">{{ row.account.code }}</td>
+                    <td>{{ row.account.name }}</td>
+                    <td class="text-end fw-semibold">{% currency row.balance %}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td class="ps-3 text-muted small">—</td>
+                    <td class="fst-italic text-muted">Net Income (current period)</td>
+                    <td class="text-end fw-semibold {% if net_income >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {% currency net_income %}
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot class="table-primary">
+                    <tr class="fw-bold">
+                        <td colspan="2" class="ps-3">Total Equity</td>
+                        <td class="text-end">{% currency total_equity %}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="content-card mt-3 p-3 d-flex justify-content-between align-items-center"
+            style="background:{% if balanced %}#f0fdf4{% else %}#fef2f2{% endif %}; border-color:{% if balanced %}#86efac{% else %}#fca5a5{% endif %}">
+            <span class="fw-bold">Total Liabilities + Equity</span>
+            <span class="fw-bold fs-5">{% currency total_l_e %}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

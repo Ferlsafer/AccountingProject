@@ -136,6 +136,18 @@
             <a href="{% url 'reports:trial_balance' %}" class="sidebar-link {% block nav_trial_active %}{% endblock %}">
                 <i class="bi bi-check2-circle"></i> Trial Balance
             </a>
+            <a href="{% url 'reports:balance_sheet' %}" class="sidebar-link {% block nav_balance_active %}{% endblock %}">
+                <i class="bi bi-layout-text-sidebar"></i> Balance Sheet
+            </a>
+            <a href="{% url 'reports:ar_aging' %}" class="sidebar-link {% block nav_ar_aging_active %}{% endblock %}">
+                <i class="bi bi-people-fill"></i> AR Aging
+            </a>
+            <a href="{% url 'reports:supplier_ap' %}" class="sidebar-link {% block nav_supplier_ap_active %}{% endblock %}">
+                <i class="bi bi-building"></i> Supplier Payables
+            </a>
+            <a href="{% url 'reports:cash_position' %}" class="sidebar-link {% block nav_cash_position_active %}{% endblock %}">
+                <i class="bi bi-cash-stack"></i> Cash Position
+            </a>
             {% endif %}
 
             {% with role=user.profile.role %}

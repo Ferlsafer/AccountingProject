@@ -1,12 +1,12 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils import timezone
-from django.db.models import Sum
+from django.db.models import Sum, Q
 
 from core.models import Business, Account, JournalEntry, JournalLine, SalaryPayment, Employee
-from petrol.models import DailyFuelSale, CreditSale, PetrolExpense, FuelType, Tank, CreditCustomer
+from petrol.models import DailyFuelSale, CreditSale, CreditPayment, PetrolExpense, FuelType, Tank, CreditCustomer, FuelPurchase, FuelSupplier
 from cargo.models import Trip, Invoice, TripExpense, VehicleExpense
 
 
@@ -368,5 +368,250 @@ def trial_balance(request):
         'total_credit': total_credit,
         'is_balanced': total_debit == total_credit,
         'as_of': as_of,
+        'business': business,
+    })
+
+
+# ── Balance Sheet ─────────────────────────────────────────────────────────────
+
+@login_required
+def balance_sheet(request):
+    today = date.today()
+    as_at = request.GET.get('as_at') or today.isoformat()
+    business = Business.get_solo()
+
+    def _account_balance(acct, normal='debit'):
+        lines = JournalLine.objects.filter(account=acct, entry__date__lte=as_at)
+        agg = lines.aggregate(dr=Sum('debit'), cr=Sum('credit'))
+        dr = agg['dr'] or Decimal('0')
+        cr = agg['cr'] or Decimal('0')
+        return (dr - cr) if normal == 'debit' else (cr - dr)
+
+    sections = {'asset': [], 'liability': [], 'equity': []}
+    normals   = {'asset': 'debit', 'liability': 'credit', 'equity': 'credit'}
+
+    for acct_type in ('asset', 'liability', 'equity'):
+        for acct in Account.objects.filter(type=acct_type, is_active=True, parent__isnull=False).order_by('code'):
+            bal = _account_balance(acct, normals[acct_type])
+            if bal:
+                sections[acct_type].append({'account': acct, 'balance': bal})
+
+    # Net income for the period up to as_at folds into equity
+    rev_agg = JournalLine.objects.filter(account__type='revenue', entry__date__lte=as_at).aggregate(t=Sum('credit'))
+    exp_agg = JournalLine.objects.filter(account__type='expense', entry__date__lte=as_at).aggregate(t=Sum('debit'))
+    net_income = (rev_agg['t'] or Decimal('0')) - (exp_agg['t'] or Decimal('0'))
+
+    total_assets      = sum(r['balance'] for r in sections['asset'])
+    total_liabilities = sum(r['balance'] for r in sections['liability'])
+    total_equity      = sum(r['balance'] for r in sections['equity']) + net_income
+    total_l_e         = total_liabilities + total_equity
+    balanced          = abs(total_assets - total_l_e) < Decimal('0.01')
+
+    return render(request, 'reports/balance_sheet.html', {
+        'assets': sections['asset'],
+        'liabilities': sections['liability'],
+        'equity': sections['equity'],
+        'net_income': net_income,
+        'total_assets': total_assets,
+        'total_liabilities': total_liabilities,
+        'total_equity': total_equity,
+        'total_l_e': total_l_e,
+        'balanced': balanced,
+        'as_at': as_at,
+        'business': business,
+    })
+
+
+# ── AR Aging ──────────────────────────────────────────────────────────────────
+
+@login_required
+def ar_aging(request):
+    today = date.today()
+    business = Business.get_solo()
+
+    BUCKETS = [(0, 30), (31, 60), (61, 90), (91, None)]
+
+    def _age_bucket(days):
+        for lo, hi in BUCKETS:
+            if hi is None or days <= hi:
+                return lo
+        return 91
+
+    # ── Petrol credit customers ──
+    petrol_rows = []
+    for cust in CreditCustomer.objects.filter(current_balance__gt=0):
+        sales = list(CreditCustomer.objects.get(pk=cust.pk).credit_sales.order_by('date'))
+        total_paid = cust.credit_payments.aggregate(t=Sum('amount'))['t'] or Decimal('0')
+
+        buckets = {0: Decimal('0'), 31: Decimal('0'), 61: Decimal('0'), 91: Decimal('0')}
+        remaining_payment = total_paid
+        for sale in sales:
+            if remaining_payment >= sale.total_amount:
+                remaining_payment -= sale.total_amount
+                continue
+            unpaid = sale.total_amount - remaining_payment
+            remaining_payment = Decimal('0')
+            days_old = (today - sale.date).days
+            key = _age_bucket(days_old)
+            buckets[key] += unpaid
+
+        petrol_rows.append({
+            'name': cust.name,
+            'phone': cust.phone,
+            'type': 'Petrol Credit',
+            'current': buckets[0],
+            'd31_60': buckets[31],
+            'd61_90': buckets[61],
+            'd90plus': buckets[91],
+            'total': cust.current_balance,
+        })
+
+    # ── Cargo unpaid invoices ──
+    cargo_rows = []
+    for inv in Invoice.objects.filter(is_paid=False).select_related('trip__customer'):
+        days_old = (today - inv.date).days
+        key = _age_bucket(days_old)
+        buckets = {0: Decimal('0'), 31: Decimal('0'), 61: Decimal('0'), 91: Decimal('0')}
+        buckets[key] = inv.amount
+        cargo_rows.append({
+            'name': inv.trip.customer.name,
+            'phone': getattr(inv.trip.customer, 'phone', ''),
+            'type': f'Cargo — {inv.number}',
+            'current': buckets[0],
+            'd31_60': buckets[31],
+            'd61_90': buckets[61],
+            'd90plus': buckets[91],
+            'total': inv.amount,
+        })
+
+    all_rows = petrol_rows + cargo_rows
+    totals = {
+        'current': sum(r['current'] for r in all_rows),
+        'd31_60':  sum(r['d31_60']  for r in all_rows),
+        'd61_90':  sum(r['d61_90']  for r in all_rows),
+        'd90plus': sum(r['d90plus'] for r in all_rows),
+        'total':   sum(r['total']   for r in all_rows),
+    }
+
+    return render(request, 'reports/ar_aging.html', {
+        'rows': all_rows,
+        'totals': totals,
+        'today': today,
+        'business': business,
+    })
+
+
+# ── Supplier AP ───────────────────────────────────────────────────────────────
+
+@login_required
+def supplier_ap(request):
+    today = date.today()
+    business = Business.get_solo()
+
+    credit_purchases = (FuelPurchase.objects
+        .filter(status='approved', payment_method='credit')
+        .select_related('supplier', 'tank__fuel_type')
+        .order_by('supplier__name', 'date'))
+
+    # Group by supplier
+    supplier_map = {}
+    for p in credit_purchases:
+        sid = p.supplier_id
+        if sid not in supplier_map:
+            supplier_map[sid] = {
+                'supplier': p.supplier,
+                'invoices': [],
+                'total': Decimal('0'),
+            }
+        days_old = (today - p.date).days
+        supplier_map[sid]['invoices'].append({
+            'purchase': p,
+            'days_old': days_old,
+            'overdue': days_old > 30,
+        })
+        supplier_map[sid]['total'] += p.total_amount
+
+    suppliers = sorted(supplier_map.values(), key=lambda x: x['supplier'].name)
+    grand_total = sum(s['total'] for s in suppliers)
+
+    return render(request, 'reports/supplier_ap.html', {
+        'suppliers': suppliers,
+        'grand_total': grand_total,
+        'today': today,
+        'business': business,
+    })
+
+
+# ── Cash Position ─────────────────────────────────────────────────────────────
+
+@login_required
+def cash_position(request):
+    today = date.today()
+    business = Business.get_solo()
+
+    CASH_ACCOUNTS = ['1010', '1020', '1025', '1030']
+    LABELS = {
+        '1010': ('Cash on Hand',   'icon-green'),
+        '1020': ('Bank Account',   'icon-blue'),
+        '1025': ('Mobile Money',   'icon-amber'),
+        '1030': ('Petty Cash',     'icon-purple'),
+    }
+
+    accounts_data = []
+    total_balance = Decimal('0')
+    total_in_today = Decimal('0')
+    total_out_today = Decimal('0')
+
+    for code in CASH_ACCOUNTS:
+        acct = Account.objects.filter(code=code).first()
+        if not acct:
+            continue
+
+        all_lines = JournalLine.objects.filter(account=acct)
+        agg = all_lines.aggregate(dr=Sum('debit'), cr=Sum('credit'))
+        balance = (agg['dr'] or Decimal('0')) - (agg['cr'] or Decimal('0'))
+
+        today_lines = all_lines.filter(entry__date=today)
+        today_agg   = today_lines.aggregate(dr=Sum('debit'), cr=Sum('credit'))
+        in_today    = today_agg['dr'] or Decimal('0')
+        out_today   = today_agg['cr'] or Decimal('0')
+
+        total_balance   += balance
+        total_in_today  += in_today
+        total_out_today += out_today
+
+        label, icon = LABELS[code]
+        accounts_data.append({
+            'account': acct,
+            'label': label,
+            'icon': icon,
+            'balance': balance,
+            'in_today': in_today,
+            'out_today': out_today,
+            'net_today': in_today - out_today,
+        })
+
+    # 7-day cash movement
+    seven_days = []
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        lines = JournalLine.objects.filter(
+            account__code__in=CASH_ACCOUNTS, entry__date=d
+        ).aggregate(dr=Sum('debit'), cr=Sum('credit'))
+        seven_days.append({
+            'date': d,
+            'inflow':  lines['dr'] or Decimal('0'),
+            'outflow': lines['cr'] or Decimal('0'),
+            'net':     (lines['dr'] or Decimal('0')) - (lines['cr'] or Decimal('0')),
+        })
+
+    return render(request, 'reports/cash_position.html', {
+        'accounts': accounts_data,
+        'total_balance': total_balance,
+        'total_in_today': total_in_today,
+        'total_out_today': total_out_today,
+        'net_today': total_in_today - total_out_today,
+        'seven_days': seven_days,
+        'today': today,
         'business': business,
     })

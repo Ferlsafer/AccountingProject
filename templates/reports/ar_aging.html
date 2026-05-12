@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}AR Aging{% endblock %}
+{% block page_title %}Accounts Receivable Aging{% endblock %}
+{% block nav_ar_aging_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 no-print">
+    <div>
+        <h5 class="fw-bold mb-1">AR Aging Report</h5>
+        <span class="text-muted small">Outstanding receivables as at {{ today|date:"d M Y" }}</span>
+    </div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-printer me-1"></i>Print
+    </button>
+</div>
+
+<!-- Summary stat cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-label">Current (0–30 days)</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency totals.current %}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-amber"><i class="bi bi-clock"></i></div>
+            <div class="stat-label">31–60 days</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency totals.d31_60 %}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="bi bi-exclamation-circle"></i></div>
+            <div class="stat-label">61–90 days</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency totals.d61_90 %}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-purple"><i class="bi bi-x-circle"></i></div>
+            <div class="stat-label">Over 90 days</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency totals.d90plus %}</div>
+        </div>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-people me-2 text-primary"></i>Debtor Details</span>
+        <span class="fw-bold">Total Outstanding: {% currency totals.total %}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Type</th>
+                    <th class="text-end">Current<br><small class="fw-normal text-muted">0–30 days</small></th>
+                    <th class="text-end">Overdue<br><small class="fw-normal text-muted">31–60 days</small></th>
+                    <th class="text-end">Overdue<br><small class="fw-normal text-muted">61–90 days</small></th>
+                    <th class="text-end">Overdue<br><small class="fw-normal text-muted">&gt;90 days</small></th>
+                    <th class="text-end">Total Owed</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+            <tr class="{% if row.d90plus %}table-danger{% elif row.d61_90 %}table-warning{% endif %}">
+                <td class="fw-semibold">{{ row.name }}</td>
+                <td><span class="tlc-badge tlc-badge-gray">{{ row.type }}</span></td>
+                <td class="text-end">{% if row.current %}{% currency row.current %}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                <td class="text-end">{% if row.d31_60 %}<span class="text-warning fw-semibold">{% currency row.d31_60 %}</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                <td class="text-end">{% if row.d61_90 %}<span class="text-danger fw-semibold">{% currency row.d61_90 %}</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                <td class="text-end">{% if row.d90plus %}<span class="text-danger fw-bold">{% currency row.d90plus %}</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                <td class="text-end fw-bold">{% currency row.total %}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-check-circle" style="font-size:2rem;color:#16a34a;opacity:0.5"></i>
+                    <p class="mt-2 mb-0 fw-semibold text-success">All clear — no outstanding receivables.</p>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            {% if rows %}
+            <tfoot class="table-light fw-bold">
+                <tr>
+                    <td colspan="2">Totals</td>
+                    <td class="text-end">{% currency totals.current %}</td>
+                    <td class="text-end">{% currency totals.d31_60 %}</td>
+                    <td class="text-end">{% currency totals.d61_90 %}</td>
+                    <td class="text-end">{% currency totals.d90plus %}</td>
+                    <td class="text-end">{% currency totals.total %}</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

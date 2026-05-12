@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Cash Position{% endblock %}
+{% block page_title %}Cash Position{% endblock %}
+{% block nav_cash_position_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 no-print">
+    <div>
+        <h5 class="fw-bold mb-1">Cash Position</h5>
+        <span class="text-muted small">Live balances across all cash accounts — {{ today|date:"d M Y" }}</span>
+    </div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-printer me-1"></i>Print
+    </button>
+</div>
+
+<!-- Total cash -->
+<div class="content-card p-4 mb-4" style="background:linear-gradient(135deg,#1e2d50,#2563eb);border:none;">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="text-white-50 small fw-semibold text-uppercase letter-spacing">Total Cash Position</div>
+            <div class="text-white fw-bold mt-1" style="font-size:2rem">{% currency total_balance %}</div>
+        </div>
+        <div class="col-auto text-end">
+            <div class="text-white-50 small">Today's movement</div>
+            <div class="text-white small fw-semibold">
+                <i class="bi bi-arrow-up text-success"></i> {% currency total_in_today %} in
+                &nbsp;
+                <i class="bi bi-arrow-down text-danger"></i> {% currency total_out_today %} out
+            </div>
+            <div class="mt-1 fw-bold {% if net_today >= 0 %}text-success{% else %}text-danger{% endif %}">
+                Net today: {% currency net_today %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Per-account cards -->
+<div class="row g-3 mb-4">
+{% for acct in accounts %}
+<div class="col-sm-6 col-md-3">
+    <div class="stat-card h-100">
+        <div class="stat-icon {{ acct.icon }}"><i class="bi bi-wallet2"></i></div>
+        <div class="stat-label">{{ acct.label }}</div>
+        <div class="stat-value" style="font-size:1.3rem">{% currency acct.balance %}</div>
+        <div class="stat-sub mt-2 d-flex gap-3">
+            <span><i class="bi bi-arrow-up text-success"></i> {% currency acct.in_today %}</span>
+            <span><i class="bi bi-arrow-down text-danger"></i> {% currency acct.out_today %}</span>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+
+<!-- 7-day movement table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-graph-up me-2 text-primary"></i>Last 7 Days Cash Movement</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th class="text-end">Cash In</th>
+                    <th class="text-end">Cash Out</th>
+                    <th class="text-end">Net</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for day in seven_days %}
+            <tr {% if day.date == today %}class="table-primary fw-semibold"{% endif %}>
+                <td>
+                    {{ day.date|date:"D, d M" }}
+                    {% if day.date == today %}<span class="tlc-badge tlc-badge-blue ms-2">Today</span>{% endif %}
+                </td>
+                <td class="text-end text-success">
+                    {% if day.inflow %}{% currency day.inflow %}{% else %}<span class="text-muted">—</span>{% endif %}
+                </td>
+                <td class="text-end text-danger">
+                    {% if day.outflow %}{% currency day.outflow %}{% else %}<span class="text-muted">—</span>{% endif %}
+                </td>
+                <td class="text-end fw-semibold {% if day.net >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {% if day.net %}{% currency day.net %}{% else %}<span class="text-muted">—</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
