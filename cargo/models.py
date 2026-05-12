@@ -163,11 +163,21 @@ class VehicleExpense(models.Model):
 
 class Invoice(models.Model):
     PAYMENT_CHOICES = [
-        ('cash',   'Cash'),
-        ('bank',   'Bank Transfer'),
-        ('mobile', 'Mobile Money'),
+        ('cash',         'Cash'),
+        ('bank',         'Bank Transfer'),
+        ('mpesa',        'M-Pesa'),
+        ('tigopesa',     'Yas (Tigo Pesa)'),
+        ('halopesa',     'HaloPesa'),
+        ('airtelmoney',  'Airtel Money'),
     ]
-    PAYMENT_ACCOUNT_MAP = {'cash': '1010', 'bank': '1020', 'mobile': '1025'}
+    PAYMENT_ACCOUNT_MAP = {
+        'cash':        '1010',
+        'bank':        '1020',
+        'mpesa':       '1025',
+        'tigopesa':    '1026',
+        'halopesa':    '1027',
+        'airtelmoney': '1028',
+    }
 
     trip           = models.OneToOneField(Trip, on_delete=models.PROTECT, related_name='invoice')
     number         = models.CharField(max_length=50, unique=True)
@@ -175,7 +185,7 @@ class Invoice(models.Model):
     amount         = models.DecimalField(max_digits=15, decimal_places=2)
     is_paid        = models.BooleanField(default=False)
     paid_date      = models.DateField(null=True, blank=True)
-    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, blank=True)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, blank=True)
     paid_by        = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name='paid_invoices')
     issued_by      = models.ForeignKey(User, on_delete=models.PROTECT, related_name='issued_invoices')
 

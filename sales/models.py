@@ -147,12 +147,21 @@ class DeliveryNote(models.Model):
 
 class Receipt(models.Model):
     PAYMENT_METHODS = [
-        ('cash',        'Cash'),
-        ('bank',        'Bank Transfer'),
-        ('mpesa',       'M-Pesa'),
-        ('tigopesa',    'Tigo Pesa'),
-        ('airtelmoney', 'Airtel Money'),
+        ('cash',         'Cash'),
+        ('bank',         'Bank Transfer'),
+        ('mpesa',        'M-Pesa'),
+        ('tigopesa',     'Yas (Tigo Pesa)'),
+        ('halopesa',     'HaloPesa'),
+        ('airtelmoney',  'Airtel Money'),
     ]
+    PAYMENT_ACCOUNT_MAP = {
+        'cash':        '1010',
+        'bank':        '1020',
+        'mpesa':       '1025',
+        'tigopesa':    '1026',
+        'halopesa':    '1027',
+        'airtelmoney': '1028',
+    }
     AGAINST_TYPES = [
         ('cargo_invoice',        'Cargo Invoice'),
         ('petrol_credit_payment','Petrol Credit Payment'),

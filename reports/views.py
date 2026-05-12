@@ -550,12 +550,15 @@ def cash_position(request):
     today = date.today()
     business = Business.get_solo()
 
-    CASH_ACCOUNTS = ['1010', '1020', '1025', '1030']
+    CASH_ACCOUNTS = ['1010', '1020', '1025', '1026', '1027', '1028', '1030']
     LABELS = {
-        '1010': ('Cash on Hand',   'icon-green'),
-        '1020': ('Bank Account',   'icon-blue'),
-        '1025': ('Mobile Money',   'icon-amber'),
-        '1030': ('Petty Cash',     'icon-purple'),
+        '1010': ('Cash on Hand',          'icon-green'),
+        '1020': ('Bank Account',          'icon-blue'),
+        '1025': ('M-Pesa',                'icon-amber'),
+        '1026': ('Yas (Tigo Pesa)',        'icon-teal'),
+        '1027': ('HaloPesa',              'icon-purple'),
+        '1028': ('Airtel Money',          'icon-red'),
+        '1030': ('Petty Cash',            'icon-gray'),
     }
 
     accounts_data = []

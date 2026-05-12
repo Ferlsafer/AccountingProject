@@ -20,7 +20,10 @@ ACCOUNTS = [
     ('1000', 'Current Assets',              'asset',     None),
     ('1010', 'Cash on Hand',                'asset',     '1000'),
     ('1020', 'Bank Account',                'asset',     '1000'),
-    ('1025', 'Mobile Money',                'asset',     '1000'),
+    ('1025', 'Mobile Money — M-Pesa',       'asset',     '1000'),
+    ('1026', 'Mobile Money — Yas (Tigo Pesa)', 'asset', '1000'),
+    ('1027', 'Mobile Money — HaloPesa',    'asset',     '1000'),
+    ('1028', 'Mobile Money — Airtel Money','asset',     '1000'),
     ('1030', 'Petty Cash',                  'asset',     '1000'),
     ('1100', 'Accounts Receivable',         'asset',     None),
     ('1110', 'Fuel Credit Customers',       'asset',     '1100'),
@@ -195,7 +198,7 @@ class Command(BaseCommand):
             (29, tank_k, _d(10000), _d(2400), 'bank'),
             (14, tank_p, _d(15000), _d(2820), 'cash'),
             (14, tank_d, _d(20000), _d(2720), 'cash'),
-            ( 3, tank_d, _d(10000), _d(2730), 'mobile'),
+            ( 3, tank_d, _d(10000), _d(2730), 'mpesa'),
         ]
         for day_ago, tank, litres, unit_price, method in PURCHASES:
             fp = FuelPurchase.objects.create(
@@ -424,7 +427,7 @@ class Command(BaseCommand):
                 should_pay = day_ago >= 8
                 if should_pay:
                     paid_date = min(inv_date + timedelta(days=random.randint(1, 4)), today)
-                    method = random.choice(['cash', 'bank', 'mobile'])
+                    method = random.choice(['cash', 'bank', 'mpesa', 'tigopesa', 'airtelmoney'])
                     inv.is_paid = True
                     inv.paid_date = paid_date
                     inv.payment_method = method

@@ -80,16 +80,22 @@ class DailyFuelSale(models.Model):
 
 class FuelPurchase(models.Model):
     PAYMENT_CHOICES = [
-        ('cash',   'Cash'),
-        ('bank',   'Bank Transfer'),
-        ('mobile', 'Mobile Money'),
-        ('credit', 'Credit (Supplier Account)'),
+        ('cash',         'Cash'),
+        ('bank',         'Bank Transfer'),
+        ('mpesa',        'M-Pesa'),
+        ('tigopesa',     'Yas (Tigo Pesa)'),
+        ('halopesa',     'HaloPesa'),
+        ('airtelmoney',  'Airtel Money'),
+        ('credit',       'Credit (Supplier Account)'),
     ]
     PAYMENT_ACCOUNT_MAP = {
-        'cash':   '1010',
-        'bank':   '1020',
-        'mobile': '1025',
-        'credit': '2020',
+        'cash':        '1010',
+        'bank':        '1020',
+        'mpesa':       '1025',
+        'tigopesa':    '1026',
+        'halopesa':    '1027',
+        'airtelmoney': '1028',
+        'credit':      '2020',
     }
     STATUS_CHOICES = [
         ('pending',   'Pending Approval'),
@@ -104,7 +110,7 @@ class FuelPurchase(models.Model):
     litres = models.DecimalField(max_digits=10, decimal_places=2)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
-    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='cash')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='cash')
     invoice_number = models.CharField(max_length=100, blank=True)
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
     review_note = models.TextField(blank=True)
