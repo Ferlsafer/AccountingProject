@@ -18,21 +18,36 @@
             </div>
             <div class="p-4">
                 {% if object %}
-                <div class="alert alert-info d-flex align-items-center gap-2 mb-4">
-                    <i class="bi bi-info-circle-fill"></i>
-                    <span>Current stock <strong>{{ object.current_stock|floatformat:0 }} L</strong> is not editable here — it updates automatically through fuel sales and purchases.</span>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold small">Last Purchase Price / L</label>
-                    <div class="input-group">
-                        <span class="input-group-text">TZS</span>
-                        <input type="text" class="form-control bg-light"
-                            value="{% if object.last_purchase_price %}{{ object.last_purchase_price|floatformat:2 }}{% else %}Not yet recorded{% endif %}"
-                            readonly disabled>
-                        <span class="input-group-text"><i class="bi bi-lock-fill text-muted"></i></span>
+                <!-- Read-only identity info -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold small text-muted">Tank Name</label>
+                        <div class="form-control bg-light text-muted">{{ object.name }}</div>
                     </div>
-                    <div class="form-text">Auto-updated when a fuel purchase is approved.</div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold small text-muted">Fuel Type</label>
+                        <div class="form-control bg-light text-muted">{{ object.fuel_type }}</div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold small text-muted">Current Stock</label>
+                        <div class="input-group">
+                            <div class="form-control bg-light text-muted">{{ object.current_stock|floatformat:0 }}</div>
+                            <span class="input-group-text bg-light text-muted">L</span>
+                        </div>
+                        <div class="form-text">Updates automatically via sales &amp; purchases.</div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold small text-muted">Last Purchase Price / L</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted">TZS</span>
+                            <div class="form-control bg-light text-muted">
+                                {% if object.last_purchase_price %}{{ object.last_purchase_price|floatformat:0 }}{% else %}—{% endif %}
+                            </div>
+                        </div>
+                        <div class="form-text">Auto-updated on purchase approval.</div>
+                    </div>
                 </div>
+                <hr class="mb-4">
                 {% endif %}
                 <form method="post">
                     {% csrf_token %}

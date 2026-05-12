@@ -19,7 +19,7 @@ def _can_approve_purchase(user):
 def _is_admin(user):
     return user.is_staff or getattr(user, 'profile', None) and user.profile.role == 'admin'
 from .models import DailyFuelSale, FuelPurchase, CreditCustomer, CreditSale, CreditPayment, PetrolExpense, Tank, FuelSupplier
-from .forms import DailyFuelSaleForm, FuelPurchaseForm, CreditSaleForm, CreditPaymentForm, PetrolExpenseForm, TankForm, FuelSupplierForm
+from .forms import DailyFuelSaleForm, FuelPurchaseForm, CreditSaleForm, CreditPaymentForm, PetrolExpenseForm, TankForm, TankEditForm, FuelSupplierForm
 
 
 def _date_range(request):
@@ -403,13 +403,13 @@ def tank_edit(request, pk):
         return redirect('home')
     tank = get_object_or_404(Tank, pk=pk)
     if request.method == 'POST':
-        form = TankForm(request.POST, instance=tank)
+        form = TankEditForm(request.POST, instance=tank)
         if form.is_valid():
             form.save()
             messages.success(request, f"Tank '{tank.name}' updated.")
             return redirect('petrol:tank_list')
     else:
-        form = TankForm(instance=tank)
+        form = TankEditForm(instance=tank)
     return render(request, 'petrol/tank_form.html', {'form': form, 'title': 'Edit Tank', 'object': tank})
 
 

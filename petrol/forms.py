@@ -86,6 +86,21 @@ class TankForm(forms.ModelForm):
         }
 
 
+class TankEditForm(forms.ModelForm):
+    class Meta:
+        model = Tank
+        fields = ['capacity', 'selling_price', 'is_active']
+        widgets = {
+            'capacity':      forms.NumberInput(attrs={**_num, 'placeholder': 'Litres, e.g. 20000'}),
+            'selling_price': forms.NumberInput(attrs={**_num, 'placeholder': '0.00'}),
+            'is_active':     forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        help_texts = {
+            'capacity':      'Total tank capacity in litres.',
+            'selling_price': 'Selling price per litre charged to customers.',
+        }
+
+
 class FuelSupplierForm(forms.ModelForm):
     class Meta:
         model = FuelSupplier
