@@ -105,8 +105,10 @@
             display: block;
         }
         .input-wrap {
-            position: relative;
             margin-bottom: 20px;
+        }
+        .input-inner {
+            position: relative;
         }
         .input-icon {
             position: absolute;
@@ -115,6 +117,7 @@
             color: #475569;
             font-size: 1rem;
             pointer-events: none;
+            z-index: 1;
         }
         .login-input {
             width: 100%;
@@ -226,21 +229,25 @@
 
             <div class="input-wrap">
                 <label class="field-label" for="id_username">Username</label>
-                <i class="bi bi-person input-icon"></i>
-                <input type="text" name="username" id="id_username" autofocus
-                    class="login-input" placeholder="Enter your username"
-                    value="{{ form.username.value|default:'' }}" autocomplete="username">
+                <div class="input-inner">
+                    <i class="bi bi-person input-icon"></i>
+                    <input type="text" name="username" id="id_username" autofocus
+                        class="login-input" placeholder="Enter your username"
+                        value="{{ form.username.value|default:'' }}" autocomplete="username">
+                </div>
             </div>
 
             <div class="input-wrap" style="margin-bottom:8px">
                 <label class="field-label" for="id_password">Password</label>
-                <i class="bi bi-lock input-icon"></i>
-                <input type="password" name="password" id="id_password"
-                    class="login-input" placeholder="Enter your password"
-                    autocomplete="current-password" style="padding-right:44px">
-                <button type="button" class="toggle-pw" id="togglePw" tabindex="-1">
-                    <i class="bi bi-eye" id="togglePwIcon"></i>
-                </button>
+                <div class="input-inner">
+                    <i class="bi bi-lock input-icon"></i>
+                    <input type="password" name="password" id="id_password"
+                        class="login-input" placeholder="Enter your password"
+                        autocomplete="current-password" style="padding-right:44px">
+                    <button type="button" class="toggle-pw" id="togglePw" tabindex="-1">
+                        <i class="bi bi-eye" id="togglePwIcon"></i>
+                    </button>
+                </div>
             </div>
 
             <button type="submit" class="btn-signin">
