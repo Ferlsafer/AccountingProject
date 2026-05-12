@@ -89,6 +89,12 @@ class FuelPurchase(models.Model):
         'mobile': '1025',
         'credit': '2020',
     }
+    STATUS_CHOICES = [
+        ('pending',   'Pending Approval'),
+        ('approved',  'Approved'),
+        ('returned',  'Returned'),
+        ('cancelled', 'Cancelled'),
+    ]
 
     date = models.DateField()
     supplier = models.ForeignKey(FuelSupplier, on_delete=models.PROTECT, related_name='purchases')
@@ -98,6 +104,10 @@ class FuelPurchase(models.Model):
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='cash')
     invoice_number = models.CharField(max_length=100, blank=True)
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
+    review_note = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='reviewed_purchases')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
     recorded_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='fuel_purchases')
     created_at = models.DateTimeField(auto_now_add=True)
 

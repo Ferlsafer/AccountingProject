@@ -3,14 +3,21 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Sum
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 
 
 def _can_manage_petrol(user):
     return user.is_staff or getattr(user, 'profile', None) and user.profile.role in ('admin', 'petrol_clerk')
-from django.db.models import Sum
-from django.shortcuts import render, redirect
 
-from django.shortcuts import get_object_or_404
+
+def _can_approve_purchase(user):
+    return user.is_staff or getattr(user, 'profile', None) and user.profile.role in ('admin', 'accountant')
+
+
+def _is_admin(user):
+    return user.is_staff or getattr(user, 'profile', None) and user.profile.role == 'admin'
 from .models import DailyFuelSale, FuelPurchase, CreditCustomer, CreditSale, CreditPayment, PetrolExpense, Tank, FuelSupplier
 from .forms import DailyFuelSaleForm, FuelPurchaseForm, CreditSaleForm, CreditPaymentForm, PetrolExpenseForm, TankForm, FuelSupplierForm
 
@@ -108,31 +115,125 @@ def daily_sale_add(request):
 @login_required
 def purchase_list(request):
     date_from, date_to = _date_range(request)
-    qs = FuelPurchase.objects.filter(date__gte=date_from, date__lte=date_to).select_related('tank__fuel_type', 'supplier')
+    status_filter = request.GET.get('status', '')
+    qs = FuelPurchase.objects.filter(
+        date__gte=date_from, date__lte=date_to
+    ).select_related('tank__fuel_type', 'supplier', 'reviewed_by')
+    if status_filter:
+        qs = qs.filter(status=status_filter)
     totals = qs.aggregate(litres=Sum('litres'), amount=Sum('total_amount'))
+    pending_count = FuelPurchase.objects.filter(status='pending').count()
     return render(request, 'petrol/purchase_list.html', {
-        'purchases': qs, 'totals': totals, 'date_from': date_from, 'date_to': date_to,
+        'purchases': qs,
+        'totals': totals,
+        'date_from': date_from,
+        'date_to': date_to,
+        'status_filter': status_filter,
+        'status_choices': FuelPurchase.STATUS_CHOICES,
+        'pending_count': pending_count,
     })
 
 
 @login_required
 def purchase_add(request):
+    if not _can_manage_petrol(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
     if request.method == 'POST':
         form = FuelPurchaseForm(request.POST)
         if form.is_valid():
-            with transaction.atomic():
-                purchase = form.save(commit=False)
-                purchase.recorded_by = request.user
-                purchase.total_amount = purchase.litres * purchase.unit_price
-                purchase.save()
-                purchase.tank.current_stock += purchase.litres
-                purchase.tank.save(update_fields=['current_stock'])
-                purchase.post_to_ledger(request.user)
-            messages.success(request, f"Purchase recorded: {purchase.litres}L — TZS {purchase.total_amount:,.0f}")
+            purchase = form.save(commit=False)
+            purchase.recorded_by = request.user
+            purchase.total_amount = purchase.litres * purchase.unit_price
+            purchase.status = 'pending'
+            purchase.save()
+            messages.success(request, f"Purchase submitted for approval: {purchase.litres}L — TZS {purchase.total_amount:,.0f}")
             return redirect('petrol:purchase_list')
     else:
         form = FuelPurchaseForm(initial={'date': date.today()})
     return render(request, 'petrol/purchase_form.html', {'form': form})
+
+
+@login_required
+def purchase_edit(request, pk):
+    purchase = get_object_or_404(FuelPurchase, pk=pk)
+    if purchase.status != 'returned':
+        messages.error(request, "Only returned purchases can be edited.")
+        return redirect('petrol:purchase_list')
+    if not _can_manage_petrol(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
+    if request.method == 'POST':
+        form = FuelPurchaseForm(request.POST, instance=purchase)
+        if form.is_valid():
+            p = form.save(commit=False)
+            p.total_amount = p.litres * p.unit_price
+            p.status = 'pending'
+            p.review_note = ''
+            p.save()
+            messages.success(request, "Purchase resubmitted for approval.")
+            return redirect('petrol:purchase_list')
+    else:
+        form = FuelPurchaseForm(instance=purchase)
+    return render(request, 'petrol/purchase_form.html', {'form': form, 'purchase': purchase})
+
+
+@login_required
+def purchase_approve(request, pk):
+    if not _can_approve_purchase(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
+    purchase = get_object_or_404(FuelPurchase, pk=pk, status='pending')
+    if request.method == 'POST':
+        with transaction.atomic():
+            purchase.status = 'approved'
+            purchase.reviewed_by = request.user
+            purchase.reviewed_at = timezone.now()
+            purchase.save()
+            purchase.tank.current_stock += purchase.litres
+            purchase.tank.save(update_fields=['current_stock'])
+            purchase.post_to_ledger(request.user)
+        messages.success(request, f"Purchase approved and posted to ledger — {purchase.litres}L from {purchase.supplier}.")
+        return redirect('petrol:purchase_list')
+    return redirect('petrol:purchase_list')
+
+
+@login_required
+def purchase_return(request, pk):
+    if not _can_approve_purchase(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
+    purchase = get_object_or_404(FuelPurchase, pk=pk, status='pending')
+    if request.method == 'POST':
+        note = request.POST.get('review_note', '').strip()
+        if not note:
+            messages.error(request, "Please provide a note explaining what needs to be corrected.")
+            return redirect('petrol:purchase_list')
+        purchase.status = 'returned'
+        purchase.review_note = note
+        purchase.reviewed_by = request.user
+        purchase.reviewed_at = timezone.now()
+        purchase.save()
+        messages.success(request, "Purchase returned to clerk with note.")
+        return redirect('petrol:purchase_list')
+    return redirect('petrol:purchase_list')
+
+
+@login_required
+def purchase_cancel(request, pk):
+    if not _is_admin(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
+    purchase = get_object_or_404(FuelPurchase, pk=pk)
+    if purchase.status == 'approved':
+        messages.error(request, "Approved purchases cannot be cancelled.")
+        return redirect('petrol:purchase_list')
+    if request.method == 'POST':
+        purchase.status = 'cancelled'
+        purchase.save()
+        messages.success(request, "Purchase cancelled.")
+        return redirect('petrol:purchase_list')
+    return redirect('petrol:purchase_list')
 
 
 # ── Credit Sales ─────────────────────────────────────────────────────────────

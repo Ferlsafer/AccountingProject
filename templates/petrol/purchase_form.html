@@ -11,10 +11,19 @@
         <div class="d-flex align-items-center mb-4">
             <a href="{% url 'petrol:purchase_list' %}" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
             <div>
-                <h5 class="fw-bold mb-0">Record Fuel Purchase</h5>
-                <span class="text-muted small">Stock delivery from supplier</span>
+                <h5 class="fw-bold mb-0">{% if purchase %}Edit Purchase Request{% else %}Record Fuel Purchase{% endif %}</h5>
+                <span class="text-muted small">{% if purchase %}Correct and resubmit for approval{% else %}Stock delivery from supplier{% endif %}</span>
             </div>
         </div>
+        {% if purchase and purchase.review_note %}
+        <div class="alert alert-warning d-flex gap-2 mb-3">
+            <i class="bi bi-chat-left-text fs-5 flex-shrink-0"></i>
+            <div>
+                <div class="fw-semibold mb-1">Note from {{ purchase.reviewed_by.get_full_name|default:purchase.reviewed_by.username }}</div>
+                <div class="small">{{ purchase.review_note }}</div>
+            </div>
+        </div>
+        {% endif %}
         <div class="content-card">
             <div class="content-card-header">
                 <span class="content-card-title"><i class="bi bi-truck me-2 text-primary"></i>Purchase Details</span>
@@ -43,7 +52,9 @@
                     <div class="mb-4"><label class="form-label fw-semibold">Invoice Number <span class="text-muted fw-normal">(optional)</span></label>{{ form.invoice_number }}</div>
                     {% if form.errors %}<div class="alert alert-danger small">{{ form.errors }}</div>{% endif %}
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-check-lg me-1"></i>Record Purchase</button>
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="bi bi-send me-1"></i>{% if purchase %}Resubmit for Approval{% else %}Submit for Approval{% endif %}
+                        </button>
                         <a href="{% url 'petrol:purchase_list' %}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
