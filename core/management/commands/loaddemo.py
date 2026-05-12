@@ -313,9 +313,9 @@ class Command(BaseCommand):
     # ── Cargo: vehicles, drivers, customers, trips ────────────────────────────
 
     def _setup_cargo(self, admin, today):
-        v1 = Vehicle.objects.create(plate_number='T 123 ABC', make='Scania',   model='R450',   year=2019)
-        v2 = Vehicle.objects.create(plate_number='T 456 DEF', make='Volvo',    model='FH 460', year=2020)
-        v3 = Vehicle.objects.create(plate_number='T 789 GHI', make='Mercedes', model='Actros', year=2018)
+        v1 = Vehicle.objects.create(plate_number='T 123 ABC', make='Scania',   model='R450',   year=2019, capacity_tons=_d(30))
+        v2 = Vehicle.objects.create(plate_number='T 456 DEF', make='Volvo',    model='FH 460', year=2020, capacity_tons=_d(28))
+        v3 = Vehicle.objects.create(plate_number='T 789 GHI', make='Mercedes', model='Actros', year=2018, capacity_tons=_d(25))
         vehicles = [v1, v2, v3]
 
         d1 = Driver.objects.create(name='Mohamed Ally',  phone='+255 754 100 001', license_number='TZ-DL-11001')

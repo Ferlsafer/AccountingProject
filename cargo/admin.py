@@ -4,7 +4,7 @@ from .models import Vehicle, Driver, CargoCustomer, Trip, TripExpense, VehicleEx
 
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
-    list_display = ['plate_number', 'make', 'model', 'year', 'is_active']
+    list_display = ['plate_number', 'make', 'model', 'year', 'capacity_tons', 'is_active']
     list_filter = ['is_active', 'make']
     search_fields = ['plate_number', 'make', 'model']
 

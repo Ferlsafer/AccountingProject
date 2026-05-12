@@ -10,6 +10,7 @@ class Vehicle(models.Model):
     make = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
     year = models.PositiveIntegerField(null=True, blank=True)
+    capacity_tons = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, help_text='Load capacity in metric tons')
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -22,7 +23,7 @@ class Vehicle(models.Model):
 class Driver(models.Model):
     name = models.CharField(max_length=200)
     phone = models.CharField(max_length=50, blank=True)
-    license_number = models.CharField(max_length=50, blank=True)
+    license_number = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
 
     class Meta:
