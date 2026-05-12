@@ -16,9 +16,9 @@
             <i class="bi bi-calendar3 me-1"></i>{{ today|date:"l, j F Y" }}
         </span>
     </div>
-    {% if user.is_staff or role == 'admin' or role == 'accountant' %}
-    <a href="/admin/" class="btn btn-sm btn-outline-secondary no-print">
-        <i class="bi bi-gear me-1"></i>Administration
+    {% if user.is_staff or role == 'admin' %}
+    <a href="{% url 'core:management_hub' %}" class="btn btn-sm btn-outline-secondary no-print">
+        <i class="bi bi-building-gear me-1"></i>Management
     </a>
     {% elif role == 'petrol_clerk' %}
     <a href="{% url 'petrol:daily_sale_add' %}" class="btn btn-sm btn-primary no-print">
