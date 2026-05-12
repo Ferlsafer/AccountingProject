@@ -7,18 +7,21 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from core.models import Account, Business, Employee, SalaryPayment
+from core.models import Account, Business, Employee, SalaryPayment, PettyCashTransaction
 from petrol.models import (CreditCustomer, CreditPayment, CreditSale,
                             DailyFuelSale, FuelPurchase, FuelSupplier,
                             FuelType, PetrolExpense, Tank)
 from cargo.models import (CargoCustomer, Driver, Invoice, Trip, TripExpense,
                            Vehicle, VehicleExpense)
+from sales.models import (Customer as SalesCustomer, JobOrder, Quotation,
+                           QuotationLine, DeliveryNote, Receipt)
 
 ACCOUNTS = [
     ('1000', 'Current Assets',              'asset',     None),
     ('1010', 'Cash on Hand',                'asset',     '1000'),
     ('1020', 'Bank Account',                'asset',     '1000'),
     ('1025', 'Mobile Money',                'asset',     '1000'),
+    ('1030', 'Petty Cash',                  'asset',     '1000'),
     ('1100', 'Accounts Receivable',         'asset',     None),
     ('1110', 'Fuel Credit Customers',       'asset',     '1100'),
     ('1120', 'Cargo Credit Customers',      'asset',     '1100'),
@@ -30,12 +33,14 @@ ACCOUNTS = [
     ('1310', 'Vehicles',                    'asset',     '1300'),
     ('1320', 'Equipment',                   'asset',     '1300'),
     ('1390', 'Accumulated Depreciation',    'asset',     '1300'),
+    ('1350', 'VAT Receivable',              'asset',     '1000'),
     ('2000', 'Current Liabilities',         'liability', None),
     ('2010', 'Accounts Payable',            'liability', '2000'),
     ('2020', 'Fuel Supplier Payable',       'liability', '2000'),
     ('2030', 'Accrued Salaries',            'liability', '2000'),
     ('2100', 'Long-term Liabilities',       'liability', None),
     ('2110', 'Loans Payable',               'liability', '2100'),
+    ('2200', 'VAT Payable',                 'liability', '2000'),
     ("3000", "Owner's Equity",              'equity',    None),
     ("3010", "Owner's Capital",             'equity',    '3000'),
     ("3020", 'Retained Earnings',           'equity',    '3000'),
@@ -55,6 +60,7 @@ ACCOUNTS = [
     ('5150', 'Office & Admin Expenses',     'expense',   '5100'),
     ('5160', 'Utilities',                   'expense',   '5100'),
     ('5170', 'Rent Expense',                'expense',   '5100'),
+    ('5190', 'Miscellaneous Petty Expenses','expense',   '5100'),
 ]
 
 
@@ -93,6 +99,12 @@ class Command(BaseCommand):
 
             self.stdout.write('  Recording salary payments (2 months)...')
             self._setup_salaries(admin, today)
+
+            self.stdout.write('  Loading sales workflow data...')
+            self._setup_sales(admin, today)
+
+            self.stdout.write('  Recording petty cash transactions...')
+            self._setup_petty_cash(admin, today)
 
         self.stdout.write(self.style.SUCCESS(
             '\nDemo data loaded successfully!'
@@ -471,3 +483,112 @@ class Command(BaseCommand):
                     posted_by=admin,
                 )
                 sp.post_to_ledger(admin)
+
+    # ── Sales workflow: customers, job orders, quotations, delivery notes, receipts ──
+
+    def _setup_sales(self, admin, today):
+        sc1 = SalesCustomer.objects.create(name='Mbeya Hardware Supplies Ltd', phone='+255 25 250 2001', customer_type='cargo')
+        sc2 = SalesCustomer.objects.create(name='Sunshine Construction Co',    phone='+255 25 250 2002', customer_type='cargo')
+        sc3 = SalesCustomer.objects.create(name='TBC Mining Co',               phone='+255 25 250 2003', customer_type='both')
+        sc4 = SalesCustomer.objects.create(name='Uhuru Transporters Ltd',      phone='+255 25 250 2004', customer_type='cargo')
+        sc5 = SalesCustomer.objects.create(name='Dar Commodities Ltd',         phone='+255 25 250 2005', customer_type='cargo')
+        customers = [sc1, sc2, sc3, sc4, sc5]
+
+        JOB_DATA = [
+            (25, 'Mbeya', 'Dar es Salaam', 'Building materials (steel beams)',  'completed',   sc1),
+            (20, 'Mbeya', 'Tunduma',       'Agricultural produce (maize)',      'completed',   sc2),
+            (15, 'Mbeya', 'Dodoma',        'Consumer goods (beverages)',        'in_progress', sc3),
+            (10, 'Mbeya', 'Iringa',        'Industrial machinery parts',        'quoted',      sc4),
+            ( 5, 'Mbeya', 'Songea',        'Textiles and clothing',             'accepted',    sc5),
+            ( 2, 'Dar es Salaam', 'Mbeya', 'Electronics and appliances',        'draft',       sc1),
+        ]
+        jobs = []
+        for day_ago, origin, dest, desc, status, cust in JOB_DATA:
+            job = JobOrder(
+                date=today - timedelta(days=day_ago),
+                customer=cust, origin=origin, destination=dest,
+                cargo_description=desc,
+                estimated_weight_tons=_d(random.randint(5, 30)),
+                status=status, created_by=admin,
+            )
+            job.save()
+            jobs.append(job)
+
+        QUO_DATA = [
+            (24, jobs[0], sc1, 'accepted', 2400000),
+            (19, jobs[1], sc2, 'accepted', 1100000),
+            ( 9, jobs[3], sc4, 'sent',     1600000),
+            ( 4, jobs[4], sc5, 'draft',    1200000),
+        ]
+        for day_ago, job, cust, status, amount in QUO_DATA:
+            quo = Quotation(
+                date=today - timedelta(days=day_ago),
+                customer=cust, job_order=job,
+                valid_until=today + timedelta(days=14),
+                notes='Standard transport quotation',
+                status=status, created_by=admin,
+            )
+            quo.save()
+            QuotationLine.objects.create(
+                quotation=quo,
+                description=f'Transport: {job.origin} → {job.destination}',
+                quantity=_d(1),
+                unit_price=_d(amount),
+            )
+
+        completed_trips = Trip.objects.filter(status='completed').order_by('date')[:4]
+        for i, trip in enumerate(completed_trips):
+            cust = customers[i % len(customers)]
+            dn = DeliveryNote(
+                date=trip.date + timedelta(days=1),
+                trip=trip, customer=cust,
+                origin=trip.origin, destination=trip.destination,
+                cargo_description=trip.cargo_description,
+                driver_name=trip.driver.name,
+                vehicle_plate=trip.vehicle.plate_number,
+                recipient_name=f'Warehouse Manager — {trip.destination}',
+                recipient_signature_received=True,
+                created_by=admin,
+            )
+            dn.save()
+
+        paid_invoices = Invoice.objects.filter(is_paid=True).order_by('date')[:4]
+        for i, inv in enumerate(paid_invoices):
+            cust = customers[i % len(customers)]
+            rec = Receipt(
+                date=inv.paid_date or inv.date,
+                customer=cust, amount=inv.amount,
+                payment_method=inv.payment_method or 'cash',
+                against_type='cargo_invoice', against_id=inv.pk,
+                notes=f'Payment for invoice {inv.number}',
+                created_by=admin,
+            )
+            rec.save()
+
+    # ── Petty cash transactions ────────────────────────────────────────────────
+
+    def _setup_petty_cash(self, admin, today):
+        PCT_DATA = [
+            # (day_ago, type,                   amount,  category,       description,                                   rcv_ref)
+            (28, 'inflow_from_main_cash',        500000, '',             'Opening petty cash float',                    ''),
+            (14, 'inflow_from_main_cash',        300000, '',             'Petty cash top-up mid-month',                 ''),
+            (25, 'expense',                       35000, 'office',       'Printing paper and pens',                     'RCV-001'),
+            (22, 'expense',                       48000, 'utilities',    'Water dispenser refill — office',             'RCV-002'),
+            (18, 'expense',                       75000, 'transport',    'Taxi fare — document delivery to TRA',        'RCV-003'),
+            (12, 'expense',                       25000, 'office',       'Postage and courier charges',                 'RCV-004'),
+            ( 9, 'expense',                       62000, 'refreshments', 'Tea, coffee and biscuits — staff meeting',    'RCV-005'),
+            ( 5, 'expense',                       40000, 'cleaning',     'Cleaning supplies — office',                  'RCV-006'),
+            ( 2, 'expense',                       30000, 'transport',    'Fuel for admin motorcycle',                   'RCV-007'),
+            ( 1, 'return_to_main_cash',          100000, '',             'Return excess cash to main till',             ''),
+        ]
+        for day_ago, ttype, amount, category, desc, rcv in PCT_DATA:
+            pct = PettyCashTransaction.objects.create(
+                date=today - timedelta(days=day_ago),
+                transaction_type=ttype,
+                amount=_d(amount),
+                expense_category=category,
+                description=desc,
+                receipt_reference=rcv,
+                created_by=admin,
+            )
+            pct.post_to_ledger(admin)
