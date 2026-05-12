@@ -111,11 +111,14 @@
                     {% if inv.paid_date %}{{ inv.paid_date|date:"d M Y" }}{% else %}—{% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'cargo:trip_detail' inv.trip.pk %}" class="btn btn-sm btn-outline-secondary">
+                    <a href="{% url 'cargo:trip_detail' inv.trip.pk %}" class="btn btn-sm btn-outline-secondary" title="View trip">
                         <i class="bi bi-eye"></i>
                     </a>
+                    <a href="{% url 'cargo:invoice_print' inv.pk %}" target="_blank" class="btn btn-sm btn-outline-primary" title="Print invoice">
+                        <i class="bi bi-printer"></i>
+                    </a>
                     {% if not inv.is_paid %}
-                    <a href="{% url 'cargo:invoice_pay' inv.pk %}" class="btn btn-sm btn-success">
+                    <a href="{% url 'cargo:invoice_pay' inv.pk %}" class="btn btn-sm btn-success" title="Record payment">
                         <i class="bi bi-cash"></i>
                     </a>
                     {% endif %}

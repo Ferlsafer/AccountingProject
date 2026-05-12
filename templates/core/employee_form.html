@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Add Employee{% endblock %}
+{% block page_title %}Add Employee{% endblock %}
+{% block nav_employees_active %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7 col-xl-6">
+        <div class="content-card form-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-person-plus me-2 text-primary"></i>Add Employee
+                </span>
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Full Name <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Role <span class="text-danger">*</span></label>
+                            {{ form.role }}
+                            {% if form.role.errors %}<div class="invalid-feedback d-block">{{ form.role.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Phone</label>
+                            {{ form.phone }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Monthly Salary (TZS) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">TZS</span>
+                                {{ form.monthly_salary }}
+                            </div>
+                            {% if form.monthly_salary.errors %}<div class="invalid-feedback d-block">{{ form.monthly_salary.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Hire Date</label>
+                            {{ form.hire_date }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label fw-semibold small" for="{{ form.is_active.id_for_label }}">
+                            Active employee
+                        </label>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Save Employee
+                        </button>
+                        <a href="{% url 'core:employee_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

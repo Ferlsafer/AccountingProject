@@ -1,0 +1,530 @@
+{% load static %}
+{% load tlc_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice {{ invoice.number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-size: 13px;
+            background: #e5e7eb;
+            color: #1e293b;
+        }
+
+        /* ── Screen: floating paper preview ── */
+        .print-toolbar {
+            background: #1e2d50;
+            padding: 14px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .print-toolbar span {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+        .print-toolbar .btn-group { display: flex; gap: 8px; }
+        .btn-print {
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-print:hover { background: #2563eb; }
+        .btn-back {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-back:hover { color: #fff; border-color: #64748b; }
+
+        .page-wrapper {
+            padding: 32px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* ── Invoice paper ── */
+        .invoice-paper {
+            background: #ffffff;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 16mm 18mm;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+            border-radius: 4px;
+            position: relative;
+        }
+
+        /* ── Header ── */
+        .inv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10mm;
+            padding-bottom: 8mm;
+            border-bottom: 3px solid #1e2d50;
+        }
+        .company-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1e2d50;
+            letter-spacing: -0.3px;
+            line-height: 1.1;
+        }
+        .company-tagline {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .company-contact {
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.7;
+            text-align: right;
+        }
+        .invoice-label {
+            font-size: 32px;
+            font-weight: 900;
+            color: #1e2d50;
+            letter-spacing: 2px;
+            text-align: right;
+            margin-bottom: 6px;
+        }
+        .inv-meta-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .inv-meta-table td {
+            padding: 2px 0;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .inv-meta-table .label {
+            color: #64748b;
+            width: 100px;
+        }
+        .inv-meta-table .value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* ── Bill To / Trip sections ── */
+        .inv-parties {
+            display: flex;
+            justify-content: space-between;
+            gap: 12mm;
+            margin-bottom: 8mm;
+        }
+        .inv-party {
+            flex: 1;
+        }
+        .section-label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        .party-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+        .party-detail {
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* ── Trip info strip ── */
+        .trip-strip {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-bottom: 8mm;
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .trip-strip-item .ts-label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
+        }
+        .trip-strip-item .ts-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 1px;
+        }
+
+        /* ── Line items table ── */
+        .inv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6mm;
+        }
+        .inv-table thead tr {
+            background: #1e2d50;
+        }
+        .inv-table thead th {
+            padding: 9px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #fff;
+        }
+        .inv-table thead th:last-child { text-align: right; }
+        .inv-table tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .inv-table tbody tr:last-child { border-bottom: 2px solid #e2e8f0; }
+        .inv-table tbody td {
+            padding: 9px 12px;
+            font-size: 12px;
+            color: #334155;
+            vertical-align: top;
+        }
+        .inv-table tbody td:last-child { text-align: right; font-weight: 600; }
+        .inv-table tfoot td {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        .inv-table tfoot .subtotal-row td { color: #64748b; }
+        .inv-table tfoot .total-row {
+            background: #f0f7ff;
+        }
+        .inv-table tfoot .total-row td {
+            font-size: 15px;
+            font-weight: 800;
+            color: #1e2d50;
+            padding: 12px;
+        }
+        .inv-table tfoot .total-row td:last-child { text-align: right; }
+
+        /* ── Payment status stamp ── */
+        .stamp-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 8mm;
+        }
+        .stamp {
+            border: 3px solid;
+            border-radius: 6px;
+            padding: 6px 20px;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            transform: rotate(-4deg);
+            display: inline-block;
+        }
+        .stamp-paid { color: #16a34a; border-color: #16a34a; }
+        .stamp-unpaid { color: #dc2626; border-color: #dc2626; }
+
+        /* ── Payment details & notes ── */
+        .inv-footer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8mm;
+            margin-bottom: 8mm;
+            padding-top: 6mm;
+            border-top: 1px solid #e2e8f0;
+        }
+        .inv-footer-grid .section-label { margin-bottom: 6px; }
+        .payment-detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            padding: 3px 0;
+            color: #475569;
+            border-bottom: 1px dashed #f1f5f9;
+        }
+        .payment-detail-row .pd-label { color: #94a3b8; }
+        .payment-detail-row .pd-value { font-weight: 600; }
+
+        /* ── Bottom rule ── */
+        .inv-bottom {
+            border-top: 2px solid #1e2d50;
+            padding-top: 5mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .thank-you {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1e2d50;
+        }
+        .issued-by-text {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        .watermark-paid {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(22, 163, 74, 0.06);
+            letter-spacing: 12px;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+
+        /* ── Print media ── */
+        @media print {
+            body { background: #fff; }
+            .print-toolbar { display: none !important; }
+            .page-wrapper { padding: 0; }
+            .invoice-paper {
+                box-shadow: none;
+                border-radius: 0;
+                width: 100%;
+                min-height: auto;
+                padding: 12mm 14mm;
+            }
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Toolbar (screen only) -->
+<div class="print-toolbar">
+    <span><i class="bi bi-file-earmark-text me-2"></i>Invoice Preview — {{ invoice.number }}</span>
+    <div class="btn-group">
+        <a href="{% url 'cargo:trip_detail' invoice.trip.pk %}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <button class="btn-print" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Invoice
+        </button>
+    </div>
+</div>
+
+<!-- Paper -->
+<div class="page-wrapper">
+<div class="invoice-paper">
+
+    {% if invoice.is_paid %}<div class="watermark-paid">Paid</div>{% endif %}
+
+    <!-- Header -->
+    <div class="inv-header">
+        <div>
+            <div class="company-name">{{ business.name }}</div>
+            <div class="company-tagline">Cargo &amp; Transport Services</div>
+            {% if business.address %}
+            <div class="company-contact" style="text-align:left; margin-top:6px;">
+                {{ business.address }}{% if business.phone %}<br>{{ business.phone }}{% endif %}
+                {% if business.email %}<br>{{ business.email }}{% endif %}
+                {% if business.tin %}<br>TIN: {{ business.tin }}{% endif %}
+            </div>
+            {% endif %}
+        </div>
+        <div style="text-align:right;">
+            <div class="invoice-label">INVOICE</div>
+            <table class="inv-meta-table">
+                <tr>
+                    <td class="label">Invoice No.</td>
+                    <td class="value">{{ invoice.number }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Date</td>
+                    <td class="value">{{ invoice.date|date:"d F Y" }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Trip Date</td>
+                    <td class="value">{{ invoice.trip.date|date:"d F Y" }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Status</td>
+                    <td class="value" style="color:{% if invoice.is_paid %}#16a34a{% else %}#dc2626{% endif %}">
+                        {% if invoice.is_paid %}PAID{% else %}UNPAID{% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bill To + Trip parties -->
+    <div class="inv-parties">
+        <div class="inv-party">
+            <div class="section-label">Bill To</div>
+            <div class="party-name">{{ invoice.trip.customer.name }}</div>
+            <div class="party-detail">
+                {% if invoice.trip.customer.phone %}{{ invoice.trip.customer.phone }}<br>{% endif %}
+                {% if invoice.trip.customer.email %}{{ invoice.trip.customer.email }}<br>{% endif %}
+                {% if invoice.trip.customer.address %}{{ invoice.trip.customer.address }}{% endif %}
+            </div>
+        </div>
+        <div class="inv-party" style="text-align:right;">
+            <div class="section-label">Issued By</div>
+            <div class="party-name">{{ business.name }}</div>
+            <div class="party-detail">
+                {{ invoice.issued_by.get_full_name|default:invoice.issued_by.username }}<br>
+                Issued: {{ invoice.date|date:"d F Y" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip strip -->
+    <div class="trip-strip">
+        <div class="trip-strip-item">
+            <div class="ts-label">Route</div>
+            <div class="ts-value">{{ invoice.trip.origin }} → {{ invoice.trip.destination }}</div>
+        </div>
+        <div class="trip-strip-item">
+            <div class="ts-label">Vehicle</div>
+            <div class="ts-value">{{ invoice.trip.vehicle.plate_number }}</div>
+        </div>
+        <div class="trip-strip-item">
+            <div class="ts-label">Driver</div>
+            <div class="ts-value">{{ invoice.trip.driver.name }}</div>
+        </div>
+        {% if invoice.trip.cargo_description %}
+        <div class="trip-strip-item">
+            <div class="ts-label">Cargo</div>
+            <div class="ts-value">{{ invoice.trip.cargo_description }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Line items -->
+    <table class="inv-table">
+        <thead>
+            <tr>
+                <th style="width:5%">#</th>
+                <th style="width:55%">Description</th>
+                <th style="width:20%">Date</th>
+                <th style="width:20%; text-align:right">Amount ({{ business.base_currency }})</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>
+                    <strong>Cargo Transportation Services</strong><br>
+                    <span style="color:#64748b; font-size:11px;">
+                        {{ invoice.trip.origin }} to {{ invoice.trip.destination }}
+                        {% if invoice.trip.cargo_description %} — {{ invoice.trip.cargo_description }}{% endif %}
+                    </span>
+                </td>
+                <td>{{ invoice.trip.date|date:"d M Y" }}</td>
+                <td>{{ invoice.amount|floatformat:0 }}</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr class="subtotal-row">
+                <td colspan="3" style="text-align:right; color:#64748b;">Subtotal</td>
+                <td style="text-align:right;">{{ invoice.amount|floatformat:0 }}</td>
+            </tr>
+            <tr class="subtotal-row">
+                <td colspan="3" style="text-align:right; color:#64748b;">Tax</td>
+                <td style="text-align:right; color:#64748b;">—</td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="3" style="text-align:right;">Total Due</td>
+                <td>{{ business.base_currency }} {{ invoice.amount|floatformat:0 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- Payment stamp -->
+    <div class="stamp-wrapper">
+        {% if invoice.is_paid %}
+        <div class="stamp stamp-paid">Paid</div>
+        {% else %}
+        <div class="stamp stamp-unpaid">Unpaid</div>
+        {% endif %}
+    </div>
+
+    <!-- Footer grid: payment details + notes -->
+    <div class="inv-footer-grid">
+        <div>
+            <div class="section-label">Payment Details</div>
+            {% if invoice.is_paid %}
+            <div class="payment-detail-row">
+                <span class="pd-label">Paid On</span>
+                <span class="pd-value">{{ invoice.paid_date|date:"d F Y" }}</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="pd-label">Method</span>
+                <span class="pd-value">{{ invoice.get_payment_method_display }}</span>
+            </div>
+            {% else %}
+            <div class="payment-detail-row">
+                <span class="pd-label">Cash</span>
+                <span class="pd-value">Accepted</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="pd-label">Bank Transfer</span>
+                <span class="pd-value">Accepted</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="pd-label">Mobile Money</span>
+                <span class="pd-value">Accepted</span>
+            </div>
+            {% endif %}
+        </div>
+        <div>
+            <div class="section-label">Notes &amp; Terms</div>
+            <p style="font-size:11px; color:#64748b; line-height:1.7;">
+                Payment is due upon receipt of this invoice.
+                Please reference invoice number <strong>{{ invoice.number }}</strong> in all correspondence.
+                {% if invoice.trip.notes %}
+                <br><br>{{ invoice.trip.notes }}
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="inv-bottom">
+        <div class="thank-you">Thank you for your business!</div>
+        <div class="issued-by-text">
+            Prepared by {{ invoice.issued_by.get_full_name|default:invoice.issued_by.username }}
+            &nbsp;·&nbsp; {{ invoice.date|date:"d M Y" }}
+        </div>
+    </div>
+
+</div>
+</div>
+
+</body>
+</html>

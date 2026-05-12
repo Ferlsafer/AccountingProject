@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Journal Ledger{% endblock %}
+{% block page_title %}Journal Ledger{% endblock %}
+{% block nav_ledger_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Journal Ledger</h5>
+        <span class="text-muted small"><i class="bi bi-journal-bookmark me-1"></i>All double-entry postings</span>
+    </div>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">Source</label>
+            <select name="source" class="form-select form-select-sm">
+                <option value="">All Sources</option>
+                {% for src in source_types %}
+                <option value="{{ src }}" {% if source_filter == src %}selected{% endif %}>{{ src }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-3">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-journal-text"></i></div>
+            <div class="stat-label">Total Entries</div>
+            <div class="stat-value">{{ entries|length }}</div>
+            <div class="stat-sub">in period</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="bi bi-arrow-left-right"></i></div>
+            <div class="stat-label">Total Posted</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency total_debit %}</div>
+            <div class="stat-sub">debit side</div>
+        </div>
+    </div>
+</div>
+
+<!-- Entries table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-table me-2 text-primary"></i>Entries
+        </span>
+        <span class="text-muted small">{{ entries|length }} record{{ entries|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Source</th>
+                    <th class="text-end">Debit</th>
+                    <th class="text-end">Credit</th>
+                    <th class="text-center">Balanced</th>
+                    <th>By</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td><code class="text-primary small">{{ entry.reference }}</code></td>
+                <td class="text-muted small">{{ entry.date|date:"d M Y" }}</td>
+                <td class="small">{{ entry.description|truncatechars:55 }}</td>
+                <td><span class="tlc-badge tlc-badge-gray">{{ entry.source_type|default:"manual" }}</span></td>
+                <td class="text-end fw-semibold small">{% currency entry.total_debit %}</td>
+                <td class="text-end text-muted small">{% currency entry.total_credit %}</td>
+                <td class="text-center">
+                    {% if entry.is_balanced %}
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    {% else %}
+                    <i class="bi bi-x-circle-fill text-danger"></i>
+                    {% endif %}
+                </td>
+                <td class="text-muted small">{{ entry.created_by.get_full_name|default:entry.created_by.username }}</td>
+            </tr>
+            <!-- Lines sub-row -->
+            <tr class="table-light">
+                <td colspan="8" class="py-1 px-4">
+                    <div class="d-flex flex-wrap gap-3">
+                    {% for line in entry.lines.all %}
+                        <span class="small text-muted">
+                            {{ line.account.code }} {{ line.account.name }}:
+                            {% if line.debit %}
+                            <span class="text-success fw-semibold">Dr {% currency line.debit %}</span>
+                            {% else %}
+                            <span class="text-danger fw-semibold">Cr {% currency line.credit %}</span>
+                            {% endif %}
+                        </span>
+                    {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <i class="bi bi-journal-x" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No journal entries in this period.</p>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            {% if entries %}
+            <tfoot class="table-light">
+                <tr class="fw-bold">
+                    <td colspan="4">Total</td>
+                    <td class="text-end">{% currency total_debit %}</td>
+                    <td class="text-end">{% currency total_debit %}</td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

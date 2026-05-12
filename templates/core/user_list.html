@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}User Accounts{% endblock %}
+{% block page_title %}User Accounts{% endblock %}
+{% block nav_users_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">User Accounts</h5>
+        <span class="text-muted small"><i class="bi bi-person-gear me-1"></i>System users and their roles</span>
+    </div>
+    <a href="{% url 'core:user_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add User
+    </a>
+</div>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-people me-2 text-primary"></i>All Users
+        </span>
+        <span class="text-muted small">{{ users|length }} user{{ users|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Access Level</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for u in users %}
+            <tr>
+                <td class="fw-semibold">{{ u.get_full_name|default:"—" }}</td>
+                <td><code class="text-muted">{{ u.username }}</code></td>
+                <td>
+                    {% with role=u.profile.role %}
+                    {% if role == 'admin' %}
+                    <span class="tlc-badge tlc-badge-purple">Admin</span>
+                    {% elif role == 'petrol_clerk' %}
+                    <span class="tlc-badge tlc-badge-amber">Petrol Clerk</span>
+                    {% elif role == 'cargo_clerk' %}
+                    <span class="tlc-badge tlc-badge-blue">Cargo Clerk</span>
+                    {% elif role == 'accountant' %}
+                    <span class="tlc-badge tlc-badge-teal">Accountant</span>
+                    {% endif %}
+                    {% endwith %}
+                </td>
+                <td class="text-muted small">
+                    {% if u.is_superuser %}
+                        Full system access (superuser)
+                    {% elif u.is_staff %}
+                        Staff — all menus
+                    {% else %}
+                        {{ u.profile.get_role_display }} menu only
+                    {% endif %}
+                </td>
+                <td>
+                    {% if u.is_active %}
+                    <span class="tlc-badge tlc-badge-green">Active</span>
+                    {% else %}
+                    <span class="tlc-badge tlc-badge-red">Disabled</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'core:user_edit' u.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center py-5 text-muted">No users found.</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Role guide -->
+<div class="content-card mt-4">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-info-circle me-2 text-primary"></i>Role Guide</span>
+    </div>
+    <div class="p-4">
+        <div class="row g-3">
+            <div class="col-sm-6 col-lg-3">
+                <div class="d-flex gap-3 align-items-start">
+                    <span class="tlc-badge tlc-badge-amber mt-1">Petrol Clerk</span>
+                    <div class="small text-muted">Petrol Station section only — sales, purchases, credit customers, expenses.</div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="d-flex gap-3 align-items-start">
+                    <span class="tlc-badge tlc-badge-blue mt-1">Cargo Clerk</span>
+                    <div class="small text-muted">Cargo section only — trips, invoices, vehicle expenses, customers.</div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="d-flex gap-3 align-items-start">
+                    <span class="tlc-badge tlc-badge-teal mt-1">Accountant</span>
+                    <div class="small text-muted">Finance and Reports sections — ledger, accounts, employees, salaries, all reports.</div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="d-flex gap-3 align-items-start">
+                    <span class="tlc-badge tlc-badge-purple mt-1">Admin</span>
+                    <div class="small text-muted">All sections visible. Use is_staff for full system + administration panel access.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Add User{% endblock %}
+{% block page_title %}Add User{% endblock %}
+{% block nav_users_active %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7 col-xl-6">
+        <div class="content-card form-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-person-plus me-2 text-primary"></i>Create User Account
+                </span>
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">First Name <span class="text-danger">*</span></label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Last Name</label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Username <span class="text-danger">*</span></label>
+                        {{ form.username }}
+                        {% if form.username.errors %}<div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>{% endif %}
+                        <div class="form-text text-muted">Used to log in. e.g. <code>juma.petrol</code></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Role <span class="text-danger">*</span></label>
+                        {{ form.role }}
+                        {% if form.role.errors %}<div class="invalid-feedback d-block">{{ form.role.errors.0 }}</div>{% endif %}
+                        <div class="form-text text-muted" id="role-hint"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Password <span class="text-danger">*</span></label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}<div class="invalid-feedback d-block">{{ form.password1.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Confirm Password <span class="text-danger">*</span></label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}<div class="invalid-feedback d-block">{{ form.password2.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Create Account
+                        </button>
+                        <a href="{% url 'core:user_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const roleHints = {
+    'admin':        'Sees all sections of the app.',
+    'petrol_clerk': 'Sees Petrol Station section only.',
+    'cargo_clerk':  'Sees Cargo section only.',
+    'accountant':   'Sees Finance and Reports sections only.',
+};
+const roleSelect = document.getElementById('id_role');
+const hint = document.getElementById('role-hint');
+
+function updateHint() {
+    hint.textContent = roleHints[roleSelect.value] || '';
+}
+roleSelect.addEventListener('change', updateHint);
+updateHint();
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Chart of Accounts{% endblock %}
+{% block page_title %}Chart of Accounts{% endblock %}
+{% block nav_accounts_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Chart of Accounts</h5>
+        <span class="text-muted small"><i class="bi bi-list-columns me-1"></i>All ledger accounts</span>
+    </div>
+    <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print">
+        <i class="bi bi-printer me-1"></i>Print
+    </button>
+</div>
+
+<!-- Type filter -->
+<form method="get" class="content-card p-3 mb-4 no-print">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">Account Type</label>
+            <select name="type" class="form-select form-select-sm">
+                <option value="">All Types</option>
+                {% for val, label in type_choices %}
+                <option value="{{ val }}" {% if type_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-3">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-table me-2 text-primary"></i>Accounts
+        </span>
+        <span class="text-muted small">{{ accounts|length }} account{{ accounts|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th style="width:10%">Code</th>
+                    <th>Account Name</th>
+                    <th>Type</th>
+                    <th>Parent</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for acc in accounts %}
+            <tr>
+                <td><code class="text-primary">{{ acc.code }}</code></td>
+                <td class="fw-semibold">{{ acc.name }}</td>
+                <td>
+                    {% if acc.type == 'asset' %}<span class="tlc-badge tlc-badge-blue">Asset</span>
+                    {% elif acc.type == 'liability' %}<span class="tlc-badge tlc-badge-amber">Liability</span>
+                    {% elif acc.type == 'equity' %}<span class="tlc-badge tlc-badge-purple">Equity</span>
+                    {% elif acc.type == 'revenue' %}<span class="tlc-badge tlc-badge-green">Revenue</span>
+                    {% elif acc.type == 'expense' %}<span class="tlc-badge tlc-badge-red">Expense</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted small">{{ acc.parent|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center py-5 text-muted">No accounts found.</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

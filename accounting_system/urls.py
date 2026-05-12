@@ -23,5 +23,8 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('petrol/', include('petrol.urls')),
     path('cargo/', include('cargo.urls')),
+    path('reports/', include('reports.urls')),
+    path('finance/', include('core.urls')),
+    path('sales/', include('sales.urls')),
     path('', dashboard, name='home'),
 ]

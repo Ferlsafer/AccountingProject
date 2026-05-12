@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Trip Profitability{% endblock %}
+{% block page_title %}Trip Profitability{% endblock %}
+{% block nav_trip_report_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Trip Profitability</h5>
+        <span class="text-muted small"><i class="bi bi-graph-up-arrow me-1"></i>Completed trips — revenue vs expenses</span>
+    </div>
+    <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print">
+        <i class="bi bi-printer me-1"></i>Print
+    </button>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4 no-print">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-truck"></i></div>
+            <div class="stat-label">Completed Trips</div>
+            <div class="stat-value">{{ rows|length }}</div>
+            <div class="stat-sub">in period</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-label">Total Freight</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency total_freight %}</div>
+            <div class="stat-sub">billed to customers</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="bi bi-receipt"></i></div>
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency total_expenses %}</div>
+            <div class="stat-sub">trip costs</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon {% if total_profit >= 0 %}icon-teal{% else %}icon-red{% endif %}">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="stat-label">Net Profit</div>
+            <div class="stat-value {% if total_profit < 0 %}text-danger{% endif %}" style="font-size:1.1rem">
+                {% currency total_profit %}
+            </div>
+            <div class="stat-sub">{{ total_margin|floatformat:1 }}% margin</div>
+        </div>
+    </div>
+</div>
+
+<!-- Trip table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-table me-2 text-primary"></i>Trip Breakdown</span>
+        <span class="text-muted small">Sorted by profit (highest first)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Route</th>
+                    <th>Customer</th>
+                    <th>Vehicle</th>
+                    <th class="text-end">Freight</th>
+                    <th class="text-end">Expenses</th>
+                    <th class="text-end">Profit</th>
+                    <th class="text-end">Margin</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+            <tr>
+                <td class="fw-semibold small">{{ row.trip.date|date:"d M Y" }}</td>
+                <td class="small">
+                    {{ row.trip.origin }}
+                    <i class="bi bi-arrow-right text-muted mx-1"></i>
+                    {{ row.trip.destination }}
+                </td>
+                <td class="text-muted small">{{ row.trip.customer }}</td>
+                <td class="text-muted small">{{ row.trip.vehicle.plate_number }}</td>
+                <td class="text-end">{% currency row.trip.freight_amount %}</td>
+                <td class="text-end text-danger">{% currency row.expenses %}</td>
+                <td class="text-end fw-bold {% if row.profit < 0 %}text-danger{% else %}text-success{% endif %}">
+                    {% currency row.profit %}
+                </td>
+                <td class="text-end small {% if row.margin < 0 %}text-danger{% else %}text-muted{% endif %}">
+                    {{ row.margin|floatformat:1 }}%
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No completed trips in this period.</p>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            {% if rows %}
+            <tfoot class="table-light fw-bold">
+                <tr>
+                    <td colspan="4">Total</td>
+                    <td class="text-end">{% currency total_freight %}</td>
+                    <td class="text-end text-danger">{% currency total_expenses %}</td>
+                    <td class="text-end {% if total_profit < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {% currency total_profit %}
+                    </td>
+                    <td class="text-end">{{ total_margin|floatformat:1 }}%</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

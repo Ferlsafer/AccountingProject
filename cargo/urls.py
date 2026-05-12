@@ -15,6 +15,7 @@ urlpatterns = [
     path('vehicle-expenses/add/',         views.vehicle_expense_add,  name='vehicle_expense_add'),
     path('customers/',                    views.customer_list,        name='customer_list'),
     path('customers/add/',               views.customer_add,         name='customer_add'),
-    path('invoices/',                     views.invoice_list,         name='invoice_list'),
-    path('invoices/<int:pk>/pay/',        views.invoice_pay,          name='invoice_pay'),
+    path('invoices/',                      views.invoice_list,         name='invoice_list'),
+    path('invoices/<int:pk>/pay/',         views.invoice_pay,          name='invoice_pay'),
+    path('invoices/<int:pk>/print/',       views.invoice_print,        name='invoice_print'),
 ]

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Salary Payments{% endblock %}
+{% block page_title %}Salary Payments{% endblock %}
+{% block nav_salaries_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Salary Payments</h5>
+        <span class="text-muted small"><i class="bi bi-cash-coin me-1"></i>Monthly payroll records</span>
+    </div>
+    <a href="{% url 'core:salary_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Record Payment
+    </a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-purple"><i class="bi bi-cash-coin"></i></div>
+            <div class="stat-label">Total Paid</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency total %}</div>
+            <div class="stat-sub">in period</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-receipt"></i></div>
+            <div class="stat-label">Payments</div>
+            <div class="stat-value">{{ payments|length }}</div>
+            <div class="stat-sub">records</div>
+        </div>
+    </div>
+</div>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-table me-2 text-primary"></i>Payment Records
+        </span>
+        <span class="text-muted small">{{ payments|length }} record{{ payments|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Role</th>
+                    <th>Month</th>
+                    <th>Paid Date</th>
+                    <th class="text-end">Amount</th>
+                    <th>Notes</th>
+                    <th>Recorded By</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td class="fw-semibold">{{ payment.employee.name }}</td>
+                <td class="text-muted small">{{ payment.employee.role }}</td>
+                <td><span class="tlc-badge tlc-badge-blue">{{ payment.month|date:"M Y" }}</span></td>
+                <td class="text-muted small">{{ payment.paid_date|date:"d M Y" }}</td>
+                <td class="text-end fw-semibold">{% currency payment.amount %}</td>
+                <td class="text-muted small">{{ payment.notes|default:"—"|truncatechars:30 }}</td>
+                <td class="text-muted small">{{ payment.posted_by.get_full_name|default:payment.posted_by.username }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No salary payments in this period.</p>
+                    <a href="{% url 'core:salary_add' %}" class="btn btn-sm btn-outline-primary mt-2">Record First Payment</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            {% if payments %}
+            <tfoot class="table-light fw-bold">
+                <tr>
+                    <td colspan="4">Total</td>
+                    <td class="text-end">{% currency total %}</td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

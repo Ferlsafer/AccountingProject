@@ -1,11 +1,15 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 from django.db import transaction
 from .models import Business, UserProfile, Account, JournalEntry, JournalLine, Employee, SalaryPayment
 
-admin.site.site_header = 'TLC Accounting'
-admin.site.site_title = 'TLC Accounting'
+admin.site.site_header = 'TBC Accounting'
+admin.site.site_title = 'TBC Accounting'
 admin.site.index_title = 'Administration'
 
+
+# ── Business ──────────────────────────────────────────────────────────────────
 
 @admin.register(Business)
 class BusinessAdmin(admin.ModelAdmin):
@@ -21,21 +25,33 @@ class BusinessAdmin(admin.ModelAdmin):
         return False
 
 
-@admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'role', 'user_email', 'is_active']
-    list_filter = ['role']
-    search_fields = ['user__username', 'user__first_name', 'user__last_name', 'user__email']
-    raw_id_fields = ['user']
+# ── Users ─────────────────────────────────────────────────────────────────────
 
-    @admin.display(description='Email')
-    def user_email(self, obj):
-        return obj.user.email
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'Role & Access'
+    fields = ['role']
 
-    @admin.display(boolean=True, description='Active')
-    def is_active(self, obj):
-        return obj.user.is_active
 
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class UserAdmin(BaseUserAdmin):
+    inlines = [UserProfileInline]
+    list_display = ['username', 'get_full_name', 'email', 'user_role', 'is_active', 'is_staff', 'last_login']
+    list_filter = ['is_active', 'is_staff']
+
+    @admin.display(description='Role')
+    def user_role(self, obj):
+        try:
+            return obj.profile.get_role_display()
+        except UserProfile.DoesNotExist:
+            return '—'
+
+
+# ── Chart of Accounts ─────────────────────────────────────────────────────────
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
@@ -45,6 +61,8 @@ class AccountAdmin(admin.ModelAdmin):
     list_display_links = ['code', 'name']
     list_per_page = 50
 
+
+# ── Journal (read-only) ───────────────────────────────────────────────────────
 
 class JournalLineInline(admin.TabularInline):
     model = JournalLine
@@ -64,6 +82,7 @@ class JournalEntryAdmin(admin.ModelAdmin):
     date_hierarchy = 'date'
     readonly_fields = ['reference', 'date', 'description', 'source_type', 'source_id', 'created_by', 'created_at']
     inlines = [JournalLineInline]
+    list_per_page = 30
 
     def has_add_permission(self, request):
         return False
@@ -79,6 +98,8 @@ class JournalEntryAdmin(admin.ModelAdmin):
         return obj.is_balanced
 
 
+# ── Employees ─────────────────────────────────────────────────────────────────
+
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     list_display = ['name', 'role', 'monthly_salary', 'phone', 'hire_date', 'is_active']
@@ -87,6 +108,8 @@ class EmployeeAdmin(admin.ModelAdmin):
     list_per_page = 25
 
 
+# ── Salary Payments ───────────────────────────────────────────────────────────
+
 @admin.register(SalaryPayment)
 class SalaryPaymentAdmin(admin.ModelAdmin):
     list_display = ['employee', 'month_display', 'amount', 'paid_date', 'posted_by']
@@ -94,6 +117,7 @@ class SalaryPaymentAdmin(admin.ModelAdmin):
     search_fields = ['employee__name']
     readonly_fields = ['posted_by']
     date_hierarchy = 'paid_date'
+    list_per_page = 25
 
     @admin.display(description='Month', ordering='month')
     def month_display(self, obj):
@@ -104,3 +128,6 @@ class SalaryPaymentAdmin(admin.ModelAdmin):
             obj.posted_by = request.user
             super().save_model(request, obj, form, change)
             obj.post_to_ledger(request.user)
+
+    def has_delete_permission(self, request, obj=None):
+        return False

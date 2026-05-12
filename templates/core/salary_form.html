@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Record Salary Payment{% endblock %}
+{% block page_title %}Record Salary Payment{% endblock %}
+{% block nav_salaries_active %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7 col-xl-6">
+        <div class="content-card form-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-cash-coin me-2 text-primary"></i>Record Salary Payment
+                </span>
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Employee <span class="text-danger">*</span></label>
+                        {{ form.employee }}
+                        {% if form.employee.errors %}<div class="invalid-feedback d-block">{{ form.employee.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">
+                                Month <span class="text-danger">*</span>
+                                <span class="text-muted fw-normal">(first day of month)</span>
+                            </label>
+                            {{ form.month }}
+                            {% if form.month.errors %}<div class="invalid-feedback d-block">{{ form.month.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Paid Date <span class="text-danger">*</span></label>
+                            {{ form.paid_date }}
+                            {% if form.paid_date.errors %}<div class="invalid-feedback d-block">{{ form.paid_date.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Amount (TZS) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">TZS</span>
+                            {{ form.amount }}
+                        </div>
+                        {% if form.amount.errors %}<div class="invalid-feedback d-block">{{ form.amount.errors.0 }}</div>{% endif %}
+                        <div class="form-text text-muted" id="salary-hint"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Notes</label>
+                        {{ form.notes }}
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Record Payment
+                        </button>
+                        <a href="{% url 'core:salary_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-fill amount from employee's monthly salary when employee is selected
+const employeeData = {
+    {% for emp in form.employee.field.queryset %}
+    "{{ emp.pk }}": "{{ emp.monthly_salary }}",
+    {% endfor %}
+};
+const empSelect = document.getElementById('id_employee');
+const amountInput = document.getElementById('id_amount');
+const hint = document.getElementById('salary-hint');
+
+empSelect.addEventListener('change', function () {
+    const salary = employeeData[this.value];
+    if (salary) {
+        amountInput.value = parseFloat(salary).toFixed(2);
+        hint.textContent = 'Auto-filled from monthly salary — adjust if needed.';
+    } else {
+        hint.textContent = '';
+    }
+});
+</script>
+{% endblock %}

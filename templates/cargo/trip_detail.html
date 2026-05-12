@@ -234,6 +234,9 @@
                     <div class="small text-muted fw-semibold mb-1">Invoice Date</div>
                     <div>{{ invoice.date|date:"d M Y" }}</div>
                 </div>
+                <a href="{% url 'cargo:invoice_print' invoice.pk %}" target="_blank" class="btn btn-outline-primary w-100 mb-3">
+                    <i class="bi bi-printer me-1"></i>Print Invoice
+                </a>
                 {% if invoice.is_paid %}
                 <div class="mb-3">
                     <div class="small text-muted fw-semibold mb-1">Paid On</div>

@@ -21,7 +21,7 @@
             <div class="sidebar-brand-icon"><i class="bi bi-bar-chart-fill"></i></div>
             <div>
                 <div class="sidebar-brand-text">TBC Management System</div>
-                <div class="sidebar-brand-sub">Management System</div>
+                <div class="sidebar-brand-sub">Petrol &amp; Cargo</div>
             </div>
         </a>
 
@@ -71,38 +71,44 @@
 
             {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
             <div class="sidebar-section-label">Finance</div>
-            <a href="/admin/core/journalentry/" class="sidebar-link">
+            <a href="{% url 'reports:journal_ledger' %}" class="sidebar-link {% block nav_ledger_active %}{% endblock %}">
                 <i class="bi bi-journal-bookmark"></i> Journal Ledger
             </a>
-            <a href="/admin/core/account/" class="sidebar-link">
+            <a href="{% url 'core:account_list' %}" class="sidebar-link {% block nav_accounts_active %}{% endblock %}">
                 <i class="bi bi-list-columns"></i> Chart of Accounts
             </a>
-            <a href="/admin/core/employee/" class="sidebar-link">
+            <a href="{% url 'core:employee_list' %}" class="sidebar-link {% block nav_employees_active %}{% endblock %}">
                 <i class="bi bi-people"></i> Employees
             </a>
-            <a href="/admin/core/salarypayment/" class="sidebar-link">
+            <a href="{% url 'core:salary_list' %}" class="sidebar-link {% block nav_salaries_active %}{% endblock %}">
                 <i class="bi bi-cash-coin"></i> Salary Payments
             </a>
             {% endif %}
 
             {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
             <div class="sidebar-section-label">Reports</div>
-            <a href="#" class="sidebar-link {% block nav_fuel_report_active %}{% endblock %}">
+            <a href="{% url 'reports:fuel_report' %}" class="sidebar-link {% block nav_fuel_report_active %}{% endblock %}">
                 <i class="bi bi-graph-up"></i> Fuel Sales Report
             </a>
-            <a href="#" class="sidebar-link {% block nav_trip_report_active %}{% endblock %}">
+            <a href="{% url 'reports:trip_report' %}" class="sidebar-link {% block nav_trip_report_active %}{% endblock %}">
                 <i class="bi bi-graph-up-arrow"></i> Trip Profitability
             </a>
-            <a href="#" class="sidebar-link {% block nav_income_active %}{% endblock %}">
+            <a href="{% url 'reports:expense_report' %}" class="sidebar-link {% block nav_expense_report_active %}{% endblock %}">
+                <i class="bi bi-pie-chart"></i> Expenses by Category
+            </a>
+            <a href="{% url 'reports:income_statement' %}" class="sidebar-link {% block nav_income_active %}{% endblock %}">
                 <i class="bi bi-file-bar-graph"></i> Income Statement
             </a>
-            <a href="#" class="sidebar-link {% block nav_trial_active %}{% endblock %}">
+            <a href="{% url 'reports:trial_balance' %}" class="sidebar-link {% block nav_trial_active %}{% endblock %}">
                 <i class="bi bi-check2-circle"></i> Trial Balance
             </a>
             {% endif %}
 
             {% if user.is_staff %}
             <div class="sidebar-section-label">System</div>
+            <a href="{% url 'core:user_list' %}" class="sidebar-link {% block nav_users_active %}{% endblock %}">
+                <i class="bi bi-person-gear"></i> User Accounts
+            </a>
             <a href="/admin/" class="sidebar-link">
                 <i class="bi bi-gear"></i> Administration
             </a>

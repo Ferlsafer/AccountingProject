@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Expenses by Category{% endblock %}
+{% block page_title %}Expenses by Category{% endblock %}
+{% block nav_expense_report_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Expenses by Category</h5>
+        <span class="text-muted small"><i class="bi bi-pie-chart me-1"></i>Petrol, cargo, vehicle and salary costs</span>
+    </div>
+    <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print">
+        <i class="bi bi-printer me-1"></i>Print
+    </button>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4 no-print">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Grand total card -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="bi bi-cash-coin"></i></div>
+            <div class="stat-label">Grand Total</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency grand_total %}</div>
+            <div class="stat-sub">all categories</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-amber"><i class="bi bi-fuel-pump"></i></div>
+            <div class="stat-label">Petrol Station</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency petrol_total %}</div>
+            <div class="stat-sub">station expenses</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-truck"></i></div>
+            <div class="stat-label">Cargo / Vehicle</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency trip_total|add:vehicle_total %}</div>
+            <div class="stat-sub">trip + vehicle</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-purple"><i class="bi bi-people"></i></div>
+            <div class="stat-label">Salaries</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency salary_total %}</div>
+            <div class="stat-sub">payroll</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- Petrol expenses -->
+    <div class="col-lg-6">
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-fuel-pump me-2 text-warning"></i>Petrol Station Expenses
+                </span>
+                <span class="fw-bold text-danger">{% currency petrol_total %}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Category</th><th class="text-end">Amount</th></tr></thead>
+                    <tbody>
+                    {% for row in petrol_by_cat %}
+                    <tr>
+                        <td>{{ row.category|title }}</td>
+                        <td class="text-end fw-semibold">{% currency row.total %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" class="text-center text-muted py-3">No expenses.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                    {% if petrol_by_cat %}
+                    <tfoot class="table-light fw-bold">
+                        <tr><td>Total</td><td class="text-end">{% currency petrol_total %}</td></tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip expenses -->
+    <div class="col-lg-6">
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-map me-2 text-primary"></i>Trip Expenses
+                </span>
+                <span class="fw-bold text-danger">{% currency trip_total %}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Category</th><th class="text-end">Amount</th></tr></thead>
+                    <tbody>
+                    {% for row in trip_by_cat %}
+                    <tr>
+                        <td>{{ row.category|title }}</td>
+                        <td class="text-end fw-semibold">{% currency row.total %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" class="text-center text-muted py-3">No expenses.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                    {% if trip_by_cat %}
+                    <tfoot class="table-light fw-bold">
+                        <tr><td>Total</td><td class="text-end">{% currency trip_total %}</td></tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle expenses -->
+    <div class="col-lg-6">
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-tools me-2 text-secondary"></i>Vehicle Expenses
+                </span>
+                <span class="fw-bold text-danger">{% currency vehicle_total %}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Category</th><th class="text-end">Amount</th></tr></thead>
+                    <tbody>
+                    {% for row in vehicle_by_cat %}
+                    <tr>
+                        <td>{{ row.category|title }}</td>
+                        <td class="text-end fw-semibold">{% currency row.total %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" class="text-center text-muted py-3">No expenses.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                    {% if vehicle_by_cat %}
+                    <tfoot class="table-light fw-bold">
+                        <tr><td>Total</td><td class="text-end">{% currency vehicle_total %}</td></tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salaries -->
+    <div class="col-lg-6">
+        <div class="content-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-people me-2 text-purple"></i>Salary Payments
+                </span>
+                <span class="fw-bold text-danger">{% currency salary_total %}</span>
+            </div>
+            <div class="p-4 text-center">
+                <div class="display-6 fw-bold {% if salary_total > 0 %}text-danger{% else %}text-muted{% endif %}">
+                    {% currency salary_total %}
+                </div>
+                <div class="text-muted small mt-1">total payroll for period</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Fuel Sales Report{% endblock %}
+{% block page_title %}Fuel Sales Report{% endblock %}
+{% block nav_fuel_report_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Fuel Sales Report</h5>
+        <span class="text-muted small"><i class="bi bi-fuel-pump me-1"></i>Cash and credit fuel sales</span>
+    </div>
+    <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print">
+        <i class="bi bi-printer me-1"></i>Print
+    </button>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4 no-print">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-3">
+            <label class="form-label small fw-semibold mb-1">Fuel Type</label>
+            <select name="fuel" class="form-select form-select-sm">
+                <option value="">All Types</option>
+                {% for ft in fuel_types %}
+                <option value="{{ ft.name }}" {% if fuel_filter == ft.name %}selected{% endif %}>{{ ft.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-3">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="bi bi-droplet"></i></div>
+            <div class="stat-label">Total Litres</div>
+            <div class="stat-value">{{ total_litres|floatformat:1 }}</div>
+            <div class="stat-sub">all fuel types</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-label">Cash Sales</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency cash_amount %}</div>
+            <div class="stat-sub">at pump</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-amber"><i class="bi bi-person-lines-fill"></i></div>
+            <div class="stat-label">Credit Sales</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency credit_amount %}</div>
+            <div class="stat-sub">on account</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon icon-teal"><i class="bi bi-graph-up"></i></div>
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value" style="font-size:1.1rem">{% currency total_amount %}</div>
+            <div class="stat-sub">cash + credit</div>
+        </div>
+    </div>
+</div>
+
+<!-- Breakdown by fuel type -->
+{% if breakdown %}
+<div class="row g-3 mb-4">
+    {% for fuel_name, totals in breakdown.items %}
+    <div class="col-md-4">
+        <div class="content-card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small fw-bold text-muted text-uppercase">{{ fuel_name }}</div>
+                    <div class="fw-bold fs-5">{% currency totals.amount %}</div>
+                    <div class="small text-muted">{{ totals.litres|floatformat:1 }} litres</div>
+                </div>
+                <div class="stat-icon icon-purple"><i class="bi bi-fuel-pump"></i></div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Detail table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-table me-2 text-primary"></i>Sales Detail</span>
+        <span class="text-muted small">{{ all_sales|length }} transaction{{ all_sales|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Fuel Type</th>
+                    <th>Type</th>
+                    <th>Customer</th>
+                    <th class="text-end">Litres</th>
+                    <th class="text-end">Price/L</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for s in all_sales %}
+            <tr>
+                <td class="fw-semibold">{{ s.date|date:"d M Y" }}</td>
+                <td><span class="tlc-badge tlc-badge-blue">{{ s.fuel_type }}</span></td>
+                <td>
+                    {% if s.sale_type == 'Cash' %}
+                    <span class="tlc-badge tlc-badge-green">Cash</span>
+                    {% else %}
+                    <span class="tlc-badge tlc-badge-amber">Credit</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted">{{ s.customer }}</td>
+                <td class="text-end">{{ s.litres|floatformat:2 }}</td>
+                <td class="text-end text-muted">{% currency s.unit_price %}</td>
+                <td class="text-end fw-semibold">{% currency s.amount %}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No sales in this period.</p>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            {% if all_sales %}
+            <tfoot class="table-light fw-bold">
+                <tr>
+                    <td colspan="4">Total</td>
+                    <td class="text-end">{{ total_litres|floatformat:2 }}</td>
+                    <td></td>
+                    <td class="text-end">{% currency total_amount %}</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

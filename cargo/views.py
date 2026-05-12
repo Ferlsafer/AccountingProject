@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 
+from core.models import Business
 from .models import Trip, TripExpense, VehicleExpense, Invoice, Vehicle, CargoCustomer
 from .forms import TripForm, TripExpenseForm, VehicleExpenseForm, InvoicePayForm, CargoCustomerForm
 
@@ -240,6 +241,21 @@ def invoice_list(request):
         'paid_filter': paid_filter,
         'date_from': date_from,
         'date_to': date_to,
+    })
+
+
+@login_required
+def invoice_print(request, pk):
+    invoice = get_object_or_404(
+        Invoice.objects.select_related('trip__customer', 'trip__vehicle', 'trip__driver', 'issued_by'),
+        pk=pk,
+    )
+    expenses = invoice.trip.expenses.order_by('date')
+    business = Business.get_solo()
+    return render(request, 'cargo/invoice_print.html', {
+        'invoice': invoice,
+        'expenses': expenses,
+        'business': business,
     })
 
 
