@@ -1,0 +1,25 @@
+{
+  "name": "TBC Management System",
+  "short_name": "TBC",
+  "description": "Petrol & Cargo Management",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1e2d50",
+  "theme_color": "#1e2d50",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

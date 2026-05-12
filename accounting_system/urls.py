@@ -16,10 +16,22 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.http import FileResponse
 from reports.views import dashboard
+import os
+
+
+def service_worker(request):
+    path_ = os.path.join(settings.BASE_DIR, 'static', 'sw.js')
+    response = FileResponse(open(path_, 'rb'), content_type='application/javascript')
+    response['Service-Worker-Allowed'] = '/'
+    return response
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('sw.js', service_worker, name='sw'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('petrol/', include('petrol.urls')),
     path('cargo/', include('cargo.urls')),
