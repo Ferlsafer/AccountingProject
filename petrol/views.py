@@ -229,7 +229,14 @@ def purchase_cancel(request, pk):
         messages.error(request, "Approved purchases cannot be cancelled.")
         return redirect('petrol:purchase_list')
     if request.method == 'POST':
+        note = request.POST.get('review_note', '').strip()
+        if not note:
+            messages.error(request, "Please provide a cancellation reason.")
+            return redirect('petrol:purchase_list')
         purchase.status = 'cancelled'
+        purchase.review_note = note
+        purchase.reviewed_by = request.user
+        purchase.reviewed_at = timezone.now()
         purchase.save()
         messages.success(request, "Purchase cancelled.")
         return redirect('petrol:purchase_list')

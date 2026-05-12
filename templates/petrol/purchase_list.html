@@ -136,14 +136,10 @@
                         </button>
                         {% endif %}
                         {% if user.is_staff or user.profile.role == 'admin' %}
-                        <!-- Cancel -->
-                        <form method="post" action="{% url 'petrol:purchase_cancel' p.pk %}" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel"
-                                onclick="return confirm('Cancel this purchase request?')">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-danger" title="Cancel"
+                            data-bs-toggle="modal" data-bs-target="#cancelModal{{ p.pk }}">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                         {% endif %}
 
                     {% elif p.status == 'returned' %}
@@ -153,22 +149,26 @@
                         </a>
                         {% endif %}
                         {% if user.is_staff or user.profile.role == 'admin' %}
-                        <form method="post" action="{% url 'petrol:purchase_cancel' p.pk %}" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel"
-                                onclick="return confirm('Cancel this purchase request?')">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-danger" title="Cancel"
+                            data-bs-toggle="modal" data-bs-target="#cancelModal{{ p.pk }}">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                         {% endif %}
                     {% endif %}
                 </td>
             </tr>
-            {% if p.status == 'returned' and p.review_note %}
+            {% if p.review_note and p.status == 'returned' %}
             <tr class="table-warning">
                 <td colspan="9" class="py-2 ps-4">
                     <i class="bi bi-chat-left-text text-warning me-2"></i>
                     <span class="small"><strong>Note from {{ p.reviewed_by.get_full_name|default:p.reviewed_by.username }}:</strong> {{ p.review_note }}</span>
+                </td>
+            </tr>
+            {% elif p.review_note and p.status == 'cancelled' %}
+            <tr class="table-danger">
+                <td colspan="9" class="py-2 ps-4">
+                    <i class="bi bi-x-circle text-danger me-2"></i>
+                    <span class="small"><strong>Cancelled by {{ p.reviewed_by.get_full_name|default:p.reviewed_by.username }}:</strong> {{ p.review_note }}</span>
                 </td>
             </tr>
             {% endif %}
@@ -195,8 +195,9 @@
     </div>
 </div>
 
-<!-- Return-with-note modals (one per pending purchase) -->
+<!-- Return and Cancel modals -->
 {% for p in purchases %}
+
 {% if p.status == 'pending' %}
 <div class="modal fade" id="returnModal{{ p.pk }}" tabindex="-1">
     <div class="modal-dialog">
@@ -209,15 +210,14 @@
                 {% csrf_token %}
                 <div class="modal-body">
                     <p class="text-muted small mb-3">
-                        <strong>{{ p.date|date:"d M Y" }}</strong> — {{ p.supplier }} — {{ p.litres|floatformat:2 }}L —
-                        {% currency p.total_amount %}
+                        <strong>{{ p.date|date:"d M Y" }}</strong> — {{ p.supplier }} — {{ p.litres|floatformat:2 }}L — {% currency p.total_amount %}
                     </p>
                     <label class="form-label fw-semibold">Note to clerk <span class="text-danger">*</span></label>
                     <textarea name="review_note" class="form-control" rows="3"
                         placeholder="Explain what needs to be corrected…" required></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-warning">
                         <i class="bi bi-arrow-return-left me-1"></i>Return to Clerk
                     </button>
@@ -227,6 +227,37 @@
     </div>
 </div>
 {% endif %}
+
+{% if p.status == 'pending' or p.status == 'returned' %}
+<div class="modal fade" id="cancelModal{{ p.pk }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-danger"><i class="bi bi-x-circle me-2"></i>Cancel Purchase</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'petrol:purchase_cancel' p.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">
+                        <strong>{{ p.date|date:"d M Y" }}</strong> — {{ p.supplier }} — {{ p.litres|floatformat:2 }}L — {% currency p.total_amount %}
+                    </p>
+                    <label class="form-label fw-semibold">Cancellation reason <span class="text-danger">*</span></label>
+                    <textarea name="review_note" class="form-control" rows="3"
+                        placeholder="State the reason for cancelling this purchase…" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-lg me-1"></i>Cancel Purchase
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endfor %}
 
 {% endblock %}
