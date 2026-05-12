@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Petty Cash Statement{% endblock %}
+{% block page_title %}Petty Cash Statement{% endblock %}
+{% block nav_petty_cash_active %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    #sidebar, #main-content > .topbar, .no-print { display: none !important; }
+    #main-content { margin: 0 !important; padding: 0 !important; }
+    .content-card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    body { background: white !important; }
+    .print-header { display: block !important; }
+}
+.print-header { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Controls (hidden on print) -->
+<div class="d-flex align-items-center justify-content-between mb-4 no-print">
+    <h5 class="fw-bold mb-0">Petty Cash Statement</h5>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary">
+            <i class="bi bi-printer me-1"></i>Print
+        </button>
+        <a href="{% url 'core:petty_cash_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<!-- Date range filter -->
+<form method="get" class="content-card p-3 mb-4 no-print">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4 col-md-3">
+            <label class="form-label small fw-semibold">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <label class="form-label small fw-semibold">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+        </div>
+    </div>
+</form>
+
+<!-- Print header (only visible when printing) -->
+<div class="print-header mb-4">
+    <h4>Petty Cash Statement</h4>
+    <p>Period: {{ date_from }} to {{ date_to }}</p>
+</div>
+
+<!-- Statement -->
+<div class="content-card">
+    <div class="content-card-header no-print">
+        <span class="content-card-title"><i class="bi bi-bank me-2 text-primary"></i>Statement</span>
+        <span class="text-muted small">{{ date_from }} to {{ date_to }}</span>
+    </div>
+    <div class="p-3">
+        <table class="table table-sm mb-0" style="font-size:0.92rem;">
+            <thead class="table-light">
+                <tr>
+                    <th style="width:100px">Date</th>
+                    <th>Description</th>
+                    <th class="text-end" style="width:120px">In (TZS)</th>
+                    <th class="text-end" style="width:120px">Out (TZS)</th>
+                    <th class="text-end" style="width:130px">Balance (TZS)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Opening balance row -->
+                <tr class="table-secondary">
+                    <td>{{ date_from }}</td>
+                    <td><em>Opening Balance</em></td>
+                    <td class="text-end">—</td>
+                    <td class="text-end">—</td>
+                    <td class="text-end fw-semibold">{{ opening|floatformat:0 }}</td>
+                </tr>
+                {% for row in rows %}
+                <tr>
+                    <td class="text-muted">{{ row.transaction.date|date:"d M Y" }}</td>
+                    <td>
+                        {{ row.transaction.description }}
+                        {% if row.transaction.receipt_reference %}
+                        <span class="text-muted small ms-1">({{ row.transaction.receipt_reference }})</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end text-success">
+                        {% if row.in_amt %}{{ row.in_amt|floatformat:0 }}{% else %}—{% endif %}
+                    </td>
+                    <td class="text-end text-danger">
+                        {% if row.out_amt %}{{ row.out_amt|floatformat:0 }}{% else %}—{% endif %}
+                    </td>
+                    <td class="text-end fw-semibold {% if row.balance >= 0 %}text-dark{% else %}text-danger{% endif %}">
+                        {{ row.balance|floatformat:0 }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">No transactions in this period.</td>
+                </tr>
+                {% endfor %}
+                <!-- Closing balance row -->
+                <tr class="table-secondary fw-bold">
+                    <td>{{ date_to }}</td>
+                    <td>Closing Balance</td>
+                    <td class="text-end">—</td>
+                    <td class="text-end">—</td>
+                    <td class="text-end {% if closing >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ closing|floatformat:0 }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Employee, SalaryPayment, UserProfile
+from .models import Employee, SalaryPayment, UserProfile, PettyCashTransaction
 
 _date = {'type': 'date', 'class': 'form-control'}
 _num  = {'class': 'form-control', 'step': '0.01', 'min': '0'}
@@ -77,4 +77,19 @@ class SalaryPaymentForm(forms.ModelForm):
         }
         help_texts = {
             'month': 'Enter the first day of the month being paid (e.g. 2024-04-01)',
+        }
+
+
+class PettyCashTransactionForm(forms.ModelForm):
+    class Meta:
+        model = PettyCashTransaction
+        fields = ["date", "transaction_type", "amount", "expense_category", "expense_account", "description", "receipt_reference"]
+        widgets = {
+            "date":             forms.DateInput(attrs={**_date}),
+            "transaction_type": forms.Select(attrs=_sel),
+            "amount":           forms.NumberInput(attrs={**_num}),
+            "expense_category": forms.TextInput(attrs={**_text, "placeholder": "e.g. Driver Allowance"}),
+            "expense_account":  forms.Select(attrs=_sel),
+            "description":      forms.Textarea(attrs={**_text, "rows": 3}),
+            "receipt_reference":forms.TextInput(attrs={**_text, "placeholder": "e.g. RCP-001"}),
         }

@@ -12,4 +12,9 @@ urlpatterns = [
     path('employees/add/',  views.employee_add,  name='employee_add'),
     path('salaries/',       views.salary_list,   name='salary_list'),
     path('salaries/add/',   views.salary_add,    name='salary_add'),
+    # Petty cash
+    path('petty-cash/',             views.petty_cash_list,      name='petty_cash_list'),
+    path('petty-cash/add/',         views.petty_cash_add,       name='petty_cash_add'),
+    path('petty-cash/<int:pk>/',    views.petty_cash_detail,    name='petty_cash_detail'),
+    path('petty-cash/statement/',   views.petty_cash_statement, name='petty_cash_statement'),
 ]

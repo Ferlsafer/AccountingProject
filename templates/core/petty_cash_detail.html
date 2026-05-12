@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Petty Cash — {{ transaction }}{% endblock %}
+{% block page_title %}Petty Cash Detail{% endblock %}
+{% block nav_petty_cash_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">PCT-{{ transaction.pk }}</h5>
+        <span class="text-muted small">{{ transaction.date|date:"d M Y" }} &mdash; {{ transaction.get_transaction_type_display }}</span>
+    </div>
+    <a href="{% url 'core:petty_cash_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="content-card h-100">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-receipt me-2 text-primary"></i>Transaction</span>
+            </div>
+            <div class="p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5 text-muted small">Type</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge {% if transaction.transaction_type == 'inflow_from_main_cash' or transaction.transaction_type == 'inflow_other' %}bg-success{% elif transaction.transaction_type == 'expense' %}bg-danger{% else %}bg-secondary{% endif %}">
+                            {{ transaction.get_transaction_type_display }}
+                        </span>
+                    </dd>
+                    <dt class="col-sm-5 text-muted small">Amount</dt>
+                    <dd class="col-sm-7 fw-bold fs-5">TZS {{ transaction.amount|floatformat:0 }}</dd>
+                    <dt class="col-sm-5 text-muted small">Date</dt>
+                    <dd class="col-sm-7">{{ transaction.date|date:"d M Y" }}</dd>
+                    <dt class="col-sm-5 text-muted small">Description</dt>
+                    <dd class="col-sm-7">{{ transaction.description }}</dd>
+                    {% if transaction.expense_category %}
+                    <dt class="col-sm-5 text-muted small">Category</dt>
+                    <dd class="col-sm-7">{{ transaction.expense_category }}</dd>
+                    {% endif %}
+                    {% if transaction.expense_account %}
+                    <dt class="col-sm-5 text-muted small">Expense Account</dt>
+                    <dd class="col-sm-7">{{ transaction.expense_account.code }} — {{ transaction.expense_account.name }}</dd>
+                    {% endif %}
+                    {% if transaction.receipt_reference %}
+                    <dt class="col-sm-5 text-muted small">Receipt Ref.</dt>
+                    <dd class="col-sm-7">{{ transaction.receipt_reference }}</dd>
+                    {% endif %}
+                    <dt class="col-sm-5 text-muted small">Recorded by</dt>
+                    <dd class="col-sm-7 text-muted">{{ transaction.created_by.get_full_name|default:transaction.created_by.username }}</dd>
+                    <dt class="col-sm-5 text-muted small">Recorded at</dt>
+                    <dd class="col-sm-7 text-muted small">{{ transaction.created_at|date:"d M Y H:i" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="content-card h-100">
+            <div class="content-card-header">
+                <span class="content-card-title"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Ledger Entry</span>
+            </div>
+            <div class="p-4">
+                {% if entry %}
+                <p class="text-muted small mb-3">{{ entry.reference }} — {{ entry.description }}</p>
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th class="text-end">Debit</th>
+                            <th class="text-end">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for line in entry.lines.all %}
+                    <tr>
+                        <td>{{ line.account.code }} — {{ line.account.name }}</td>
+                        <td class="text-end">{% if line.debit %}{{ line.debit|floatformat:0 }}{% else %}—{% endif %}</td>
+                        <td class="text-end">{% if line.credit %}{{ line.credit|floatformat:0 }}{% else %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light fw-semibold">
+                        <tr>
+                            <td>Total</td>
+                            <td class="text-end">{{ entry.total_debit|floatformat:0 }}</td>
+                            <td class="text-end">{{ entry.total_credit|floatformat:0 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                {% if entry.is_balanced %}
+                <div class="mt-2 text-success small"><i class="bi bi-check-circle me-1"></i>Entry is balanced</div>
+                {% else %}
+                <div class="mt-2 text-danger small"><i class="bi bi-exclamation-triangle me-1"></i>Entry is NOT balanced</div>
+                {% endif %}
+                {% else %}
+                <p class="text-muted">No ledger entry found for this transaction.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Petty Cash{% endblock %}
+{% block page_title %}Petty Cash{% endblock %}
+{% block nav_petty_cash_active %}active{% endblock %}
+
+{% block content %}
+<!-- Balance card -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="content-card p-4 text-center">
+            <div class="text-muted small mb-1">Current Petty Cash Balance</div>
+            <div class="fs-3 fw-bold {% if current_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                TZS {{ current_balance|floatformat:0 }}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8 d-flex align-items-center justify-content-end gap-2">
+        <a href="{% url 'core:petty_cash_statement' %}?date_from={{ date_from }}&date_to={{ date_to }}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-printer me-1"></i>Statement
+        </a>
+        <a href="{% url 'core:petty_cash_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add Transaction
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<form method="get" class="content-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4 col-md-3">
+            <label class="form-label small fw-semibold">From</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <label class="form-label small fw-semibold">To</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <label class="form-label small fw-semibold">Type</label>
+            <select name="transaction_type" class="form-select form-select-sm">
+                <option value="">All types</option>
+                {% for val, label in transaction_types %}
+                <option value="{{ val }}" {% if type_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+            <a href="{% url 'core:petty_cash_list' %}" class="btn btn-sm btn-outline-secondary ms-1">Clear</a>
+        </div>
+    </div>
+</form>
+
+<!-- Transactions table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title"><i class="bi bi-wallet2 me-2 text-primary"></i>Petty Cash Transactions</span>
+        <span class="text-muted small">{{ rows|length }} record{{ rows|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end">Balance</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+            {% with t=row.transaction %}
+            <tr>
+                <td class="text-muted small">{{ t.date|date:"d M Y" }}</td>
+                <td>
+                    <span class="badge {% if t.transaction_type == 'inflow_from_main_cash' or t.transaction_type == 'inflow_other' %}bg-success{% elif t.transaction_type == 'expense' %}bg-danger{% else %}bg-secondary{% endif %}">
+                        {{ t.get_transaction_type_display }}
+                    </span>
+                </td>
+                <td>{{ t.description|truncatechars:60 }}</td>
+                <td class="text-muted small">{{ t.expense_category|default:"—" }}</td>
+                <td class="text-end fw-semibold">{{ t.amount|floatformat:0 }}</td>
+                <td class="text-end {% if row.balance >= 0 %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                    {{ row.balance|floatformat:0 }}
+                </td>
+                <td class="text-end">
+                    <a href="{% url 'core:petty_cash_detail' t.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                </td>
+            </tr>
+            {% endwith %}
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-wallet2" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No transactions in this period.</p>
+                    <a href="{% url 'core:petty_cash_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Transaction</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -90,6 +90,9 @@
             <a href="{% url 'core:salary_list' %}" class="sidebar-link {% block nav_salaries_active %}{% endblock %}">
                 <i class="bi bi-cash-coin"></i> Salary Payments
             </a>
+            <a href="{% url 'core:petty_cash_list' %}" class="sidebar-link {% block nav_petty_cash_active %}{% endblock %}">
+                <i class="bi bi-wallet2"></i> Petty Cash
+            </a>
             {% endif %}
 
             {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
