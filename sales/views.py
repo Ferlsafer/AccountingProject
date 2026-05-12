@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Customer, JobOrder, Quotation
-from .forms import CustomerForm, JobOrderForm, QuotationForm, QuotationLineFormSet
+from .models import Customer, JobOrder, Quotation, DeliveryNote
+from .forms import CustomerForm, JobOrderForm, QuotationForm, QuotationLineFormSet, DeliveryNoteForm
 
 
 @login_required
@@ -274,3 +274,91 @@ def quotation_print(request, pk):
         'quotation': quotation,
         'business': business,
     })
+
+
+# ── Delivery Notes ────────────────────────────────────────────────────────────
+
+@login_required
+def delivery_note_list(request):
+    today = today_date.today()
+    date_from = request.GET.get('date_from') or today.replace(day=1).isoformat()
+    date_to = request.GET.get('date_to') or today.isoformat()
+    q = request.GET.get('q', '').strip()
+
+    qs = (DeliveryNote.objects
+          .filter(date__gte=date_from, date__lte=date_to)
+          .select_related('customer', 'trip', 'created_by'))
+    if q:
+        qs = qs.filter(customer__name__icontains=q)
+
+    return render(request, 'sales/delivery_note_list.html', {
+        'delivery_notes': qs,
+        'date_from': date_from,
+        'date_to': date_to,
+        'q': q,
+    })
+
+
+@login_required
+def delivery_note_create(request):
+    from cargo.models import Trip
+    trip_id = request.GET.get('trip')
+    trip = None
+    initial = {'date': today_date.today()}
+
+    if trip_id:
+        trip = Trip.objects.filter(pk=trip_id).select_related('driver', 'vehicle').first()
+        if trip:
+            initial.update({
+                'trip': trip.pk,
+                'origin': trip.origin,
+                'destination': trip.destination,
+                'cargo_description': trip.cargo_description[:255] if trip.cargo_description else '',
+                'driver_name': trip.driver.name,
+                'vehicle_plate': trip.vehicle.plate_number,
+            })
+
+    if request.method == 'POST':
+        form = DeliveryNoteForm(request.POST)
+        if form.is_valid():
+            dn = form.save(commit=False)
+            dn.created_by = request.user
+            dn.save()
+            messages.success(request, f"Delivery Note {dn.reference} created.")
+            return redirect('sales:delivery_note_print', pk=dn.pk)
+    else:
+        form = DeliveryNoteForm(initial=initial)
+
+    return render(request, 'sales/delivery_note_form.html', {
+        'form': form, 'title': 'New Delivery Note', 'prefill_trip': trip,
+    })
+
+
+@login_required
+def delivery_note_detail(request, pk):
+    dn = get_object_or_404(DeliveryNote, pk=pk)
+    return render(request, 'sales/delivery_note_detail.html', {'dn': dn})
+
+
+@login_required
+def delivery_note_edit(request, pk):
+    dn = get_object_or_404(DeliveryNote, pk=pk)
+    if request.method == 'POST':
+        form = DeliveryNoteForm(request.POST, instance=dn)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Delivery Note {dn.reference} updated.")
+            return redirect('sales:delivery_note_detail', pk=pk)
+    else:
+        form = DeliveryNoteForm(instance=dn)
+    return render(request, 'sales/delivery_note_form.html', {
+        'form': form, 'title': 'Edit Delivery Note', 'dn': dn,
+    })
+
+
+@login_required
+def delivery_note_print(request, pk):
+    dn = get_object_or_404(DeliveryNote, pk=pk)
+    from core.models import Business
+    business = Business.objects.first()
+    return render(request, 'sales/delivery_note_print.html', {'dn': dn, 'business': business})

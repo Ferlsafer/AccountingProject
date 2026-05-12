@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{{ dn.reference }} — Print{% endblock %}
+{% block page_title %}Print Delivery Note{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    #sidebar, #main-content > .topbar, .no-print { display: none !important; }
+    #main-content { margin: 0 !important; padding: 0 !important; }
+    body { background: white !important; }
+    .dn-doc { border: none !important; box-shadow: none !important; max-width: 100% !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+    <span class="text-muted small">Preview — Ctrl+P to print</span>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-primary btn-sm">
+            <i class="bi bi-printer me-1"></i>Print
+        </button>
+        <a href="{% url 'sales:delivery_note_detail' dn.pk %}" class="btn btn-outline-secondary btn-sm">Back</a>
+    </div>
+</div>
+
+<div class="dn-doc content-card p-5 mx-auto" style="max-width:800px;">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-5">
+        <div>
+            {% if business %}
+            <h4 class="fw-bold mb-1">{{ business.name }}</h4>
+            {% if business.address %}<div class="text-muted small">{{ business.address }}</div>{% endif %}
+            {% if business.phone %}<div class="text-muted small">Tel: {{ business.phone }}</div>{% endif %}
+            {% if business.tin %}<div class="text-muted small">TIN: {{ business.tin }}</div>{% endif %}
+            {% endif %}
+        </div>
+        <div class="text-end">
+            <h3 class="fw-bold text-primary mb-1">DELIVERY NOTE</h3>
+            <div class="fw-semibold">{{ dn.reference }}</div>
+            <div class="text-muted small">Date: {{ dn.date|date:"d M Y" }}</div>
+        </div>
+    </div>
+
+    <!-- Trip info grid -->
+    <table class="table table-bordered mb-4" style="font-size:0.9rem;">
+        <tbody>
+            <tr>
+                <th class="table-light" style="width:25%">Customer</th>
+                <td>{{ dn.customer.name }}</td>
+                <th class="table-light" style="width:25%">Date</th>
+                <td>{{ dn.date|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <th class="table-light">Origin</th>
+                <td>{{ dn.origin }}</td>
+                <th class="table-light">Destination</th>
+                <td>{{ dn.destination }}</td>
+            </tr>
+            <tr>
+                <th class="table-light">Driver</th>
+                <td>{{ dn.driver_name }}</td>
+                <th class="table-light">Vehicle Plate</th>
+                <td>{{ dn.vehicle_plate }}</td>
+            </tr>
+            <tr>
+                <th class="table-light">Cargo Description</th>
+                <td colspan="3">{{ dn.cargo_description }}</td>
+            </tr>
+            {% if dn.notes %}
+            <tr>
+                <th class="table-light">Notes</th>
+                <td colspan="3">{{ dn.notes }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Acknowledgement section -->
+    <div class="border rounded p-4 mb-4" style="background:#fafafa;">
+        <div class="fw-semibold mb-3">Acknowledgement of Receipt</div>
+        <p class="small text-muted mb-4">
+            I hereby confirm that the above-described goods have been received in good condition.
+        </p>
+        <div class="row">
+            <div class="col-6">
+                <div class="text-muted small mb-1">Recipient Name</div>
+                <div style="border-bottom:1px solid #999;min-height:28px;padding-bottom:2px;">
+                    {{ dn.recipient_name }}
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="text-muted small mb-1">Signature &amp; Date</div>
+                <div style="border-bottom:1px solid #999;min-height:28px;">&nbsp;</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="row pt-3 border-top">
+        <div class="col-6">
+            <div class="text-muted small mb-3">Issued by</div>
+            <div style="border-top:1px solid #999;width:200px;"></div>
+            {% if business %}<div class="small mt-1">{{ business.name }}</div>{% endif %}
+        </div>
+        <div class="col-6 text-end text-muted small">
+            <div>{{ dn.reference }}</div>
+            <div>Printed: {% now "d M Y" %}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -114,3 +114,32 @@ class QuotationLine(models.Model):
 
     def __str__(self):
         return f"{self.description} x {self.quantity} @ {self.unit_price}"
+
+
+class DeliveryNote(models.Model):
+    reference = models.CharField(max_length=30, unique=True)
+    date = models.DateField()
+    trip = models.ForeignKey('cargo.Trip', on_delete=models.PROTECT, related_name='delivery_notes')
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='delivery_notes')
+    origin = models.CharField(max_length=100)
+    destination = models.CharField(max_length=100)
+    cargo_description = models.CharField(max_length=255)
+    driver_name = models.CharField(max_length=200)
+    vehicle_plate = models.CharField(max_length=20)
+    recipient_name = models.CharField(max_length=200, blank=True)
+    recipient_signature_received = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='delivery_notes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-id']
+
+    def __str__(self):
+        return f"{self.reference} — {self.customer}"
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            from sales.utils import generate_reference
+            self.reference = generate_reference('DN')
+        super().save(*args, **kwargs)

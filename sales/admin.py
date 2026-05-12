@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Customer, JobOrder, Quotation, QuotationLine
+from .models import Customer, JobOrder, Quotation, QuotationLine, DeliveryNote
 
 
 @admin.register(Customer)
@@ -32,3 +32,12 @@ class QuotationAdmin(admin.ModelAdmin):
     readonly_fields = ('reference', 'created_by', 'created_at')
     date_hierarchy = 'date'
     inlines = [QuotationLineInline]
+
+
+@admin.register(DeliveryNote)
+class DeliveryNoteAdmin(admin.ModelAdmin):
+    list_display = ('reference', 'date', 'customer', 'trip', 'origin', 'destination', 'recipient_signature_received')
+    list_filter = ('recipient_signature_received',)
+    search_fields = ('reference', 'customer__name', 'driver_name', 'vehicle_plate')
+    readonly_fields = ('reference', 'created_by', 'created_at')
+    date_hierarchy = 'date'

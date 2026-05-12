@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block nav_sales_delivery_notes_active %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="content-card form-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-truck me-2 text-primary"></i>{{ title }}
+                </span>
+                {% if dn %}<span class="text-muted small">{{ dn.reference }}</span>{% endif %}
+                {% if prefill_trip %}
+                <span class="badge bg-info text-dark ms-2">Pre-filled from trip {{ prefill_trip }}</span>
+                {% endif %}
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.date.id_for_label }}" class="form-label fw-semibold small">Date <span class="text-danger">*</span></label>
+                            {{ form.date }}
+                            {% if form.date.errors %}<div class="invalid-feedback d-block">{{ form.date.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <label for="{{ form.trip.id_for_label }}" class="form-label fw-semibold small">Trip <span class="text-danger">*</span></label>
+                            {{ form.trip }}
+                            {% if form.trip.errors %}<div class="invalid-feedback d-block">{{ form.trip.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.customer.id_for_label }}" class="form-label fw-semibold small">Customer <span class="text-danger">*</span></label>
+                            {{ form.customer }}
+                            {% if form.customer.errors %}<div class="invalid-feedback d-block">{{ form.customer.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.origin.id_for_label }}" class="form-label fw-semibold small">Origin <span class="text-danger">*</span></label>
+                            {{ form.origin }}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.destination.id_for_label }}" class="form-label fw-semibold small">Destination <span class="text-danger">*</span></label>
+                            {{ form.destination }}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.cargo_description.id_for_label }}" class="form-label fw-semibold small">Cargo Description <span class="text-danger">*</span></label>
+                            {{ form.cargo_description }}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.driver_name.id_for_label }}" class="form-label fw-semibold small">Driver Name <span class="text-danger">*</span></label>
+                            {{ form.driver_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.vehicle_plate.id_for_label }}" class="form-label fw-semibold small">Vehicle Plate <span class="text-danger">*</span></label>
+                            {{ form.vehicle_plate }}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.recipient_name.id_for_label }}" class="form-label fw-semibold small">Recipient Name</label>
+                            {{ form.recipient_name }}
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                {{ form.recipient_signature_received }}
+                                <label for="{{ form.recipient_signature_received.id_for_label }}" class="form-check-label fw-semibold small ms-1">
+                                    Signature received
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label fw-semibold small">Notes</label>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Save Delivery Note
+                        </button>
+                        {% if dn %}
+                        <a href="{% url 'sales:delivery_note_detail' dn.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        {% else %}
+                        <a href="{% url 'sales:delivery_note_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

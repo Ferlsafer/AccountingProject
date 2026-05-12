@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Customer, JobOrder, Quotation, QuotationLine
+from .models import Customer, JobOrder, Quotation, QuotationLine, DeliveryNote
 
 
 class CustomerForm(forms.ModelForm):
@@ -67,3 +67,24 @@ QuotationLineFormSet = inlineformset_factory(
     min_num=1,
     validate_min=True,
 )
+
+
+class DeliveryNoteForm(forms.ModelForm):
+    class Meta:
+        model = DeliveryNote
+        fields = ['date', 'trip', 'customer', 'origin', 'destination',
+                  'cargo_description', 'driver_name', 'vehicle_plate',
+                  'recipient_name', 'recipient_signature_received', 'notes']
+        widgets = {
+            'date':             forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'trip':             forms.Select(attrs={'class': 'form-select'}),
+            'customer':         forms.Select(attrs={'class': 'form-select'}),
+            'origin':           forms.TextInput(attrs={'class': 'form-control'}),
+            'destination':      forms.TextInput(attrs={'class': 'form-control'}),
+            'cargo_description':forms.TextInput(attrs={'class': 'form-control'}),
+            'driver_name':      forms.TextInput(attrs={'class': 'form-control'}),
+            'vehicle_plate':    forms.TextInput(attrs={'class': 'form-control'}),
+            'recipient_name':   forms.TextInput(attrs={'class': 'form-control'}),
+            'recipient_signature_received': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'notes':            forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }

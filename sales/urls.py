@@ -23,7 +23,12 @@ urlpatterns = [
     path('quotations/<int:pk>/edit/',          views.quotation_edit,       name='quotation_edit'),
     path('quotations/<int:pk>/transition/',    views.quotation_transition, name='quotation_transition'),
     path('quotations/<int:pk>/print/',         views.quotation_print,      name='quotation_print'),
-    # Step 9: delivery notes
+    # Delivery Notes
+    path('delivery-notes/',                   views.delivery_note_list,   name='delivery_note_list'),
+    path('delivery-notes/add/',               views.delivery_note_create, name='delivery_note_create'),
+    path('delivery-notes/<int:pk>/',          views.delivery_note_detail, name='delivery_note_detail'),
+    path('delivery-notes/<int:pk>/edit/',     views.delivery_note_edit,   name='delivery_note_edit'),
+    path('delivery-notes/<int:pk>/print/',    views.delivery_note_print,  name='delivery_note_print'),
     # Step 10: receipts
     # Step 12: unified invoices
 ]
