@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Employee, SalaryPayment, UserProfile, PettyCashTransaction
+from .models import Employee, SalaryPayment, UserProfile, PettyCashTransaction, Account, Business
 
 _date = {'type': 'date', 'class': 'form-control'}
 _num  = {'class': 'form-control', 'step': '0.01', 'min': '0'}
@@ -92,4 +92,35 @@ class PettyCashTransactionForm(forms.ModelForm):
             "expense_account":  forms.Select(attrs=_sel),
             "description":      forms.Textarea(attrs={**_text, "rows": 3}),
             "receipt_reference":forms.TextInput(attrs={**_text, "placeholder": "e.g. RCP-001"}),
+        }
+
+
+class AccountForm(forms.ModelForm):
+    class Meta:
+        model = Account
+        fields = ['code', 'name', 'type', 'parent', 'is_active']
+        widgets = {
+            'code':      forms.TextInput(attrs={**_text, 'placeholder': 'e.g. 5180'}),
+            'name':      forms.TextInput(attrs={**_text, 'placeholder': 'e.g. Bank Charges'}),
+            'type':      forms.Select(attrs=_sel),
+            'parent':    forms.Select(attrs=_sel),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        help_texts = {
+            'code': 'Unique account code. Use 1xxx=Asset, 2xxx=Liability, 3xxx=Equity, 4xxx=Revenue, 5xxx=Expense.',
+            'parent': 'Optional — select a parent account to group sub-accounts.',
+        }
+
+
+class BusinessForm(forms.ModelForm):
+    class Meta:
+        model = Business
+        fields = ['name', 'tin', 'phone', 'email', 'address', 'base_currency']
+        widgets = {
+            'name':          forms.TextInput(attrs={**_text, 'placeholder': 'e.g. TLC Business Ltd'}),
+            'tin':           forms.TextInput(attrs={**_text, 'placeholder': 'e.g. 123-456-789'}),
+            'phone':         forms.TextInput(attrs={**_text, 'placeholder': 'e.g. +255 712 000 000'}),
+            'email':         forms.EmailInput(attrs={**_text, 'placeholder': 'e.g. info@tlc.co.tz'}),
+            'address':       forms.Textarea(attrs={**_text, 'rows': 2, 'placeholder': 'Physical address'}),
+            'base_currency': forms.Select(attrs=_sel),
         }

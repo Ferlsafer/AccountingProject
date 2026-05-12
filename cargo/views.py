@@ -7,8 +7,8 @@ from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 
 from core.models import Business
-from .models import Trip, TripExpense, VehicleExpense, Invoice, Vehicle, CargoCustomer
-from .forms import TripForm, TripExpenseForm, VehicleExpenseForm, InvoicePayForm, CargoCustomerForm
+from .models import Trip, TripExpense, VehicleExpense, Invoice, Vehicle, Driver, CargoCustomer
+from .forms import TripForm, TripExpenseForm, VehicleExpenseForm, InvoicePayForm, CargoCustomerForm, VehicleForm, DriverForm
 
 
 def _date_range(request):
@@ -16,6 +16,76 @@ def _date_range(request):
     date_from = request.GET.get('date_from') or today.replace(day=1).isoformat()
     date_to   = request.GET.get('date_to')   or today.isoformat()
     return date_from, date_to
+
+
+# ── Vehicles ──────────────────────────────────────────────────────────────────
+
+@login_required
+def vehicle_list(request):
+    vehicles = Vehicle.objects.all()
+    return render(request, 'cargo/vehicle_list.html', {'vehicles': vehicles})
+
+
+@login_required
+def vehicle_add(request):
+    if request.method == 'POST':
+        form = VehicleForm(request.POST)
+        if form.is_valid():
+            v = form.save()
+            messages.success(request, f"Vehicle '{v.plate_number}' registered.")
+            return redirect('cargo:vehicle_list')
+    else:
+        form = VehicleForm()
+    return render(request, 'cargo/vehicle_form.html', {'form': form, 'title': 'Register Vehicle'})
+
+
+@login_required
+def vehicle_edit(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    if request.method == 'POST':
+        form = VehicleForm(request.POST, instance=vehicle)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Vehicle '{vehicle.plate_number}' updated.")
+            return redirect('cargo:vehicle_list')
+    else:
+        form = VehicleForm(instance=vehicle)
+    return render(request, 'cargo/vehicle_form.html', {'form': form, 'title': 'Edit Vehicle', 'object': vehicle})
+
+
+# ── Drivers ───────────────────────────────────────────────────────────────────
+
+@login_required
+def driver_list(request):
+    drivers = Driver.objects.all()
+    return render(request, 'cargo/driver_list.html', {'drivers': drivers})
+
+
+@login_required
+def driver_add(request):
+    if request.method == 'POST':
+        form = DriverForm(request.POST)
+        if form.is_valid():
+            d = form.save()
+            messages.success(request, f"Driver '{d.name}' registered.")
+            return redirect('cargo:driver_list')
+    else:
+        form = DriverForm()
+    return render(request, 'cargo/driver_form.html', {'form': form, 'title': 'Register Driver'})
+
+
+@login_required
+def driver_edit(request, pk):
+    driver = get_object_or_404(Driver, pk=pk)
+    if request.method == 'POST':
+        form = DriverForm(request.POST, instance=driver)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Driver '{driver.name}' updated.")
+            return redirect('cargo:driver_list')
+    else:
+        form = DriverForm(instance=driver)
+    return render(request, 'cargo/driver_form.html', {'form': form, 'title': 'Edit Driver', 'object': driver})
 
 
 # ── Trips ─────────────────────────────────────────────────────────────────────

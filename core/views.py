@@ -7,8 +7,8 @@ from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Account, Employee, SalaryPayment, UserProfile, PettyCashTransaction
-from .forms import EmployeeForm, SalaryPaymentForm, UserCreateForm, UserEditForm, PettyCashTransactionForm
+from .models import Account, Business, Employee, SalaryPayment, UserProfile, PettyCashTransaction
+from .forms import EmployeeForm, SalaryPaymentForm, UserCreateForm, UserEditForm, PettyCashTransactionForm, AccountForm, BusinessForm
 
 
 # ── User Management ───────────────────────────────────────────────────────────
@@ -278,3 +278,48 @@ def petty_cash_statement(request):
         'date_from': date_from,
         'date_to': date_to,
     })
+
+
+# ── Chart of Accounts — add/edit ──────────────────────────────────────────────
+
+@login_required
+def account_add(request):
+    if request.method == 'POST':
+        form = AccountForm(request.POST)
+        if form.is_valid():
+            acc = form.save()
+            messages.success(request, f"Account {acc.code} — {acc.name} added.")
+            return redirect('core:account_list')
+    else:
+        form = AccountForm()
+    return render(request, 'core/account_form.html', {'form': form, 'title': 'Add Account'})
+
+
+@login_required
+def account_edit(request, pk):
+    account = get_object_or_404(Account, pk=pk)
+    if request.method == 'POST':
+        form = AccountForm(request.POST, instance=account)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Account {account.code} updated.")
+            return redirect('core:account_list')
+    else:
+        form = AccountForm(instance=account)
+    return render(request, 'core/account_form.html', {'form': form, 'title': 'Edit Account', 'object': account})
+
+
+# ── Business Settings ─────────────────────────────────────────────────────────
+
+@login_required
+def business_settings(request):
+    business = Business.get_solo()
+    if request.method == 'POST':
+        form = BusinessForm(request.POST, instance=business)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Business settings updated.")
+            return redirect('core:business_settings')
+    else:
+        form = BusinessForm(instance=business)
+    return render(request, 'core/business_form.html', {'form': form, 'business': business})

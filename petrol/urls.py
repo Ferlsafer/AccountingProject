@@ -13,4 +13,10 @@ urlpatterns = [
     path('credit-payment/add/',views.credit_payment_add, name='credit_payment_add'),
     path('expenses/',          views.expense_list,       name='expense_list'),
     path('expenses/add/',      views.expense_add,        name='expense_add'),
+    path('tanks/',                   views.tank_list,     name='tank_list'),
+    path('tanks/add/',               views.tank_add,      name='tank_add'),
+    path('tanks/<int:pk>/edit/',     views.tank_edit,     name='tank_edit'),
+    path('suppliers/',               views.supplier_list, name='supplier_list'),
+    path('suppliers/add/',           views.supplier_add,  name='supplier_add'),
+    path('suppliers/<int:pk>/edit/', views.supplier_edit, name='supplier_edit'),
 ]

@@ -6,8 +6,9 @@ from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import render, redirect
 
-from .models import DailyFuelSale, FuelPurchase, CreditCustomer, CreditSale, CreditPayment, PetrolExpense, Tank
-from .forms import DailyFuelSaleForm, FuelPurchaseForm, CreditSaleForm, CreditPaymentForm, PetrolExpenseForm
+from django.shortcuts import get_object_or_404
+from .models import DailyFuelSale, FuelPurchase, CreditCustomer, CreditSale, CreditPayment, PetrolExpense, Tank, FuelSupplier
+from .forms import DailyFuelSaleForm, FuelPurchaseForm, CreditSaleForm, CreditPaymentForm, PetrolExpenseForm, TankForm, FuelSupplierForm
 
 
 def _date_range(request):
@@ -244,3 +245,73 @@ def expense_add(request):
     else:
         form = PetrolExpenseForm(initial={'date': date.today()})
     return render(request, 'petrol/expense_form.html', {'form': form})
+
+
+# ── Tanks ─────────────────────────────────────────────────────────────────────
+
+@login_required
+def tank_list(request):
+    tanks = Tank.objects.select_related('fuel_type').all()
+    return render(request, 'petrol/tank_list.html', {'tanks': tanks})
+
+
+@login_required
+def tank_add(request):
+    if request.method == 'POST':
+        form = TankForm(request.POST)
+        if form.is_valid():
+            t = form.save()
+            messages.success(request, f"Tank '{t.name}' added.")
+            return redirect('petrol:tank_list')
+    else:
+        form = TankForm()
+    return render(request, 'petrol/tank_form.html', {'form': form, 'title': 'Add Tank'})
+
+
+@login_required
+def tank_edit(request, pk):
+    tank = get_object_or_404(Tank, pk=pk)
+    if request.method == 'POST':
+        form = TankForm(request.POST, instance=tank)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Tank '{tank.name}' updated.")
+            return redirect('petrol:tank_list')
+    else:
+        form = TankForm(instance=tank)
+    return render(request, 'petrol/tank_form.html', {'form': form, 'title': 'Edit Tank', 'object': tank})
+
+
+# ── Fuel Suppliers ────────────────────────────────────────────────────────────
+
+@login_required
+def supplier_list(request):
+    suppliers = FuelSupplier.objects.all()
+    return render(request, 'petrol/supplier_list.html', {'suppliers': suppliers})
+
+
+@login_required
+def supplier_add(request):
+    if request.method == 'POST':
+        form = FuelSupplierForm(request.POST)
+        if form.is_valid():
+            s = form.save()
+            messages.success(request, f"Supplier '{s.name}' added.")
+            return redirect('petrol:supplier_list')
+    else:
+        form = FuelSupplierForm()
+    return render(request, 'petrol/supplier_form.html', {'form': form, 'title': 'Add Fuel Supplier'})
+
+
+@login_required
+def supplier_edit(request, pk):
+    supplier = get_object_or_404(FuelSupplier, pk=pk)
+    if request.method == 'POST':
+        form = FuelSupplierForm(request.POST, instance=supplier)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Supplier '{supplier.name}' updated.")
+            return redirect('petrol:supplier_list')
+    else:
+        form = FuelSupplierForm(instance=supplier)
+    return render(request, 'petrol/supplier_form.html', {'form': form, 'title': 'Edit Supplier', 'object': supplier})

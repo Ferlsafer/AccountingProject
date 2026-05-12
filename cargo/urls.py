@@ -4,6 +4,12 @@ from . import views
 app_name = 'cargo'
 
 urlpatterns = [
+    path('vehicles/',                views.vehicle_list, name='vehicle_list'),
+    path('vehicles/add/',            views.vehicle_add,  name='vehicle_add'),
+    path('vehicles/<int:pk>/edit/',  views.vehicle_edit, name='vehicle_edit'),
+    path('drivers/',                 views.driver_list,  name='driver_list'),
+    path('drivers/add/',             views.driver_add,   name='driver_add'),
+    path('drivers/<int:pk>/edit/',   views.driver_edit,  name='driver_edit'),
     path('trips/',                         views.trip_list,            name='trip_list'),
     path('trips/add/',                     views.trip_add,             name='trip_add'),
     path('trips/<int:pk>/',               views.trip_detail,          name='trip_detail'),

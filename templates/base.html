@@ -130,12 +130,24 @@
             {% endif %}
 
             {% if user.is_staff %}
-            <div class="sidebar-section-label">System</div>
+            <div class="sidebar-section-label">Settings</div>
             <a href="{% url 'core:user_list' %}" class="sidebar-link {% block nav_users_active %}{% endblock %}">
                 <i class="bi bi-person-gear"></i> User Accounts
             </a>
-            <a href="/admin/" class="sidebar-link">
-                <i class="bi bi-gear"></i> Administration
+            <a href="{% url 'cargo:vehicle_list' %}" class="sidebar-link {% block nav_vehicles_active %}{% endblock %}">
+                <i class="bi bi-truck"></i> Vehicles
+            </a>
+            <a href="{% url 'cargo:driver_list' %}" class="sidebar-link {% block nav_drivers_active %}{% endblock %}">
+                <i class="bi bi-person-badge"></i> Drivers
+            </a>
+            <a href="{% url 'petrol:tank_list' %}" class="sidebar-link {% block nav_tanks_active %}{% endblock %}">
+                <i class="bi bi-fuel-pump"></i> Fuel Tanks
+            </a>
+            <a href="{% url 'petrol:supplier_list' %}" class="sidebar-link {% block nav_suppliers_active %}{% endblock %}">
+                <i class="bi bi-building"></i> Fuel Suppliers
+            </a>
+            <a href="{% url 'core:business_settings' %}" class="sidebar-link {% block nav_business_active %}{% endblock %}">
+                <i class="bi bi-building-gear"></i> Business Settings
             </a>
             {% endif %}
 

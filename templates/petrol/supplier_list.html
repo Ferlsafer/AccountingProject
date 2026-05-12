@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Fuel Suppliers{% endblock %}
+{% block page_title %}Fuel Suppliers{% endblock %}
+{% block nav_suppliers_active %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Fuel Suppliers</h5>
+        <span class="text-muted small"><i class="bi bi-building me-1"></i>Registered fuel suppliers</span>
+    </div>
+    <a href="{% url 'petrol:supplier_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Supplier
+    </a>
+</div>
+
+<div class="content-card">
+    <div class="content-card-header">
+        <span class="content-card-title">
+            <i class="bi bi-building me-2 text-primary"></i>Supplier List
+        </span>
+        <span class="text-muted small">{{ suppliers|length }} supplier{{ suppliers|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Contact Person</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for s in suppliers %}
+            <tr>
+                <td class="fw-semibold">{{ s.name }}</td>
+                <td class="text-muted">{{ s.contact_person|default:"—" }}</td>
+                <td class="text-muted">{{ s.phone|default:"—" }}</td>
+                <td class="text-muted small">{{ s.address|default:"—" }}</td>
+                <td class="text-end">
+                    <a href="{% url 'petrol:supplier_edit' s.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center py-5 text-muted">
+                    <i class="bi bi-building" style="font-size:2rem;opacity:0.4;"></i>
+                    <p class="mt-2 mb-0">No suppliers added yet.</p>
+                    <a href="{% url 'petrol:supplier_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Supplier</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

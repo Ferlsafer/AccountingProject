@@ -17,4 +17,8 @@ urlpatterns = [
     path('petty-cash/add/',         views.petty_cash_add,       name='petty_cash_add'),
     path('petty-cash/<int:pk>/',    views.petty_cash_detail,    name='petty_cash_detail'),
     path('petty-cash/statement/',   views.petty_cash_statement, name='petty_cash_statement'),
+    # Master data
+    path('accounts/add/',            views.account_add,       name='account_add'),
+    path('accounts/<int:pk>/edit/',  views.account_edit,      name='account_edit'),
+    path('settings/',                views.business_settings, name='business_settings'),
 ]

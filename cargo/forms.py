@@ -1,5 +1,5 @@
 from django import forms
-from .models import Trip, TripExpense, VehicleExpense, Invoice, CargoCustomer
+from .models import Trip, TripExpense, VehicleExpense, Invoice, CargoCustomer, Vehicle, Driver
 
 _date = {'type': 'date', 'class': 'form-control'}
 _num  = {'class': 'form-control', 'step': '0.01', 'min': '0'}
@@ -69,4 +69,30 @@ class InvoicePayForm(forms.ModelForm):
         widgets = {
             'paid_date':      forms.DateInput(attrs=_date),
             'payment_method': forms.Select(attrs=_sel),
+        }
+
+
+class VehicleForm(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = ['plate_number', 'make', 'model', 'year', 'capacity_tons', 'is_active']
+        widgets = {
+            'plate_number':  forms.TextInput(attrs={**_text, 'placeholder': 'e.g. T 123 ABC'}),
+            'make':          forms.TextInput(attrs={**_text, 'placeholder': 'e.g. Scania'}),
+            'model':         forms.TextInput(attrs={**_text, 'placeholder': 'e.g. R450'}),
+            'year':          forms.NumberInput(attrs={**_text, 'placeholder': 'e.g. 2020', 'min': '1980', 'max': '2100'}),
+            'capacity_tons': forms.NumberInput(attrs={**_num, 'placeholder': 'e.g. 30'}),
+            'is_active':     forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class DriverForm(forms.ModelForm):
+    class Meta:
+        model = Driver
+        fields = ['name', 'phone', 'license_number', 'is_active']
+        widgets = {
+            'name':           forms.TextInput(attrs={**_text, 'placeholder': 'e.g. Mohamed Ally'}),
+            'phone':          forms.TextInput(attrs={**_text, 'placeholder': 'e.g. +255 754 000 000'}),
+            'license_number': forms.TextInput(attrs={**_text, 'placeholder': 'e.g. TZ-DL-12345'}),
+            'is_active':      forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

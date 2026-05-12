@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block nav_vehicles_active %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7 col-xl-6">
+        <div class="content-card form-card">
+            <div class="content-card-header">
+                <span class="content-card-title">
+                    <i class="bi bi-truck me-2 text-primary"></i>{{ title }}
+                </span>
+                {% if object %}
+                <span class="text-muted small">{{ object.plate_number }}</span>
+                {% endif %}
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                    <div class="mb-3 form-check">
+                        {{ field }}
+                        <label for="{{ field.id_for_label }}" class="form-check-label fw-semibold small">
+                            {{ field.label }}
+                        </label>
+                        {% if field.errors %}
+                        <div class="invalid-feedback d-block">{{ field.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label fw-semibold small">
+                            {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <div class="form-text text-muted">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% if field.errors %}
+                        <div class="invalid-feedback d-block">{{ field.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Save Vehicle
+                        </button>
+                        <a href="{% url 'cargo:vehicle_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
