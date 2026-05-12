@@ -440,8 +440,8 @@ def ar_aging(request):
     # ── Petrol credit customers ──
     petrol_rows = []
     for cust in CreditCustomer.objects.filter(current_balance__gt=0):
-        sales = list(CreditCustomer.objects.get(pk=cust.pk).credit_sales.order_by('date'))
-        total_paid = cust.credit_payments.aggregate(t=Sum('amount'))['t'] or Decimal('0')
+        sales = list(cust.credit_sales.order_by('date'))
+        total_paid = cust.payments.aggregate(t=Sum('amount'))['t'] or Decimal('0')
 
         buckets = {0: Decimal('0'), 31: Decimal('0'), 61: Decimal('0'), 91: Decimal('0')}
         remaining_payment = total_paid
