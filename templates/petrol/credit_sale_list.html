@@ -11,6 +11,7 @@
         <h5 class="fw-bold mb-1">Credit Sales</h5>
         <span class="text-muted small"><i class="bi bi-person-lines-fill me-1"></i>Fuel sold on account</span>
     </div>
+    {% if user.profile.role != 'accountant' %}
     <div class="d-flex gap-2">
         <a href="{% url 'petrol:credit_payment_add' %}" class="btn btn-outline-success">
             <i class="bi bi-cash-coin me-1"></i>Receive Payment
@@ -19,6 +20,7 @@
             <i class="bi bi-plus-lg me-1"></i>New Credit Sale
         </a>
     </div>
+    {% endif %}
 </div>
 
 <!-- Customer balances -->

@@ -10,9 +10,11 @@
         <h5 class="fw-bold mb-1">Cargo Customers</h5>
         <span class="text-muted small"><i class="bi bi-person-vcard me-1"></i>All registered cargo customers</span>
     </div>
+    {% if user.profile.role != 'accountant' %}
     <a href="{% url 'cargo:customer_add' %}" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i>Add Customer
     </a>
+    {% endif %}
 </div>
 
 <div class="content-card">
@@ -47,7 +49,7 @@
                 <td colspan="5" class="text-center py-5 text-muted">
                     <i class="bi bi-people" style="font-size:2rem;opacity:0.4;"></i>
                     <p class="mt-2 mb-0">No customers yet.</p>
-                    <a href="{% url 'cargo:customer_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Customer</a>
+                    {% if user.profile.role != 'accountant' %}<a href="{% url 'cargo:customer_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Customer</a>{% endif %}
                 </td>
             </tr>
             {% endfor %}

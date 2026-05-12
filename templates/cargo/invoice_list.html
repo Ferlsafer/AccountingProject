@@ -117,7 +117,7 @@
                     <a href="{% url 'cargo:invoice_print' inv.pk %}" target="_blank" class="btn btn-sm btn-outline-primary" title="Print invoice">
                         <i class="bi bi-printer"></i>
                     </a>
-                    {% if not inv.is_paid %}
+                    {% if not inv.is_paid and user.profile.role != 'accountant' %}
                     <a href="{% url 'cargo:invoice_pay' inv.pk %}" class="btn btn-sm btn-success" title="Record payment">
                         <i class="bi bi-cash"></i>
                     </a>

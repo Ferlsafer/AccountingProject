@@ -11,9 +11,11 @@
         <h5 class="fw-bold mb-1">Trips</h5>
         <span class="text-muted small"><i class="bi bi-map me-1"></i>All cargo trips</span>
     </div>
+    {% if user.profile.role != 'accountant' %}
     <a href="{% url 'cargo:trip_add' %}" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i>New Trip
     </a>
+    {% endif %}
 </div>
 
 <!-- Filters -->
@@ -137,7 +139,7 @@
                 <td colspan="8" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i>
                     <p class="mt-2 mb-0">No trips in this period.</p>
-                    <a href="{% url 'cargo:trip_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Trip</a>
+                    {% if user.profile.role != 'accountant' %}<a href="{% url 'cargo:trip_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Trip</a>{% endif %}
                 </td>
             </tr>
             {% endfor %}

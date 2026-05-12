@@ -11,9 +11,11 @@
         <h5 class="fw-bold mb-1">Vehicle Expenses</h5>
         <span class="text-muted small"><i class="bi bi-tools me-1"></i>Maintenance, repairs, and running costs</span>
     </div>
+    {% if user.profile.role != 'accountant' %}
     <a href="{% url 'cargo:vehicle_expense_add' %}" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i>Add Expense
     </a>
+    {% endif %}
 </div>
 
 <!-- Filters -->
@@ -101,7 +103,7 @@
                 <td colspan="6" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox" style="font-size:2rem;opacity:0.4;"></i>
                     <p class="mt-2 mb-0">No vehicle expenses in this period.</p>
-                    <a href="{% url 'cargo:vehicle_expense_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Expense</a>
+                    {% if user.profile.role != 'accountant' %}<a href="{% url 'cargo:vehicle_expense_add' %}" class="btn btn-sm btn-outline-primary mt-2">Add First Expense</a>{% endif %}
                 </td>
             </tr>
             {% endfor %}
