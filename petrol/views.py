@@ -94,15 +94,20 @@ def daily_sale_add(request):
     if request.method == 'POST':
         form = DailyFuelSaleForm(request.POST)
         if form.is_valid():
+            sale = form.save(commit=False)
+            if not sale.tank.selling_price:
+                messages.error(request, f"No selling price set for {sale.tank}. Ask management to set it first.")
+                tanks = Tank.objects.filter(is_active=True).select_related('fuel_type')
+                return render(request, 'petrol/daily_sale_form.html', {'form': form, 'tanks': tanks})
             with transaction.atomic():
-                sale = form.save(commit=False)
                 sale.recorded_by = request.user
+                sale.unit_price = sale.tank.selling_price
                 sale.total_amount = sale.litres_sold * sale.unit_price
                 sale.save()
                 sale.tank.current_stock -= sale.litres_sold
                 sale.tank.save(update_fields=['current_stock'])
                 sale.post_to_ledger(request.user)
-            messages.success(request, f"Sale recorded: {sale.litres_sold}L of {sale.tank.fuel_type} — TZS {sale.total_amount:,.0f}")
+            messages.success(request, f"Sale recorded: {sale.litres_sold}L of {sale.tank.fuel_type} @ TZS {sale.unit_price:,.0f}/L — Total TZS {sale.total_amount:,.0f}")
             return redirect('petrol:daily_sale_list')
     else:
         form = DailyFuelSaleForm(initial={'date': date.today()})
@@ -280,9 +285,13 @@ def credit_sale_add(request):
             form = CreditSaleForm(request.POST)
 
         if form.is_valid():
+            sale = form.save(commit=False)
+            if not sale.tank.selling_price:
+                messages.error(request, f"No selling price set for {sale.tank}. Ask management to set it first.")
+                return render(request, 'petrol/credit_sale_form.html', {'form': form, 'customer_type': customer_type})
             with transaction.atomic():
-                sale = form.save(commit=False)
                 sale.recorded_by = request.user
+                sale.unit_price = sale.tank.selling_price
                 sale.total_amount = sale.litres * sale.unit_price
                 sale.save()
                 sale.tank.current_stock -= sale.litres

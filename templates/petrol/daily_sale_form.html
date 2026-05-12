@@ -35,33 +35,37 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Tank</label>
                         {{ form.tank }}
-                        <div class="form-text">
+                        <div class="mt-2">
                             {% for tank in tanks %}
-                            <span class="badge bg-light text-dark border me-1">
-                                {{ tank.name }}: {{ tank.current_stock|floatformat:0 }}L available
-                            </span>
+                            <div class="d-flex justify-content-between align-items-center py-1 px-2 rounded mb-1"
+                                style="background:#f8fafc;font-size:0.82rem;" data-tank-id="{{ tank.pk }}"
+                                data-price="{{ tank.selling_price }}">
+                                <span class="fw-semibold">{{ tank.name }}</span>
+                                <span class="text-muted">{{ tank.current_stock|floatformat:0 }}L stock</span>
+                                {% if tank.selling_price %}
+                                <span class="tlc-badge tlc-badge-blue">TZS {{ tank.selling_price|floatformat:0 }}/L</span>
+                                {% else %}
+                                <span class="tlc-badge tlc-badge-red">No price set</span>
+                                {% endif %}
+                            </div>
                             {% endfor %}
                         </div>
                     </div>
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label class="form-label fw-semibold">Litres Sold</label>
-                            <div class="input-group">
-                                {{ form.litres_sold }}
-                                <span class="input-group-text">L</span>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label fw-semibold">Price / Litre</label>
-                            <div class="input-group">
-                                <span class="input-group-text">TZS</span>
-                                {{ form.unit_price }}
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Litres Sold</label>
+                        <div class="input-group">
+                            {{ form.litres_sold }}
+                            <span class="input-group-text">L</span>
                         </div>
                     </div>
 
-                    <!-- Live total preview -->
+                    <!-- Price info (read-only, pulled from tank) -->
+                    <div class="alert alert-light border mb-2 d-flex align-items-center justify-content-between">
+                        <span class="text-muted small fw-semibold"><i class="bi bi-tag me-1"></i>Selling Price</span>
+                        <span id="price-display" class="fw-bold text-primary">—</span>
+                    </div>
+
                     <div class="alert alert-light border mb-4 d-flex align-items-center justify-content-between">
                         <span class="text-muted small fw-semibold"><i class="bi bi-calculator me-1"></i>Total Amount</span>
                         <span id="total-preview" class="fw-bold fs-5 text-primary">TZS 0</span>
@@ -86,12 +90,21 @@
 
 {% block extra_js %}
 <script>
+const tankPrices = {};
+document.querySelectorAll('[data-tank-id]').forEach(el => {
+    tankPrices[el.dataset.tankId] = parseFloat(el.dataset.price) || 0;
+});
+
 function updateTotal() {
-    const l = parseFloat(document.getElementById('id_litres_sold').value) || 0;
-    const p = parseFloat(document.getElementById('id_unit_price').value) || 0;
-    document.getElementById('total-preview').textContent = 'TZS ' + Math.round(l * p).toLocaleString();
+    const tankId = document.getElementById('id_tank').value;
+    const price = tankPrices[tankId] || 0;
+    const litres = parseFloat(document.getElementById('id_litres_sold').value) || 0;
+    document.getElementById('price-display').textContent = price ? 'TZS ' + price.toLocaleString() + ' / L' : '—';
+    document.getElementById('total-preview').textContent = 'TZS ' + Math.round(litres * price).toLocaleString();
 }
+
+document.getElementById('id_tank').addEventListener('change', updateTotal);
 document.getElementById('id_litres_sold').addEventListener('input', updateTotal);
-document.getElementById('id_unit_price').addEventListener('input', updateTotal);
+updateTotal();
 </script>
 {% endblock %}

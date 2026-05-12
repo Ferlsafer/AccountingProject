@@ -10,12 +10,11 @@ _text  = {'class': 'form-control'}
 class DailyFuelSaleForm(forms.ModelForm):
     class Meta:
         model = DailyFuelSale
-        fields = ['date', 'tank', 'litres_sold', 'unit_price']
+        fields = ['date', 'tank', 'litres_sold']
         widgets = {
             'date':        forms.DateInput(attrs=_date),
             'tank':        forms.Select(attrs=_sel),
             'litres_sold': forms.NumberInput(attrs={**_num, 'placeholder': '0.00'}),
-            'unit_price':  forms.NumberInput(attrs={**_num, 'placeholder': '0.00'}),
         }
 
 
@@ -37,13 +36,12 @@ class FuelPurchaseForm(forms.ModelForm):
 class CreditSaleForm(forms.ModelForm):
     class Meta:
         model = CreditSale
-        fields = ['date', 'customer', 'tank', 'litres', 'unit_price']
+        fields = ['date', 'customer', 'tank', 'litres']
         widgets = {
-            'date':       forms.DateInput(attrs=_date),
-            'customer':   forms.Select(attrs=_sel),
-            'tank':       forms.Select(attrs=_sel),
-            'litres':     forms.NumberInput(attrs={**_num, 'placeholder': '0.00'}),
-            'unit_price': forms.NumberInput(attrs={**_num, 'placeholder': '0.00'}),
+            'date':     forms.DateInput(attrs=_date),
+            'customer': forms.Select(attrs=_sel),
+            'tank':     forms.Select(attrs=_sel),
+            'litres':   forms.NumberInput(attrs={**_num, 'placeholder': '0.00'}),
         }
 
 
@@ -74,15 +72,17 @@ class PetrolExpenseForm(forms.ModelForm):
 class TankForm(forms.ModelForm):
     class Meta:
         model = Tank
-        fields = ['name', 'fuel_type', 'capacity', 'is_active']
+        fields = ['name', 'fuel_type', 'capacity', 'selling_price', 'is_active']
         widgets = {
-            'name':      forms.TextInput(attrs={**_text, 'placeholder': 'e.g. Tank A — Petrol'}),
-            'fuel_type': forms.Select(attrs=_sel),
-            'capacity':  forms.NumberInput(attrs={**_num, 'placeholder': 'Litres, e.g. 20000'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'name':          forms.TextInput(attrs={**_text, 'placeholder': 'e.g. Tank A — Petrol'}),
+            'fuel_type':     forms.Select(attrs=_sel),
+            'capacity':      forms.NumberInput(attrs={**_num, 'placeholder': 'Litres, e.g. 20000'}),
+            'selling_price': forms.NumberInput(attrs={**_num, 'placeholder': '0.00'}),
+            'is_active':     forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         help_texts = {
-            'capacity': 'Total tank capacity in litres.',
+            'capacity':      'Total tank capacity in litres.',
+            'selling_price': 'Selling price per litre charged to customers.',
         }
 
 

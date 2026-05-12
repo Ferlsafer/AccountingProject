@@ -19,6 +19,7 @@ class Tank(models.Model):
     fuel_type = models.ForeignKey(FuelType, on_delete=models.PROTECT, related_name='tanks')
     capacity = models.DecimalField(max_digits=10, decimal_places=2, help_text='Litres')
     current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), help_text='Current selling price per litre (set by management)')
     is_active = models.BooleanField(default=True)
 
     class Meta:
