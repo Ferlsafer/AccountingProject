@@ -1,11 +1,12 @@
 from datetime import date, timedelta
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Sum, Q
 
-from core.models import Business, Account, JournalEntry, JournalLine, SalaryPayment, Employee
+from core.models import Business, Account, JournalEntry, JournalLine, SalaryPayment, Employee, BankReconciliation
 from petrol.models import DailyFuelSale, CreditSale, CreditPayment, PetrolExpense, FuelType, Tank, CreditCustomer, FuelPurchase, FuelSupplier
 from cargo.models import Trip, Invoice, TripExpense, VehicleExpense
 
@@ -614,4 +615,115 @@ def cash_position(request):
         'seven_days': seven_days,
         'today': today,
         'business': business,
+    })
+
+
+# ── Bank Reconciliation ───────────────────────────────────────────────────────
+
+@login_required
+def reconciliation_list(request):
+    # Only cash/bank accounts are reconcilable (asset accounts starting with 10)
+    cash_accounts = Account.objects.filter(type='asset', code__startswith='10', is_active=True)
+    reconciliations = BankReconciliation.objects.select_related('account', 'created_by').all()
+    return render(request, 'reports/reconciliation_list.html', {
+        'reconciliations': reconciliations,
+        'cash_accounts': cash_accounts,
+        'today': date.today(),
+    })
+
+
+@login_required
+def reconciliation_create(request):
+    if request.method != 'POST':
+        return redirect('reports:reconciliation_list')
+
+    account_id = request.POST.get('account')
+    period_start = request.POST.get('period_start')
+    period_end = request.POST.get('period_end')
+    statement_balance = request.POST.get('statement_balance')
+
+    if not all([account_id, period_start, period_end, statement_balance]):
+        messages.error(request, 'All fields are required.')
+        return redirect('reports:reconciliation_list')
+
+    recon = BankReconciliation.objects.create(
+        account_id=account_id,
+        period_start=period_start,
+        period_end=period_end,
+        statement_balance=statement_balance,
+        created_by=request.user,
+    )
+    return redirect('reports:reconciliation_detail', pk=recon.pk)
+
+
+@login_required
+def reconciliation_detail(request, pk):
+    recon = get_object_or_404(BankReconciliation, pk=pk)
+
+    # Opening balance: net movement on this account before period_start
+    pre = JournalLine.objects.filter(
+        account=recon.account, entry__date__lt=recon.period_start
+    ).aggregate(dr=Sum('debit'), cr=Sum('credit'))
+    opening_balance = (pre['dr'] or Decimal('0')) - (pre['cr'] or Decimal('0'))
+
+    # All lines within the period
+    lines = JournalLine.objects.filter(
+        account=recon.account,
+        entry__date__range=[recon.period_start, recon.period_end],
+    ).select_related('entry').order_by('entry__date', 'entry__id')
+
+    if request.method == 'POST' and not recon.is_locked:
+        action = request.POST.get('action')
+        ticked_ids = set(int(x) for x in request.POST.getlist('cleared'))
+
+        now = timezone.now()
+        for line in lines:
+            if line.pk in ticked_ids:
+                line.is_reconciled = True
+                line.reconciled_at = now
+                line.reconciled_by = request.user
+                line.reconciliation = recon
+            else:
+                line.is_reconciled = False
+                line.reconciled_at = None
+                line.reconciled_by = None
+                line.reconciliation = None
+            line.save(update_fields=['is_reconciled', 'reconciled_at', 'reconciled_by', 'reconciliation'])
+
+        if action == 'lock':
+            recon.is_locked = True
+            recon.locked_at = now
+            recon.save(update_fields=['is_locked', 'locked_at'])
+            messages.success(request, 'Reconciliation locked and finalised.')
+            return redirect('reports:reconciliation_list')
+
+        messages.success(request, 'Progress saved.')
+        return redirect('reports:reconciliation_detail', pk=recon.pk)
+
+    # Build rows with running balance
+    running = opening_balance
+    rows = []
+    cleared_total = opening_balance
+    for line in lines:
+        net = line.debit - line.credit
+        running += net
+        if line.is_reconciled:
+            cleared_total += net
+        rows.append({
+            'line': line,
+            'net': net,
+            'running_balance': running,
+        })
+
+    system_balance = running
+    difference = recon.statement_balance - cleared_total
+
+    return render(request, 'reports/reconciliation_detail.html', {
+        'recon': recon,
+        'rows': rows,
+        'opening_balance': opening_balance,
+        'system_balance': system_balance,
+        'cleared_balance': cleared_total,
+        'difference': difference,
+        'today': date.today(),
     })

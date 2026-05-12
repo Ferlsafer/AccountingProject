@@ -108,9 +108,36 @@ class JournalLine(models.Model):
     debit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
     credit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
     description = models.CharField(max_length=200, blank=True)
+    is_reconciled = models.BooleanField(default=False)
+    reconciled_at = models.DateTimeField(null=True, blank=True)
+    reconciled_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='reconciled_lines'
+    )
+    reconciliation = models.ForeignKey(
+        'BankReconciliation', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='cleared_lines'
+    )
 
     def __str__(self):
         return f"{self.account} | Dr {self.debit} Cr {self.credit}"
+
+
+class BankReconciliation(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='reconciliations')
+    period_start = models.DateField()
+    period_end = models.DateField()
+    statement_balance = models.DecimalField(max_digits=15, decimal_places=2)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='reconciliations')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_locked = models.BooleanField(default=False)
+    locked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-period_end', '-created_at']
+
+    def __str__(self):
+        return f"{self.account.name} | {self.period_start} → {self.period_end}"
 
 
 class Employee(models.Model):

@@ -13,5 +13,8 @@ urlpatterns = [
     path('balance-sheet/',     views.balance_sheet,    name='balance_sheet'),
     path('ar-aging/',          views.ar_aging,         name='ar_aging'),
     path('supplier-ap/',       views.supplier_ap,      name='supplier_ap'),
-    path('cash-position/',     views.cash_position,    name='cash_position'),
+    path('cash-position/',               views.cash_position,          name='cash_position'),
+    path('reconciliation/',              views.reconciliation_list,    name='reconciliation_list'),
+    path('reconciliation/new/',          views.reconciliation_create,  name='reconciliation_create'),
+    path('reconciliation/<int:pk>/',     views.reconciliation_detail,  name='reconciliation_detail'),
 ]

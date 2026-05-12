@@ -148,6 +148,9 @@
             <a href="{% url 'reports:cash_position' %}" class="sidebar-link {% block nav_cash_position_active %}{% endblock %}">
                 <i class="bi bi-cash-stack"></i> Cash Position
             </a>
+            <a href="{% url 'reports:reconciliation_list' %}" class="sidebar-link {% block nav_reconciliation_active %}{% endblock %}">
+                <i class="bi bi-journal-check"></i> Reconciliation
+            </a>
             {% endif %}
 
             {% with role=user.profile.role %}
