@@ -26,11 +26,11 @@
         <div class="col-auto text-end">
             <div class="text-white-50 small">Today's movement</div>
             <div class="text-white small fw-semibold">
-                <i class="bi bi-arrow-up text-success"></i> {% currency total_in_today %} in
+                <i class="bi bi-arrow-up" style="color:#4ade80"></i> {% currency total_in_today %} in
                 &nbsp;
-                <i class="bi bi-arrow-down text-danger"></i> {% currency total_out_today %} out
+                <i class="bi bi-arrow-down" style="color:#f87171"></i> {% currency total_out_today %} out
             </div>
-            <div class="mt-1 fw-bold {% if net_today >= 0 %}text-success{% else %}text-danger{% endif %}">
+            <div class="mt-1 fw-bold" style="color:{% if net_today >= 0 %}#4ade80{% else %}#f87171{% endif %}">
                 Net today: {% currency net_today %}
             </div>
         </div>
