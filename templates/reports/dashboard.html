@@ -47,15 +47,6 @@
     align-items: center;
     margin-bottom: 18px;
   }
-  .mob-avatar {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.15);
-    border: 2px solid rgba(255,255,255,0.25);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 13px; color: #fff;
-    letter-spacing: 0.02em;
-  }
   .mob-logout-btn {
     width: 40px; height: 40px;
     border-radius: 50%;
@@ -292,7 +283,6 @@
       <button type="button" class="mob-logout-btn" data-sidebar-toggle aria-label="Menu">
         <i class="bi bi-list" style="font-size:1.3rem"></i>
       </button>
-      <div class="mob-avatar">{{ user.get_full_name|default:user.username|slice:":2"|upper }}</div>
       <form method="post" action="/accounts/logout/" class="m-0">
         {% csrf_token %}
         <button type="submit" class="mob-logout-btn" title="Log out" data-no-loading>
@@ -721,7 +711,6 @@
       <button type="button" class="mob-logout-btn" data-sidebar-toggle aria-label="Menu">
         <i class="bi bi-list" style="font-size:1.3rem"></i>
       </button>
-      <div class="mob-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
       <form method="post" action="{% url 'logout' %}" class="m-0">{% csrf_token %}<button type="submit" class="mob-logout-btn" title="Sign out" data-no-loading><i class="bi bi-box-arrow-right"></i></button></form>
     </div>
     <div class="mob-date-chip"><i class="bi bi-calendar3"></i>{{ today|date:"l, j F Y" }}</div>
