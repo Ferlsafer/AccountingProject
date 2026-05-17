@@ -73,7 +73,56 @@
     </div>
 </div>
 
-<!-- Table -->
+<!-- Mobile: card list -->
+<div class="d-md-none">
+    <div class="mob-group-card mob-open" id="mob-purchases-list">
+        <div class="mob-group-header" onclick="mobToggle('mob-purchases-list')">
+            <div class="mob-group-icon mob-gi-blue"><i class="bi bi-truck"></i></div>
+            <div class="mob-group-info">
+                <div class="mob-group-title">Purchase Log</div>
+                <div class="mob-group-summary">{{ purchases|length }} record{{ purchases|length|pluralize }} &middot; {% currency totals.amount|default:0 %}</div>
+            </div>
+            <i class="bi bi-chevron-down mob-chevron"></i>
+        </div>
+        <div class="mob-group-divider"></div>
+        <div class="mob-group-body">
+            {% for p in purchases %}
+            <div class="mob-detail-row">
+                <div class="mob-detail-icon {% if p.status == 'approved' %}mob-gi-green{% elif p.status == 'pending' %}mob-gi-orange{% elif p.status == 'returned' %}mob-gi-red{% else %}mob-gi-teal{% endif %}">
+                    <i class="bi bi-truck"></i>
+                </div>
+                <div class="mob-detail-text">
+                    <div class="mob-detail-val">{{ p.supplier }}</div>
+                    <div class="mob-detail-sub">{{ p.date|date:"d M Y" }} &middot; {{ p.litres|floatformat:0 }}L &middot; {{ p.tank.fuel_type }}</div>
+                    <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
+                        {% if p.status == 'pending' %}<span class="tlc-badge tlc-badge-amber">Pending</span>
+                        {% elif p.status == 'approved' %}<span class="tlc-badge tlc-badge-green">Approved</span>
+                        {% elif p.status == 'returned' %}<span class="tlc-badge tlc-badge-red">Returned</span>
+                        {% elif p.status == 'cancelled' %}<span class="tlc-badge tlc-badge-gray">Cancelled</span>
+                        {% endif %}
+                        {% if p.status == 'returned' and user.profile.role == 'petrol_clerk' %}
+                        <a href="{% url 'petrol:purchase_edit' p.pk %}" class="tlc-badge tlc-badge-blue" style="text-decoration:none;">Edit &amp; Resubmit</a>
+                        {% endif %}
+                    </div>
+                    {% if p.review_note and p.status == 'returned' %}
+                    <div style="margin-top:4px;font-size:11px;color:#f59e0b;">
+                        <i class="bi bi-chat-left-text me-1"></i>{{ p.review_note }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="mob-entry-val">{% currency p.total_amount %}</div>
+            </div>
+            {% empty %}
+            <div class="mob-empty">
+                <i class="bi bi-inbox"></i>No purchases in this period.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Desktop: table -->
+<div class="d-none d-md-block">
 <div class="content-card">
     <div class="content-card-header">
         <span class="content-card-title"><i class="bi bi-table me-2 text-primary"></i>Purchase Log</span>
@@ -123,7 +172,6 @@
                 <td class="text-end" style="white-space:nowrap">
                     {% if p.status == 'pending' %}
                         {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
-                        <!-- Approve -->
                         <form method="post" action="{% url 'petrol:purchase_approve' p.pk %}" class="d-inline">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-success" title="Approve"
@@ -131,7 +179,6 @@
                                 <i class="bi bi-check-lg"></i>
                             </button>
                         </form>
-                        <!-- Return with note (modal trigger) -->
                         <button type="button" class="btn btn-sm btn-warning" title="Return with note"
                             data-bs-toggle="modal" data-bs-target="#returnModal{{ p.pk }}">
                             <i class="bi bi-arrow-return-left"></i>
@@ -143,7 +190,6 @@
                             <i class="bi bi-x-lg"></i>
                         </button>
                         {% endif %}
-
                     {% elif p.status == 'returned' %}
                         {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'petrol_clerk' %}
                         <a href="{% url 'petrol:purchase_edit' p.pk %}" class="btn btn-sm btn-outline-primary" title="Edit and resubmit">
@@ -195,6 +241,7 @@
             {% endif %}
         </table>
     </div>
+</div>
 </div>
 
 <!-- Return and Cancel modals -->

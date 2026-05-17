@@ -341,6 +341,11 @@
             });
         })();
 
+        // Collapsible mob-group-card toggle (used on dashboard + list pages)
+        function mobToggle(id) {
+            document.getElementById(id).classList.toggle('mob-open');
+        }
+
         // Register service worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});

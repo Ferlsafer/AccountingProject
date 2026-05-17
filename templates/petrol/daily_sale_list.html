@@ -78,7 +78,41 @@
     </div>
 </div>
 
-<!-- Combined sales table -->
+<!-- Mobile: card list -->
+<div class="d-md-none">
+    <div class="mob-group-card mob-open" id="mob-sales-list">
+        <div class="mob-group-header" onclick="mobToggle('mob-sales-list')">
+            <div class="mob-group-icon mob-gi-green"><i class="bi bi-cash-stack"></i></div>
+            <div class="mob-group-info">
+                <div class="mob-group-title">All Sales</div>
+                <div class="mob-group-summary">{{ all_sales|length }} transaction{{ all_sales|length|pluralize }} &middot; {% currency total_amount %}</div>
+            </div>
+            <i class="bi bi-chevron-down mob-chevron"></i>
+        </div>
+        <div class="mob-group-divider"></div>
+        <div class="mob-group-body">
+            {% for s in all_sales %}
+            <div class="mob-detail-row">
+                <div class="mob-detail-icon {% if s.sale_type == 'cash' %}mob-gi-green{% else %}mob-gi-amber{% endif %}">
+                    <i class="bi bi-{% if s.sale_type == 'cash' %}cash{% else %}person-lines-fill{% endif %}"></i>
+                </div>
+                <div class="mob-detail-text">
+                    <div class="mob-detail-val">{{ s.customer|default:"Cash Sale" }}</div>
+                    <div class="mob-detail-sub">{{ s.date|date:"d M Y" }} &middot; {{ s.litres|floatformat:1 }}L &middot; {{ s.fuel_type }}</div>
+                </div>
+                <div class="mob-entry-val">{% currency s.total_amount %}</div>
+            </div>
+            {% empty %}
+            <div class="mob-empty">
+                <i class="bi bi-inbox"></i>No sales in this period.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Desktop: table -->
+<div class="d-none d-md-block">
 <div class="content-card">
     <div class="content-card-header">
         <span class="content-card-title">
@@ -148,5 +182,6 @@
             {% endif %}
         </table>
     </div>
+</div>
 </div>
 {% endblock %}

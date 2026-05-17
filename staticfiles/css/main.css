@@ -559,6 +559,127 @@ body.auth-page .page-body {
     .mgmt-card-count { font-size: 1.6rem; }
 }
 
+/* ══════════════════════════════════════════════════════
+   MOB-* CARD COMPONENTS — reusable across all pages
+   (visibility on desktop controlled by Bootstrap d-md-none)
+   ══════════════════════════════════════════════════════ */
+
+/* Group card (collapsible) */
+.mob-group-card {
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(26,43,107,0.07);
+    font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+}
+.mob-group-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.mob-group-header:active { background: #f9fafb; }
+.mob-group-icon {
+    width: 42px; height: 42px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 1.15rem;
+}
+.mob-gi-blue   { background: #eff3ff; color: #3b5bdb; }
+.mob-gi-green  { background: #ecfdf5; color: #2bba6b; }
+.mob-gi-orange { background: #fffbeb; color: #f59e0b; }
+.mob-gi-purple { background: #f5f3ff; color: #7c3aed; }
+.mob-gi-red    { background: #fef2f2; color: #ef4444; }
+.mob-gi-teal   { background: #f0fdfa; color: #0d9488; }
+.mob-gi-amber  { background: #fffbeb; color: #d97706; }
+.mob-group-info { flex: 1; min-width: 0; }
+.mob-group-title   { font-size: 14px; font-weight: 700; color: #1a1f36; }
+.mob-group-summary { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.mob-group-value {
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 13px; font-weight: 700; color: #111e52;
+    margin-right: 4px; white-space: nowrap;
+}
+.mob-chevron {
+    font-size: 1rem; color: #9ca3af; flex-shrink: 0;
+    transition: transform 0.28s ease;
+}
+.mob-group-card.mob-open .mob-chevron { transform: rotate(180deg); }
+.mob-group-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.35s ease;
+}
+.mob-group-card.mob-open .mob-group-body { max-height: 4000px; }
+.mob-group-divider { height: 1px; background: #e5e7eb; margin: 0 16px; }
+
+/* Detail rows inside group cards */
+.mob-detail-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    text-decoration: none;
+    color: inherit;
+}
+.mob-detail-row:last-child { border-bottom: none; }
+.mob-detail-row:active { background: #f9fafb; }
+.mob-detail-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 0.9rem;
+}
+.mob-detail-text { flex: 1; min-width: 0; }
+.mob-detail-name { font-size: 12px; color: #6b7280; font-weight: 500; }
+.mob-detail-val  {
+    font-size: 14px; font-weight: 700; color: #1a1f36;
+    font-family: 'DM Sans', inherit;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mob-detail-sub  { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+
+/* Amount on right side of detail row */
+.mob-entry-val {
+    font-size: 13px; font-weight: 700; color: #1a1f36;
+    font-family: 'DM Mono', 'Courier New', monospace;
+    white-space: nowrap; flex-shrink: 0;
+}
+
+/* Section cards (non-collapsible) */
+.mob-section-card {
+    background: #fff; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(26,43,107,0.07);
+    font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+}
+.mob-section-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; border-bottom: 1px solid #e5e7eb;
+}
+.mob-section-title {
+    font-size: 14px; font-weight: 700; color: #1a1f36;
+    display: flex; align-items: center; gap: 8px;
+}
+.mob-section-title i { color: #3b5bdb; }
+.mob-all-btn {
+    font-size: 12px; font-weight: 600; color: #fff;
+    background: #3b5bdb; border: none;
+    border-radius: 8px; padding: 5px 10px;
+    cursor: pointer; text-decoration: none;
+}
+.mob-ledger-btn {
+    font-size: 12px; font-weight: 600; color: #6b7280;
+    border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 5px 10px; background: none; text-decoration: none;
+}
+
+/* Empty state */
+.mob-empty {
+    padding: 28px 20px; text-align: center;
+    color: #6b7280; font-size: 13px;
+    font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+}
+.mob-empty i { font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 8px; }
+
 /* ── Print ───────────────────────────────────────────── */
 @media print {
     #sidebar, .topbar, .no-print { display: none !important; }
