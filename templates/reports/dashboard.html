@@ -282,9 +282,6 @@
 {% block content %}
 {% with role=request.user.profile.role %}
 
-{# ═══════════════════════════════════════════════════════
-   MOBILE DASHBOARD  (admin / accountant)  max-width 767px
-═══════════════════════════════════════════════════════ #}
 {% if user.is_staff or role == 'admin' or role == 'accountant' %}
 <div class="d-md-none mob-dash">
 
@@ -509,9 +506,6 @@
 {% endif %}
 
 
-{# ═══════════════════════════════════════════════════════
-   DESKTOP DASHBOARD  —  unchanged, hidden on mobile
-═══════════════════════════════════════════════════════ #}
 {% if user.is_staff or role == 'admin' or role == 'accountant' %}
 <div class="d-none d-md-block">
 
