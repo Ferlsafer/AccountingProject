@@ -366,14 +366,16 @@ def delivery_note_print(request, pk):
 
 # ── Receipt helper ───────────────────────────────────────────────────────────
 
-def create_receipt_for_payment(user, customer_name, amount, against_type, against_id):
-    """Auto-create a Receipt for an existing payment if a matching sales.Customer exists.
-    Returns (receipt, created). If no matching customer, returns (None, False).
-    """
+def create_receipt_for_payment(user, customer_name, amount, against_type, against_id, phone=''):
+    """Find or create a sales.Customer, then auto-create a Receipt. Always returns (receipt, True)."""
+    _type_map = {'petrol_credit_payment': 'petrol', 'cargo_invoice': 'cargo'}
     customer = Customer.objects.filter(name__iexact=customer_name).first()
     if not customer:
-        return None, False
-    from sales.utils import generate_reference
+        customer = Customer.objects.create(
+            name=customer_name,
+            phone=phone or '',
+            customer_type=_type_map.get(against_type, 'both'),
+        )
     receipt = Receipt(
         date=__import__('datetime').date.today(),
         customer=customer,

@@ -370,18 +370,15 @@ def invoice_pay(request, pk):
                 inv.post_to_ledger(request.user)
             messages.success(request, f"Invoice {invoice.number} marked as paid.")
             from sales.views import create_receipt_for_payment
-            receipt, created = create_receipt_for_payment(
+            receipt, _ = create_receipt_for_payment(
                 request.user,
                 customer_name=invoice.trip.customer.name,
                 amount=invoice.amount,
                 against_type='cargo_invoice',
                 against_id=invoice.pk,
+                phone=invoice.trip.customer.phone,
             )
-            if created:
-                return redirect('sales:receipt_print', pk=receipt.pk)
-            from urllib.parse import urlencode
-            qs = urlencode({'against_type': 'cargo_invoice', 'against_id': invoice.pk, 'amount': invoice.amount})
-            return redirect(f'/sales/receipts/add/?{qs}')
+            return redirect('sales:receipt_print', pk=receipt.pk)
     else:
         form = InvoicePayForm(instance=invoice)
     return render(request, 'cargo/invoice_pay_form.html', {'form': form, 'invoice': invoice})
