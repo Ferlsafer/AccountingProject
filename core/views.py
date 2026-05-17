@@ -6,6 +6,16 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import requires_csrf_token
+
+
+@requires_csrf_token
+def csrf_failure(request, reason=''):
+    messages.warning(
+        request,
+        "Your session expired or you switched accounts. Please log in again."
+    )
+    return redirect('/accounts/login/')
 
 from .models import Account, Business, Employee, SalaryPayment, UserProfile, PettyCashTransaction, JournalEntry, JournalLine
 from .forms import EmployeeForm, SalaryPaymentForm, UserCreateForm, UserEditForm, PettyCashTransactionForm, AccountForm, BusinessForm

@@ -147,7 +147,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounting_system.middleware.NoCacheAuthMiddleware',
 ]
+
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 ROOT_URLCONF = 'accounting_system.urls'
 
