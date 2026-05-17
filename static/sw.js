@@ -1,4 +1,4 @@
-const CACHE = 'tbc-v4';
+const CACHE = 'tbc-v5';
 const PRECACHE = [
   '/static/img/gas-station.png',
 ];
@@ -19,6 +19,11 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+
+  // Never intercept HTML navigation — let the browser fetch fresh pages directly.
+  // This prevents stale CSRF tokens from being served from any cache layer.
+  if (e.request.mode === 'navigate') return;
+
   const url = new URL(e.request.url);
 
   // CSS and JS: network-first — always fresh, cache as fallback only
@@ -45,6 +50,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Everything else: network-first (HTML pages, API calls — must be fresh)
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  // Everything else (non-navigation XHR/fetch): network only, no cache
+  // Navigation is already excluded above so this path is for API/XHR calls.
+  e.respondWith(fetch(e.request));
 });

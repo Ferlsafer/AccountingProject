@@ -326,7 +326,7 @@ body.auth-page .page-body {
 }
 
 /* ── Responsive: hide sidebar on small screens ───────── */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     #sidebar { transform: translateX(-100%); }
     #sidebar.open { transform: translateX(0); }
     #main-content { margin-left: 0; }
