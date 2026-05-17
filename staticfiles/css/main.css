@@ -326,11 +326,11 @@ body.auth-page .page-body {
     display: none;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    background: #fff;
-    border-top: 1px solid #e2e8f0;
+    background: #111e52;
+    border-top: none;
     z-index: 300;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -2px 16px rgba(0,0,0,0.10);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.30);
 }
 
 .mobile-bottom-nav .mobile-nav-inner {
@@ -347,7 +347,7 @@ body.auth-page .page-body {
     justify-content: center;
     gap: 3px;
     text-decoration: none;
-    color: #94a3b8;
+    color: #7b8dc8;
     font-size: 0.6rem;
     font-weight: 600;
     padding: 6px 4px;
@@ -358,8 +358,8 @@ body.auth-page .page-body {
 
 .mobile-nav-item i { font-size: 1.25rem; line-height: 1; }
 
-.mobile-nav-item.active { color: #2563eb; }
-.mobile-nav-item:active { color: #2563eb; background: #eff6ff; }
+.mobile-nav-item.active { color: #f4c842; }
+.mobile-nav-item:active { color: #f4c842; background: rgba(255,255,255,0.07); }
 
 /* ── Mobile design — layout and cards ───────────────── */
 @media (max-width: 767px) {

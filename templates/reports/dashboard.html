@@ -196,7 +196,7 @@
     overflow: hidden;
     transition: max-height 0.35s ease;
   }
-  .mob-group-card.mob-open .mob-group-body { max-height: 800px; }
+  .mob-group-card.mob-open .mob-group-body { max-height: 1400px; }
 
   .mob-group-divider { height: 1px; background: #e5e7eb; margin: 0 16px; }
 
@@ -708,8 +708,131 @@
 {% endif %}{# end admin/accountant #}
 
 
-{# ── Petrol clerk dashboard (mobile + desktop same) ─────── #}
 {% if role == 'petrol_clerk' %}
+
+<!-- ── FUEL CLERK MOBILE DASHBOARD ─────────────────────── -->
+<div class="d-md-none mob-dash">
+  <header class="mob-header">
+    <div class="mob-header-top">
+      <div class="mob-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+      <a href="{% url 'logout' %}" class="mob-logout-btn" title="Sign out"><i class="bi bi-box-arrow-right"></i></a>
+    </div>
+    <div class="mob-date-chip"><i class="bi bi-calendar3"></i>{{ today|date:"l, j F Y" }}</div>
+    <div class="mob-greeting" id="mob-greeting-fc">Good morning,</div>
+    <div class="mob-biz-name">{{ business.name }}</div>
+    <div class="mob-biz-sub">Fuel Station &middot; {{ user.get_full_name|default:user.username }}</div>
+  </header>
+
+  <div class="mob-stats-strip">
+    <div class="mob-stat-item">
+      <div class="mob-stat-val mob-green">{% currency today_fuel_revenue %}</div>
+      <div class="mob-stat-label">Revenue</div>
+    </div>
+    <div class="mob-stat-item">
+      <div class="mob-stat-val">{{ today_fuel_litres|floatformat:0 }}L</div>
+      <div class="mob-stat-label">Litres</div>
+    </div>
+    <div class="mob-stat-item">
+      <div class="mob-stat-val mob-orange">{% currency total_credit_balance %}</div>
+      <div class="mob-stat-label">Credit Owed</div>
+    </div>
+  </div>
+
+  <div class="mob-body">
+    <a href="{% url 'petrol:daily_sale_add' %}" class="mob-cta-btn">
+      <i class="bi bi-plus-circle-fill"></i>Record Sale
+    </a>
+
+    <!-- Tank Stock Levels -->
+    <div class="mob-group-card mob-open" id="mob-fc-tanks">
+      <div class="mob-group-header" onclick="mobToggle('mob-fc-tanks')">
+        <div class="mob-group-icon mob-gi-blue"><i class="bi bi-droplet-half"></i></div>
+        <div class="mob-group-info">
+          <div class="mob-group-title">Tank Stock Levels</div>
+          <div class="mob-group-summary">{{ tank_list|length }} active tank{{ tank_list|length|pluralize }}</div>
+        </div>
+        <i class="bi bi-chevron-down mob-chevron"></i>
+      </div>
+      <div class="mob-group-divider"></div>
+      <div class="mob-group-body">
+        {% for t in tank_list %}
+        <div class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-blue"><i class="bi bi-fuel-pump"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-val" style="font-size:13px;">{{ t.obj.name }}</div>
+            <div class="mob-detail-name">{{ t.obj.fuel_type.name }}</div>
+            <div style="margin:4px 0;height:5px;border-radius:4px;background:#e5e7eb;overflow:hidden;">
+              <div style="width:{{ t.pct }}%;height:100%;border-radius:4px;background:{% if t.pct < 20 %}#ef4444{% elif t.pct < 50 %}#f59e0b{% else %}#2bba6b{% endif %};"></div>
+            </div>
+            <div class="mob-detail-sub">{{ t.obj.current_stock|floatformat:0 }} / {{ t.obj.capacity|floatformat:0 }} L</div>
+          </div>
+          <div class="fw-bold" style="color:{% if t.pct < 20 %}#ef4444{% elif t.pct < 50 %}#f59e0b{% else %}#2bba6b{% endif %};font-size:14px;">{{ t.pct }}%</div>
+        </div>
+        {% empty %}
+        <div class="mob-empty"><i class="bi bi-droplet"></i>No active tanks.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Today's Sales -->
+    <div class="mob-group-card mob-open" id="mob-fc-sales">
+      <div class="mob-group-header" onclick="mobToggle('mob-fc-sales')">
+        <div class="mob-group-icon mob-gi-green"><i class="bi bi-cash-stack"></i></div>
+        <div class="mob-group-info">
+          <div class="mob-group-title">Today's Sales</div>
+          <div class="mob-group-summary">{{ today|date:"d M Y" }}</div>
+        </div>
+        <a href="{% url 'petrol:credit_sale_add' %}" onclick="event.stopPropagation();" class="mob-ledger-btn">+ Credit</a>
+        <i class="bi bi-chevron-down mob-chevron"></i>
+      </div>
+      <div class="mob-group-divider"></div>
+      <div class="mob-group-body">
+        {% for sale in today_sales %}
+        <div class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-green"><i class="bi bi-fuel-pump"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-val" style="font-size:13px;">{{ sale.tank.fuel_type }}</div>
+            <div class="mob-detail-sub">{{ sale.litres_sold|floatformat:0 }}L &middot; {% currency sale.unit_price %}/L &middot; {{ sale.recorded_by.get_full_name|default:sale.recorded_by.username }}</div>
+          </div>
+          <div class="mob-entry-val">{% currency sale.total_amount %}</div>
+        </div>
+        {% empty %}
+        <div class="mob-empty"><i class="bi bi-fuel-pump"></i>No sales recorded today yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Credit Balances -->
+    {% if outstanding_credit %}
+    <div class="mob-group-card" id="mob-fc-credit">
+      <div class="mob-group-header" onclick="mobToggle('mob-fc-credit')">
+        <div class="mob-group-icon mob-gi-orange"><i class="bi bi-person-lines-fill"></i></div>
+        <div class="mob-group-info">
+          <div class="mob-group-title">Credit Balances</div>
+          <div class="mob-group-summary">{% currency total_credit_balance %} outstanding</div>
+        </div>
+        <i class="bi bi-chevron-down mob-chevron"></i>
+      </div>
+      <div class="mob-group-divider"></div>
+      <div class="mob-group-body">
+        {% for cust in outstanding_credit %}
+        <a href="{% url 'petrol:credit_payment_add' %}" class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-orange"><i class="bi bi-person"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-val" style="font-size:13px;">{{ cust.name }}</div>
+            <div class="mob-detail-sub">{{ cust.phone|default:"No phone" }}</div>
+          </div>
+          <div style="color:#ef4444;font-weight:700;font-family:'DM Mono',monospace;font-size:13px;">{% currency cust.current_balance %}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── FUEL CLERK DESKTOP (hidden on mobile) ────────────── -->
+<div class="d-none d-md-block">
 <!-- Page header -->
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
@@ -845,7 +968,8 @@
     </div>
 </div>
 {% endif %}
-{% endif %}{# end petrol_clerk #}
+</div>
+{% endif %}
 
 
 {# ── Cargo clerk dashboard ──────────────────────────────── #}
@@ -971,11 +1095,14 @@
 
 {% block extra_js %}
 <script>
-  // Time-based greeting
+  // Time-based greeting for all mobile dashboards
   (function () {
     const h = new Date().getHours();
-    const el = document.getElementById('mob-greeting');
-    if (el) el.textContent = h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,';
+    const greet = h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,';
+    ['mob-greeting', 'mob-greeting-fc'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = greet;
+    });
   })();
 
   // Collapsible group cards
