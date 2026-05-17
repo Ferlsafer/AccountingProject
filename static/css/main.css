@@ -11,6 +11,11 @@
     --topbar-height: 60px;
     --card-radius: 12px;
     --brand-gradient: linear-gradient(135deg, #1e2d50 0%, #2563eb 100%);
+
+    /* Override Bootstrap font variables so every component uses DM Sans */
+    --bs-font-sans-serif: 'DM Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --bs-body-font-family: 'DM Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --bs-font-monospace: 'DM Mono', 'Courier New', monospace;
 }
 
 body {
