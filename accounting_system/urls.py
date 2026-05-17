@@ -26,6 +26,7 @@ def service_worker(request):
     path_ = os.path.join(settings.BASE_DIR, 'static', 'sw.js')
     response = FileResponse(open(path_, 'rb'), content_type='application/javascript')
     response['Service-Worker-Allowed'] = '/'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     return response
 
 
