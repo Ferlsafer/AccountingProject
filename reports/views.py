@@ -65,7 +65,6 @@ def dashboard(request):
             'recent_invoices':    (Invoice.objects
                                    .select_related('trip__customer')
                                    .order_by('-date')[:6]),
-            'active_trips':       Trip.objects.filter(status='in_progress').count(),
         })
 
     # ── Petrol clerk (and finance who can see it too) ─────────────────────────
@@ -93,11 +92,13 @@ def dashboard(request):
     if is_cargo or is_finance:
         unpaid_qs = Invoice.objects.filter(is_paid=False)
         context.update({
+            'active_trips':        Trip.objects.filter(status='in_progress').count(),
+            'planned_count':       Trip.objects.filter(status='planned').count(),
+            'completed_count':     Trip.objects.filter(status='completed', date__gte=month_start).count(),
             'pending_trips': (Trip.objects
                               .filter(status__in=['planned', 'in_progress'])
                               .select_related('customer', 'vehicle', 'driver')
                               .order_by('status', '-date')[:10]),
-            'planned_count':       Trip.objects.filter(status='planned').count(),
             'outstanding_amount':  unpaid_qs.aggregate(t=Sum('amount'))['t'] or Decimal('0'),
             'outstanding_invoices': unpaid_qs.select_related('trip__customer').order_by('-date')[:8],
             'month_collected':     (Invoice.objects

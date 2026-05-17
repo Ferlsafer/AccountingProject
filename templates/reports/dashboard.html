@@ -989,12 +989,12 @@
         </div></a>
     </div>
     <div class="col-6 col-md-3">
-        <a href="{% url 'cargo:trip_list' %}?status=planned" class="text-decoration-none">
+        <a href="{% url 'cargo:trip_list' %}?status=completed" class="text-decoration-none">
         <div class="stat-card">
-            <div class="stat-icon icon-blue"><i class="bi bi-calendar-check"></i></div>
-            <div class="stat-label">Planned Trips</div>
-            <div class="stat-value">{{ planned_count }}</div>
-            <div class="stat-sub">awaiting departure</div>
+            <div class="stat-icon icon-green"><i class="bi bi-check2-circle"></i></div>
+            <div class="stat-label">Completed This Month</div>
+            <div class="stat-value">{{ completed_count }}</div>
+            <div class="stat-sub">{{ today|date:"F Y" }}</div>
         </div></a>
     </div>
     <div class="col-6 col-md-3">
@@ -1008,7 +1008,7 @@
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-card">
-            <div class="stat-icon icon-green"><i class="bi bi-check2-circle"></i></div>
+            <div class="stat-icon icon-teal"><i class="bi bi-cash-stack"></i></div>
             <div class="stat-label">Collected This Month</div>
             <div class="stat-value" style="font-size:1.1rem">{% currency month_collected %}</div>
             <div class="stat-sub">{{ today|date:"F Y" }}</div>
