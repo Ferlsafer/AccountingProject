@@ -1,7 +1,7 @@
-const CACHE = 'tbc-v1';
+const CACHE = 'tbc-v2';
 const STATIC = [
   '/static/css/main.css',
-  '/static/img/icon.svg',
+  '/static/img/gas-station.png',
 ];
 
 self.addEventListener('install', e => {
