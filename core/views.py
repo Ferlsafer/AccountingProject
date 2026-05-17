@@ -418,6 +418,7 @@ def manual_journal_add(request):
             return render(request, 'core/manual_journal_form.html', {
                 'accounts': accounts,
                 'post': request.POST,
+                'today': date.today(),
             })
 
         today = date.today()
