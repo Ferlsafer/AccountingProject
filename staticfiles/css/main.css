@@ -332,6 +332,18 @@ body.auth-page .page-body {
     #main-content { margin-left: 0; }
 }
 
+/* ── Mobile sidebar backdrop ─────────────────────────── */
+#sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 199;
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+}
+#sidebar-backdrop.active { display: block; }
+
 /* ── Mobile bottom navigation ────────────────────────── */
 .mobile-bottom-nav {
     display: none;
@@ -399,6 +411,7 @@ body.auth-page .page-body {
     transition: background 0.15s;
 }
 .mob-page-back:hover, .mob-page-back:active { background: rgba(255,255,255,0.22); color: #fff; }
+button.mob-page-back { padding: 0; cursor: pointer; }
 .mob-page-title-text {
     flex: 1;
     font-size: 16px; font-weight: 700;
