@@ -716,7 +716,7 @@
   <header class="mob-header">
     <div class="mob-header-top">
       <div class="mob-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
-      <a href="{% url 'logout' %}" class="mob-logout-btn" title="Sign out"><i class="bi bi-box-arrow-right"></i></a>
+      <form method="post" action="{% url 'logout' %}" class="m-0">{% csrf_token %}<button type="submit" class="mob-logout-btn" title="Sign out"><i class="bi bi-box-arrow-right"></i></button></form>
     </div>
     <div class="mob-date-chip"><i class="bi bi-calendar3"></i>{{ today|date:"l, j F Y" }}</div>
     <div class="mob-greeting" id="mob-greeting-fc">Good morning,</div>
