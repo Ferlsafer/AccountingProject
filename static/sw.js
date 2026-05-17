@@ -1,4 +1,4 @@
-const CACHE = 'tbc-v2';
+const CACHE = 'tbc-v3';
 const STATIC = [
   '/static/css/main.css',
   '/static/img/gas-station.png',
