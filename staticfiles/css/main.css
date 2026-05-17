@@ -314,7 +314,7 @@ body.auth-page .page-body {
     background: var(--content-bg);
 }
 
-/* ── Responsive ──────────────────────────────────────── */
+/* ── Responsive: hide sidebar on small screens ───────── */
 @media (max-width: 768px) {
     #sidebar { transform: translateX(-100%); }
     #sidebar.open { transform: translateX(0); }
@@ -326,18 +326,17 @@ body.auth-page .page-body {
     display: none;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 60px;
     background: #fff;
     border-top: 1px solid #e2e8f0;
     z-index: 300;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.10);
 }
 
 .mobile-bottom-nav .mobile-nav-inner {
     display: flex;
     align-items: stretch;
-    height: 60px;
+    height: 58px;
 }
 
 .mobile-nav-item {
@@ -346,51 +345,91 @@ body.auth-page .page-body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 3px;
     text-decoration: none;
     color: #94a3b8;
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     font-weight: 600;
     padding: 6px 4px;
-    transition: color 0.15s;
+    transition: color 0.15s, background 0.15s;
     -webkit-tap-highlight-color: transparent;
+    border-radius: 0;
 }
 
-.mobile-nav-item i {
-    font-size: 1.3rem;
-    line-height: 1;
-}
+.mobile-nav-item i { font-size: 1.25rem; line-height: 1; }
 
-.mobile-nav-item.active,
-.mobile-nav-item:active {
-    color: #2563eb;
-}
+.mobile-nav-item.active { color: #2563eb; }
+.mobile-nav-item:active { color: #2563eb; background: #eff6ff; }
 
+/* ── Mobile design — layout and cards ───────────────── */
 @media (max-width: 767px) {
+    /* Show bottom nav */
     .mobile-bottom-nav { display: flex; flex-direction: column; }
 
-    /* Shift page content up from the bottom nav */
+    /* Tighter page body */
     .page-body {
-        padding-bottom: calc(70px + env(safe-area-inset-bottom));
+        padding: 14px 12px;
+        padding-bottom: calc(74px + env(safe-area-inset-bottom));
     }
 
-    /* Compact topbar on mobile */
-    .topbar { padding: 0 14px; box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
-    .topbar-title { font-size: 0.95rem; }
+    /* Compact topbar */
+    .topbar { padding: 0 14px; }
+    .topbar-title { font-size: 0.92rem; }
 
-    /* Larger tap targets for buttons */
+    /* Touch-friendly tap targets */
     .btn { min-height: 40px; }
-    .btn-sm { min-height: 34px; }
+    .btn-sm { min-height: 36px; font-size: 0.82rem; }
 
-    /* Stat cards: 2-column on mobile */
-    .stat-card { padding: 16px; }
-    .stat-value { font-size: 1.3rem; }
+    /* ── Stat cards: horizontal icon+text layout ───────
+       CSS grid places the icon in col 1 spanning all rows,
+       label/value/sub stack in col 2. No template changes needed. */
+    .stat-card {
+        display: grid;
+        grid-template-columns: 46px 1fr;
+        grid-template-rows: auto auto auto;
+        column-gap: 14px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border: 1px solid #edf0f7;
+    }
+    .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
 
-    /* Make tables horizontally scrollable */
+    .stat-icon {
+        grid-column: 1;
+        grid-row: 1 / 4;
+        align-self: center;
+        margin-bottom: 0;
+        width: 46px; height: 46px;
+        border-radius: 10px;
+        font-size: 20px;
+    }
+    .stat-label { grid-column: 2; grid-row: 1; font-size: 0.7rem; }
+    .stat-value { grid-column: 2; grid-row: 2; font-size: 1.2rem; margin-top: 2px; }
+    .stat-sub   { grid-column: 2; grid-row: 3; font-size: 0.72rem; }
+
+    /* Text-center stat cards (operational cards) override to left-align */
+    .stat-card.text-center { text-align: left; }
+    .stat-card .mx-auto { margin: 0 !important; }
+
+    /* ── Content cards ───────────────────────────────── */
+    .content-card { border-radius: 8px; }
+    .content-card-header { padding: 12px 14px; }
+    .content-card-title { font-size: 0.88rem; }
+
+    /* ── Tables: compact for small screens ───────────── */
+    .table th { font-size: 0.68rem; padding: 9px 10px; }
+    .table td { font-size: 0.82rem; padding: 9px 10px; }
     .table-responsive { -webkit-overflow-scrolling: touch; }
 
-    /* Management cards full-width on mobile */
-    .mgmt-wrap .col-sm-6 { padding: 0 8px; }
+    /* ── Page-level headings ─────────────────────────── */
+    h5.fw-bold { font-size: 0.98rem; }
+    .mb-4 { margin-bottom: 1rem !important; }
+
+    /* ── Management cards ────────────────────────────── */
+    .mgmt-card { padding: 20px 14px 16px; }
+    .mgmt-card-icon { width: 48px; height: 48px; font-size: 1.3rem; border-radius: 12px; }
+    .mgmt-card-count { font-size: 1.6rem; }
 }
 
 /* ── Print ───────────────────────────────────────────── */
