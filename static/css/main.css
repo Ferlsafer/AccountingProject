@@ -458,15 +458,96 @@ body.auth-page .page-body {
     .stat-card.text-center { text-align: left; }
     .stat-card .mx-auto { margin: 0 !important; }
 
-    /* ── Content cards ───────────────────────────────── */
-    .content-card { border-radius: 8px; }
-    .content-card-header { padding: 12px 14px; }
-    .content-card-title { font-size: 0.88rem; }
+    /* ── Page background: matches dashboard ─────────── */
+    body:not(.auth-page) .page-body { background: #f0f2f8; }
 
-    /* ── Tables: compact for small screens ───────────── */
-    .table th { font-size: 0.68rem; padding: 9px 10px; }
-    .table td { font-size: 0.82rem; padding: 9px 10px; }
-    .table-responsive { -webkit-overflow-scrolling: touch; }
+    /* ── Content cards: rounded, shadow, no harsh border ─ */
+    .content-card {
+        border-radius: 16px !important;
+        box-shadow: 0 2px 14px rgba(26,43,107,0.09) !important;
+        border: none !important;
+        overflow: hidden;
+    }
+    .content-card-header { padding: 13px 16px; }
+    .content-card-title  { font-size: 0.88rem; }
+
+    /* ── Filter form cards ───────────────────────────── */
+    form.content-card { border-radius: 12px !important; }
+
+    /* ── Native mobile form inputs ───────────────────── */
+    .form-control, .form-select {
+        font-size: 16px;          /* prevents iOS auto-zoom */
+        padding: 13px 14px;
+        border-radius: 10px;
+        border-color: #dde2ef;
+        background: #f8f9fc;
+        color: #1a1f36;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #2a3f8f;
+        box-shadow: 0 0 0 3px rgba(42,63,143,0.13);
+        background: #fff;
+    }
+    .form-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #4b5563;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+    .input-group-text {
+        font-size: 13px;
+        background: #eef0f8;
+        border-color: #dde2ef;
+        color: #6b7280;
+    }
+
+    /* ── Submit / primary action buttons in forms ────── */
+    form .btn-primary,
+    form .btn-success {
+        background: linear-gradient(135deg, #111e52 0%, #2a3f8f 100%) !important;
+        border-color: transparent !important;
+        border-radius: 12px !important;
+        font-size: 15px;
+        font-weight: 700;
+        padding: 14px;
+        letter-spacing: 0.01em;
+        box-shadow: 0 4px 14px rgba(17,30,82,0.28);
+        font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+    }
+    form .btn-primary:active, form .btn-success:active { transform: scale(0.98); }
+    form .btn-outline-secondary {
+        border-radius: 12px !important;
+        font-size: 14px;
+        padding: 13px 16px;
+        border-color: #dde2ef;
+        color: #6b7280;
+    }
+
+    /* ── Total/price preview alerts: navy tint ───────── */
+    .alert.alert-light.border {
+        background: #f0f4ff !important;
+        border-color: #c7d2fe !important;
+        border-radius: 12px !important;
+        padding: 14px 16px;
+    }
+    .alert.alert-warning.border {
+        border-radius: 12px !important;
+        padding: 14px 16px;
+    }
+
+    /* ── List page action buttons: full-width on mobile ─ */
+    .mob-actions { display: flex; gap: 8px; width: 100%; }
+    .mob-actions .btn { flex: 1; justify-content: center; }
+
+    /* ── Tables → readable card rows ─────────────────── */
+    .content-card .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table th { font-size: 0.68rem; padding: 9px 10px; white-space: nowrap; }
+    .table td { font-size: 0.82rem; padding: 10px 10px; }
+    /* Each row taller for easy tapping */
+    .table tbody tr { border-bottom: 1px solid #f0f2f8; }
+    .table tbody tr:last-child { border-bottom: none; }
 
     /* ── Page-level headings ─────────────────────────── */
     h5.fw-bold { font-size: 0.98rem; }

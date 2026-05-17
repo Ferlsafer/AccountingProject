@@ -7,14 +7,16 @@
 
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
+    <div class="d-none d-md-block">
         <h5 class="fw-bold mb-1">Fuel Purchases</h5>
         <span class="text-muted small"><i class="bi bi-truck me-1"></i>Stock deliveries from suppliers</span>
     </div>
     {% if user.profile.role != 'accountant' %}
-    <a href="{% url 'petrol:purchase_add' %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>Record Purchase
-    </a>
+    <div class="mob-actions">
+        <a href="{% url 'petrol:purchase_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Record Purchase
+        </a>
+    </div>
     {% endif %}
 </div>
 
