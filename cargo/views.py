@@ -7,7 +7,7 @@ from django.db import transaction
 
 def _can_manage_cargo(user):
     return user.is_staff or getattr(user, 'profile', None) and user.profile.role in ('admin', 'cargo_clerk')
-from django.db.models import Sum
+from django.db.models import Sum, Case, When, DecimalField, Value
 from django.shortcuts import render, redirect, get_object_or_404
 
 from core.models import Business
@@ -322,9 +322,14 @@ def invoice_list(request):
     elif paid_filter == '0':
         qs = qs.filter(is_paid=False)
 
-    totals = qs.aggregate(amount=Sum('amount'))
-    paid_total   = qs.filter(is_paid=True).aggregate(t=Sum('amount'))['t'] or Decimal('0')
-    unpaid_total = qs.filter(is_paid=False).aggregate(t=Sum('amount'))['t'] or Decimal('0')
+    agg = qs.aggregate(
+        amount=Sum('amount'),
+        paid_total=Sum(Case(When(is_paid=True,  then='amount'), default=Value(0), output_field=DecimalField())),
+        unpaid_total=Sum(Case(When(is_paid=False, then='amount'), default=Value(0), output_field=DecimalField())),
+    )
+    totals       = {'amount': agg['amount']}
+    paid_total   = agg['paid_total']   or Decimal('0')
+    unpaid_total = agg['unpaid_total'] or Decimal('0')
     return render(request, 'cargo/invoice_list.html', {
         'invoices': qs,
         'totals': totals,

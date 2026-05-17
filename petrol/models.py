@@ -55,6 +55,7 @@ class DailyFuelSale(models.Model):
 
     class Meta:
         ordering = ['-date', '-created_at']
+        indexes = [models.Index(fields=['date'])]
 
     def __str__(self):
         return f"{self.date} — {self.tank} — {self.litres_sold}L"
@@ -204,6 +205,7 @@ class CreditSale(models.Model):
 
     class Meta:
         ordering = ['-date', '-created_at']
+        indexes = [models.Index(fields=['date'])]
 
     def __str__(self):
         return f"{self.date} — {self.customer} — {self.litres}L"
@@ -256,6 +258,7 @@ class CreditPayment(models.Model):
 
     class Meta:
         ordering = ['-date', '-created_at']
+        indexes = [models.Index(fields=['date'])]
 
     def __str__(self):
         return f"{self.date} — {self.customer} — {self.amount}"
@@ -295,6 +298,7 @@ class PetrolExpense(models.Model):
 
     class Meta:
         ordering = ['-date', '-created_at']
+        indexes = [models.Index(fields=['date'])]
 
     def __str__(self):
         return f"{self.date} — {self.description}"

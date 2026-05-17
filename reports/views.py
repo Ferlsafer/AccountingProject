@@ -23,110 +23,89 @@ from cargo.models import Trip, Invoice, TripExpense, VehicleExpense
 def dashboard(request):
     today = timezone.localdate()
     month_start = today.replace(day=1)
-
-    # Cash position: sum of debits minus credits on account 1010
-    cash_qs = JournalLine.objects.filter(account__code='1010')
-    cash_debits = cash_qs.aggregate(t=Sum('debit'))['t'] or Decimal('0')
-    cash_credits = cash_qs.aggregate(t=Sum('credit'))['t'] or Decimal('0')
-    cash_position = cash_debits - cash_credits
-
-    # This month revenue: credits to 4xxx accounts
-    month_revenue = JournalLine.objects.filter(
-        account__code__startswith='4',
-        entry__date__gte=month_start,
-        entry__date__lte=today,
-    ).aggregate(t=Sum('credit'))['t'] or Decimal('0')
-
-    # This month expenses: debits to 5xxx accounts
-    month_expenses = JournalLine.objects.filter(
-        account__code__startswith='5',
-        entry__date__gte=month_start,
-        entry__date__lte=today,
-    ).aggregate(t=Sum('debit'))['t'] or Decimal('0')
-
-    month_profit = month_revenue - month_expenses
-
-    # Salary payments this month
-    salary_this_month = SalaryPayment.objects.filter(
-        paid_date__gte=month_start,
-        paid_date__lte=today,
-    ).aggregate(t=Sum('amount'))['t'] or Decimal('0')
-
-    # Today's fuel sales
-    today_fuel_revenue = DailyFuelSale.objects.filter(date=today).aggregate(
-        t=Sum('total_amount'))['t'] or Decimal('0')
-    today_fuel_litres = DailyFuelSale.objects.filter(date=today).aggregate(
-        t=Sum('litres_sold'))['t'] or Decimal('0')
-
-    # Recent journal entries (6 most recent)
-    recent_entries = JournalEntry.objects.select_related('created_by').prefetch_related('lines__account')[:6]
-
-    # Recent invoices (6 most recent)
-    recent_invoices = (Invoice.objects
-                       .select_related('trip__customer')
-                       .order_by('-date')[:6])
-
-    # Active trips count
-    active_trips = Trip.objects.filter(status='in_progress').count()
-
     business = Business.get_solo()
 
-    # ── Petrol clerk context ──────────────────────────────────────────────────
-    tank_list = [
-        {
-            'obj': t,
-            'pct': int(t.current_stock / t.capacity * 100) if t.capacity else 0,
-        }
-        for t in Tank.objects.filter(is_active=True).select_related('fuel_type').order_by('name')
-    ]
-    today_sales = (DailyFuelSale.objects
-                   .filter(date=today)
-                   .select_related('tank__fuel_type', 'recorded_by')
-                   .order_by('-created_at')[:10])
-    credit_qs = CreditCustomer.objects.filter(is_active=True, current_balance__gt=0)
-    total_credit_balance = credit_qs.aggregate(t=Sum('current_balance'))['t'] or Decimal('0')
-    outstanding_credit = credit_qs.order_by('-current_balance')[:5]
+    profile = getattr(request.user, 'profile', None)
+    role = getattr(profile, 'role', None)
+    is_finance = request.user.is_staff or role in ('admin', 'accountant')
+    is_petrol  = role == 'petrol_clerk'
+    is_cargo   = role == 'cargo_clerk'
 
-    # ── Cargo clerk context ───────────────────────────────────────────────────
-    pending_trips = (Trip.objects
-                     .filter(status__in=['planned', 'in_progress'])
-                     .select_related('customer', 'vehicle', 'driver')
-                     .order_by('status', '-date')[:10])
-    planned_count = Trip.objects.filter(status='planned').count()
-    outstanding_inv_qs = Invoice.objects.filter(is_paid=False)
-    outstanding_amount = outstanding_inv_qs.aggregate(t=Sum('amount'))['t'] or Decimal('0')
-    outstanding_invoices = outstanding_inv_qs.select_related('trip__customer').order_by('-date')[:8]
-    month_collected = (Invoice.objects
-                       .filter(is_paid=True, paid_date__gte=month_start)
-                       .aggregate(t=Sum('amount'))['t'] or Decimal('0'))
+    context = {'business': business, 'today': today}
 
-    context = {
-        'business': business,
-        'today': today,
-        # admin / accountant
-        'cash_position': cash_position,
-        'month_revenue': month_revenue,
-        'month_expenses': month_expenses,
-        'month_profit': month_profit,
-        'salary_this_month': salary_this_month,
-        'active_employees': Employee.objects.filter(is_active=True).count(),
-        'today_fuel_revenue': today_fuel_revenue,
-        'today_fuel_litres': today_fuel_litres,
-        'recent_entries': recent_entries,
-        'recent_invoices': recent_invoices,
-        'active_trips': active_trips,
-        # petrol clerk
-        'tank_list': tank_list,
-        'today_sales': today_sales,
-        'total_credit_balance': total_credit_balance,
-        'outstanding_credit': outstanding_credit,
-        # cargo clerk
-        'pending_trips': pending_trips,
-        'planned_count': planned_count,
-        'outstanding_amount': outstanding_amount,
-        'outstanding_invoices': outstanding_invoices,
-        'month_collected': month_collected,
-    }
+    # ── Finance / admin only ──────────────────────────────────────────────────
+    if is_finance:
+        cash_agg = JournalLine.objects.filter(account__code='1010').aggregate(
+            dr=Sum('debit'), cr=Sum('credit')
+        )
+        cash_position = (cash_agg['dr'] or Decimal('0')) - (cash_agg['cr'] or Decimal('0'))
+
+        month_revenue = JournalLine.objects.filter(
+            account__code__startswith='4',
+            entry__date__gte=month_start, entry__date__lte=today,
+        ).aggregate(t=Sum('credit'))['t'] or Decimal('0')
+
+        month_expenses = JournalLine.objects.filter(
+            account__code__startswith='5',
+            entry__date__gte=month_start, entry__date__lte=today,
+        ).aggregate(t=Sum('debit'))['t'] or Decimal('0')
+
+        today_fuel_agg = DailyFuelSale.objects.filter(date=today).aggregate(
+            rev=Sum('total_amount'), litres=Sum('litres_sold')
+        )
+
+        context.update({
+            'cash_position':      cash_position,
+            'month_revenue':      month_revenue,
+            'month_expenses':     month_expenses,
+            'month_profit':       month_revenue - month_expenses,
+            'salary_this_month':  SalaryPayment.objects.filter(
+                paid_date__gte=month_start, paid_date__lte=today,
+            ).aggregate(t=Sum('amount'))['t'] or Decimal('0'),
+            'active_employees':   Employee.objects.filter(is_active=True).count(),
+            'today_fuel_revenue': today_fuel_agg['rev']    or Decimal('0'),
+            'today_fuel_litres':  today_fuel_agg['litres'] or Decimal('0'),
+            'recent_entries':     (JournalEntry.objects
+                                   .select_related('created_by')
+                                   .prefetch_related('lines__account')[:6]),
+            'recent_invoices':    (Invoice.objects
+                                   .select_related('trip__customer')
+                                   .order_by('-date')[:6]),
+            'active_trips':       Trip.objects.filter(status='in_progress').count(),
+        })
+
+    # ── Petrol clerk (and finance who can see it too) ─────────────────────────
+    if is_petrol or is_finance:
+        credit_qs = CreditCustomer.objects.filter(is_active=True, current_balance__gt=0)
+        context.update({
+            'tank_list': [
+                {'obj': t, 'pct': int(t.current_stock / t.capacity * 100) if t.capacity else 0}
+                for t in Tank.objects.filter(is_active=True).select_related('fuel_type').order_by('name')
+            ],
+            'today_sales': (DailyFuelSale.objects
+                            .filter(date=today)
+                            .select_related('tank__fuel_type', 'recorded_by')
+                            .order_by('-created_at')[:10]),
+            'total_credit_balance': credit_qs.aggregate(t=Sum('current_balance'))['t'] or Decimal('0'),
+            'outstanding_credit':   credit_qs.order_by('-current_balance')[:5],
+        })
+
+    # ── Cargo clerk (and finance) ─────────────────────────────────────────────
+    if is_cargo or is_finance:
+        unpaid_qs = Invoice.objects.filter(is_paid=False)
+        context.update({
+            'pending_trips': (Trip.objects
+                              .filter(status__in=['planned', 'in_progress'])
+                              .select_related('customer', 'vehicle', 'driver')
+                              .order_by('status', '-date')[:10]),
+            'planned_count':       Trip.objects.filter(status='planned').count(),
+            'outstanding_amount':  unpaid_qs.aggregate(t=Sum('amount'))['t'] or Decimal('0'),
+            'outstanding_invoices': unpaid_qs.select_related('trip__customer').order_by('-date')[:8],
+            'month_collected':     (Invoice.objects
+                                    .filter(is_paid=True, paid_date__gte=month_start)
+                                    .aggregate(t=Sum('amount'))['t'] or Decimal('0')),
+        })
+
     return render(request, 'reports/dashboard.html', context)
 
 
@@ -151,7 +130,7 @@ def journal_ledger(request):
                     .distinct()
                     .order_by('source_type'))
 
-    total_debit = sum(e.total_debit for e in qs)
+    total_debit = JournalLine.objects.filter(entry__in=qs).aggregate(t=Sum('debit'))['t'] or Decimal('0')
 
     return render(request, 'reports/journal_ledger.html', {
         'entries': qs,

@@ -70,6 +70,10 @@ class Trip(models.Model):
 
     class Meta:
         ordering = ['-date', '-created_at']
+        indexes = [
+            models.Index(fields=['date']),
+            models.Index(fields=['status']),
+        ]
 
     def __str__(self):
         return f"{self.origin} → {self.destination} ({self.date})"
@@ -193,6 +197,10 @@ class Invoice(models.Model):
 
     class Meta:
         ordering = ['-date']
+        indexes = [
+            models.Index(fields=['date']),
+            models.Index(fields=['is_paid']),
+        ]
 
     def __str__(self):
         return self.number
