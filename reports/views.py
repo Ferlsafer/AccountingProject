@@ -50,10 +50,6 @@ def dashboard(request):
             entry__date__gte=month_start, entry__date__lte=today,
         ).aggregate(t=Sum('debit'))['t'] or Decimal('0')
 
-        today_fuel_agg = DailyFuelSale.objects.filter(date=today).aggregate(
-            rev=Sum('total_amount'), litres=Sum('litres_sold')
-        )
-
         context.update({
             'cash_position':      cash_position,
             'month_revenue':      month_revenue,
@@ -63,8 +59,6 @@ def dashboard(request):
                 paid_date__gte=month_start, paid_date__lte=today,
             ).aggregate(t=Sum('amount'))['t'] or Decimal('0'),
             'active_employees':   Employee.objects.filter(is_active=True).count(),
-            'today_fuel_revenue': today_fuel_agg['rev']    or Decimal('0'),
-            'today_fuel_litres':  today_fuel_agg['litres'] or Decimal('0'),
             'recent_entries':     (JournalEntry.objects
                                    .select_related('created_by')
                                    .prefetch_related('lines__account')[:6]),
@@ -76,8 +70,13 @@ def dashboard(request):
 
     # ── Petrol clerk (and finance who can see it too) ─────────────────────────
     if is_petrol or is_finance:
+        today_fuel_agg = DailyFuelSale.objects.filter(date=today).aggregate(
+            rev=Sum('total_amount'), litres=Sum('litres_sold')
+        )
         credit_qs = CreditCustomer.objects.filter(is_active=True, current_balance__gt=0)
         context.update({
+            'today_fuel_revenue': today_fuel_agg['rev']    or Decimal('0'),
+            'today_fuel_litres':  today_fuel_agg['litres'] or Decimal('0'),
             'tank_list': [
                 {'obj': t, 'pct': int(t.current_stock / t.capacity * 100) if t.capacity else 0}
                 for t in Tank.objects.filter(is_active=True).select_related('fuel_type').order_by('name')
