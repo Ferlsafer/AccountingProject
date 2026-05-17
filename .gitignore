@@ -8,7 +8,7 @@ db.sqlite3
 .env
 *.env
 media/
-# staticfiles/ — committed to repo so Vercel can serve them via whitenoise
 .DS_Store
 *.log
 .vercel
+staticfiles/
