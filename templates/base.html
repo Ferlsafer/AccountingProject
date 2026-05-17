@@ -346,9 +346,11 @@
             document.getElementById(id).classList.toggle('mob-open');
         }
 
-        // Register service worker
+        // Register service worker and force immediate update check on every load
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .then(reg => reg.update())
+                .catch(() => {});
         }
     </script>
     {% block extra_js %}{% endblock %}
