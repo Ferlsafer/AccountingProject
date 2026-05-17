@@ -109,6 +109,46 @@
                         <i class="bi bi-chat-left-text me-1"></i>{{ p.review_note }}
                     </div>
                     {% endif %}
+                    {% if p.review_note and p.status == 'cancelled' %}
+                    <div style="margin-top:4px;font-size:11px;color:#6b7280;">
+                        <i class="bi bi-x-circle me-1"></i>{{ p.review_note }}
+                    </div>
+                    {% endif %}
+                    {# Action buttons for admin/accountant on pending purchases #}
+                    {% if p.status == 'pending' %}
+                    {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
+                    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                        <form method="post" action="{% url 'petrol:purchase_approve' p.pk %}" style="display:inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success"
+                                onclick="return confirm('Approve this purchase and post to ledger?')">
+                                <i class="bi bi-check-lg me-1"></i>Approve
+                            </button>
+                        </form>
+                        <button type="button" class="btn btn-sm btn-warning"
+                            data-bs-toggle="modal" data-bs-target="#returnModal{{ p.pk }}">
+                            <i class="bi bi-arrow-return-left me-1"></i>Deny
+                        </button>
+                        {% if user.is_staff or user.profile.role == 'admin' %}
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal" data-bs-target="#cancelModal{{ p.pk }}">
+                            <i class="bi bi-x-lg me-1"></i>Cancel
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    {# Admin cancel on returned purchases #}
+                    {% if p.status == 'returned' %}
+                    {% if user.is_staff or user.profile.role == 'admin' %}
+                    <div style="margin-top:8px;">
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal" data-bs-target="#cancelModal{{ p.pk }}">
+                            <i class="bi bi-x-lg me-1"></i>Cancel
+                        </button>
+                    </div>
+                    {% endif %}
+                    {% endif %}
                 </div>
                 <div class="mob-entry-val">{% currency p.total_amount %}</div>
             </div>
