@@ -5,10 +5,517 @@
 {% block page_title %}Dashboard{% endblock %}
 {% block nav_home_active %}active{% endblock %}
 
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+@media (max-width: 767px) {
+  /* Reset page layout for mobile dashboard */
+  .topbar { display: none !important; }
+  .page-body { padding: 0 !important; }
+
+  /* ── Container ──────────────────────────── */
+  .mob-dash {
+    font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+    background: #f0f2f8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: calc(74px + env(safe-area-inset-bottom));
+  }
+
+  /* ── Header ─────────────────────────────── */
+  .mob-header {
+    background: linear-gradient(160deg, #111e52 0%, #2a3f8f 100%);
+    padding: 20px 20px 58px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mob-header::before {
+    content: '';
+    position: absolute;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    top: -80px; right: -60px;
+    pointer-events: none;
+  }
+
+  .mob-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .mob-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: #fff;
+    letter-spacing: 0.02em;
+  }
+  .mob-logout-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #fff; font-size: 1.1rem;
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+  .mob-logout-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+  .mob-date-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 12px; color: rgba(255,255,255,0.7);
+    margin-bottom: 12px;
+  }
+
+  .mob-greeting { color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 2px; }
+  .mob-biz-name { color: #fff; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .mob-biz-sub  { color: rgba(255,255,255,0.5); font-size: 12px; }
+
+  /* ── Stats strip ─────────────────────────── */
+  .mob-stats-strip {
+    margin: -36px 16px 0;
+    background: #fff;
+    border-radius: 20px;
+    padding: 16px 8px;
+    display: flex;
+    box-shadow: 0 8px 32px rgba(26,43,107,0.14);
+    position: relative;
+    z-index: 10;
+  }
+  .mob-stat-item {
+    flex: 1;
+    text-align: center;
+    position: relative;
+  }
+  .mob-stat-item + .mob-stat-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 10%; height: 80%;
+    width: 1px; background: #e5e7eb;
+  }
+  .mob-stat-val {
+    font-size: 13px; font-weight: 700;
+    color: #111e52;
+    font-family: 'DM Mono', 'Courier New', monospace;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+  }
+  .mob-stat-val.mob-green  { color: #2bba6b; }
+  .mob-stat-val.mob-orange { color: #f59e0b; }
+  .mob-stat-label { font-size: 11px; color: #6b7280; margin-top: 3px; font-weight: 500; }
+
+  /* ── Body ────────────────────────────────── */
+  .mob-body {
+    flex: 1;
+    padding: 16px 16px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  /* ── CTA button ──────────────────────────── */
+  .mob-cta-btn {
+    background: linear-gradient(135deg, #3b5bdb 0%, #2a3f8f 100%);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    padding: 16px;
+    width: 100%;
+    font-size: 15px; font-weight: 600;
+    font-family: 'DM Sans', inherit;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 16px rgba(59,91,219,0.35);
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .mob-cta-btn:active  { transform: scale(0.98); color: #fff; }
+  .mob-cta-btn:hover   { color: #fff; box-shadow: 0 6px 20px rgba(59,91,219,0.45); }
+
+  /* ── Group (collapsible) cards ───────────── */
+  .mob-group-card {
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(26,43,107,0.07);
+  }
+  .mob-group-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mob-group-header:active { background: #f9fafb; }
+
+  .mob-group-icon {
+    width: 42px; height: 42px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 1.15rem;
+  }
+  .mob-gi-blue   { background: #eff3ff; color: #3b5bdb; }
+  .mob-gi-green  { background: #ecfdf5; color: #2bba6b; }
+  .mob-gi-orange { background: #fffbeb; color: #f59e0b; }
+  .mob-gi-purple { background: #f5f3ff; color: #7c3aed; }
+  .mob-gi-red    { background: #fef2f2; color: #ef4444; }
+
+  .mob-group-info { flex: 1; min-width: 0; }
+  .mob-group-title   { font-size: 14px; font-weight: 700; color: #1a1f36; }
+  .mob-group-summary { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .mob-group-value   {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; font-weight: 700;
+    color: #111e52;
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+  .mob-chevron {
+    font-size: 1rem; color: #9ca3af;
+    flex-shrink: 0;
+    transition: transform 0.28s ease;
+  }
+  .mob-group-card.mob-open .mob-chevron { transform: rotate(180deg); }
+
+  .mob-group-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+  .mob-group-card.mob-open .mob-group-body { max-height: 800px; }
+
+  .mob-group-divider { height: 1px; background: #e5e7eb; margin: 0 16px; }
+
+  /* ── Detail rows ─────────────────────────── */
+  .mob-detail-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    text-decoration: none;
+  }
+  .mob-detail-row:last-child { border-bottom: none; }
+  .mob-detail-row:active { background: #f9fafb; }
+
+  .mob-detail-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 0.9rem;
+  }
+  .mob-detail-text { flex: 1; min-width: 0; }
+  .mob-detail-name { font-size: 12px; color: #6b7280; font-weight: 500; }
+  .mob-detail-val  {
+    font-size: 15px; font-weight: 700; color: #1a1f36;
+    font-family: 'DM Mono', monospace;
+  }
+  .mob-detail-sub  { font-size: 11px; color: #9ca3af; }
+  .mob-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: #d1d5db; }
+
+  /* ── Section cards (non-collapsible) ─────── */
+  .mob-section-card {
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(26,43,107,0.07);
+  }
+  .mob-section-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .mob-section-title {
+    font-size: 14px; font-weight: 700; color: #1a1f36;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mob-section-title i { color: #3b5bdb; }
+
+  .mob-ledger-btn {
+    font-size: 12px; font-weight: 600; color: #6b7280;
+    border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 5px 10px; cursor: pointer;
+    background: none; font-family: inherit;
+    text-decoration: none;
+  }
+  .mob-all-btn {
+    font-size: 12px; font-weight: 600; color: #fff;
+    background: #3b5bdb; border: none;
+    border-radius: 8px; padding: 5px 10px;
+    cursor: pointer; font-family: inherit;
+    text-decoration: none;
+  }
+
+  /* Entry / invoice rows inside section cards */
+  .mob-entry-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .mob-entry-row:last-child { border-bottom: none; }
+  .mob-entry-ref  { font-size: 11px; font-weight: 700; color: #3b5bdb; font-family: 'DM Mono', monospace; }
+  .mob-entry-desc { font-size: 12px; color: #6b7280; }
+  .mob-entry-val  { font-size: 13px; font-weight: 700; color: #1a1f36; font-family: 'DM Mono', monospace; white-space: nowrap; }
+  .mob-entry-date { font-size: 11px; color: #9ca3af; }
+
+  .mob-empty {
+    padding: 28px 20px; text-align: center;
+    color: #6b7280; font-size: 13px;
+  }
+  .mob-empty i { font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 8px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 {% with role=request.user.profile.role %}
 
-<!-- ── Page header ──────────────────────────────────────────── -->
+{# ═══════════════════════════════════════════════════════
+   MOBILE DASHBOARD  (admin / accountant)  max-width 767px
+═══════════════════════════════════════════════════════ #}
+{% if user.is_staff or role == 'admin' or role == 'accountant' %}
+<div class="d-md-none mob-dash">
+
+  {# Header #}
+  <header class="mob-header">
+    <div class="mob-header-top">
+      <div class="mob-avatar">{{ user.get_full_name|default:user.username|slice:":2"|upper }}</div>
+      <form method="post" action="/accounts/logout/" class="m-0">
+        {% csrf_token %}
+        <button type="submit" class="mob-logout-btn" title="Log out">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </form>
+    </div>
+    <div class="mob-date-chip">
+      <i class="bi bi-calendar3"></i>
+      {{ today|date:"l, j F Y" }}
+    </div>
+    <div class="mob-greeting" id="mob-greeting">Good day,</div>
+    <div class="mob-biz-name">{{ business.name }}</div>
+    <div class="mob-biz-sub">Cash · {{ today|date:"F Y" }}</div>
+  </header>
+
+  {# Stats strip #}
+  <div class="mob-stats-strip">
+    <div class="mob-stat-item">
+      <div class="mob-stat-val">{% currency cash_position %}</div>
+      <div class="mob-stat-label">Cash</div>
+    </div>
+    <div class="mob-stat-item">
+      <div class="mob-stat-val mob-green">{% currency month_revenue %}</div>
+      <div class="mob-stat-label">Revenue</div>
+    </div>
+    <div class="mob-stat-item">
+      <div class="mob-stat-val mob-orange">{{ active_trips }}</div>
+      <div class="mob-stat-label">Active Trips</div>
+    </div>
+  </div>
+
+  {# Body #}
+  <div class="mob-body">
+
+    {# CTA #}
+    {% if user.is_staff or role == 'admin' %}
+    <a href="{% url 'core:management_hub' %}" class="mob-cta-btn">
+      <i class="bi bi-building-gear"></i> Management Hub
+    </a>
+    {% else %}
+    <a href="{% url 'reports:journal_ledger' %}" class="mob-cta-btn">
+      <i class="bi bi-journal-bookmark"></i> Open Ledger
+    </a>
+    {% endif %}
+
+    {# ── Financials collapsible ── #}
+    <div class="mob-group-card mob-open" id="mob-gc-finance">
+      <div class="mob-group-header" onclick="mobToggle('mob-gc-finance')">
+        <div class="mob-group-icon mob-gi-blue"><i class="bi bi-currency-dollar"></i></div>
+        <div class="mob-group-info">
+          <div class="mob-group-title">Financials</div>
+          <div class="mob-group-summary">Cash · Revenue · Expenses · Profit</div>
+        </div>
+        <span class="mob-group-value">{% currency month_profit %}</span>
+        <i class="bi bi-chevron-down mob-chevron"></i>
+      </div>
+      <div class="mob-group-body">
+        <div class="mob-group-divider"></div>
+
+        <div class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-blue"><i class="bi bi-wallet2"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-name">Cash Position</div>
+            <div class="mob-detail-val">{% currency cash_position %}</div>
+            <div class="mob-detail-sub">Account 1010</div>
+          </div>
+          <div class="mob-dot"></div>
+        </div>
+
+        <div class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-green"><i class="bi bi-graph-up-arrow"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-name">Revenue This Month</div>
+            <div class="mob-detail-val">{% currency month_revenue %}</div>
+            <div class="mob-detail-sub">{{ today|date:"F Y" }}</div>
+          </div>
+          <div class="mob-dot"></div>
+        </div>
+
+        <div class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-red"><i class="bi bi-graph-down-arrow"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-name">Expenses This Month</div>
+            <div class="mob-detail-val">{% currency month_expenses %}</div>
+            <div class="mob-detail-sub">{{ today|date:"F Y" }}</div>
+          </div>
+          <div class="mob-dot"></div>
+        </div>
+
+        <div class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-purple"><i class="bi bi-activity"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-name">Net Profit This Month</div>
+            <div class="mob-detail-val {% if month_profit < 0 %}text-danger{% endif %}">{% currency month_profit %}</div>
+            <div class="mob-detail-sub">Revenue – Expenses</div>
+          </div>
+          <div class="mob-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    {# ── Operations collapsible ── #}
+    <div class="mob-group-card" id="mob-gc-ops">
+      <div class="mob-group-header" onclick="mobToggle('mob-gc-ops')">
+        <div class="mob-group-icon mob-gi-orange"><i class="bi bi-truck"></i></div>
+        <div class="mob-group-info">
+          <div class="mob-group-title">Operations</div>
+          <div class="mob-group-summary">Fuel · Trips · Staff · Payroll</div>
+        </div>
+        <span class="mob-group-value">{{ active_trips }}</span>
+        <i class="bi bi-chevron-down mob-chevron"></i>
+      </div>
+      <div class="mob-group-body">
+        <div class="mob-group-divider"></div>
+
+        <a href="{% url 'petrol:daily_sale_list' %}" class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-orange"><i class="bi bi-fuel-pump"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-name">Fuel Sales Today</div>
+            <div class="mob-detail-val">{% currency today_fuel_revenue %}</div>
+            <div class="mob-detail-sub">{{ today_fuel_litres|floatformat:0 }} litres dispensed</div>
+          </div>
+          <div class="mob-dot"></div>
+        </a>
+
+        <a href="{% url 'cargo:trip_list' %}?status=in_progress" class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-blue"><i class="bi bi-map"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-name">Active Trips</div>
+            <div class="mob-detail-val">{{ active_trips }}</div>
+            <div class="mob-detail-sub">in progress</div>
+          </div>
+          <div class="mob-dot"></div>
+        </a>
+
+        <div class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-green"><i class="bi bi-people"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-name">Active Employees</div>
+            <div class="mob-detail-val">{{ active_employees }}</div>
+            <div class="mob-detail-sub">on payroll</div>
+          </div>
+          <div class="mob-dot"></div>
+        </div>
+
+        <div class="mob-detail-row">
+          <div class="mob-detail-icon mob-gi-red"><i class="bi bi-cash-coin"></i></div>
+          <div class="mob-detail-text">
+            <div class="mob-detail-name">Salaries Paid (Month)</div>
+            <div class="mob-detail-val">{% currency salary_this_month %}</div>
+            <div class="mob-detail-sub">{{ today|date:"F Y" }}</div>
+          </div>
+          <div class="mob-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    {# ── Journal entries ── #}
+    <div class="mob-section-card">
+      <div class="mob-section-head">
+        <div class="mob-section-title">
+          <i class="bi bi-journal-bookmark"></i> Recent Journal Entries
+        </div>
+        <a href="{% url 'reports:journal_ledger' %}" class="mob-ledger-btn">Ledger →</a>
+      </div>
+      {% if recent_entries %}
+        {% for entry in recent_entries %}
+        <div class="mob-entry-row">
+          <div style="flex:1;min-width:0;">
+            <div class="mob-entry-ref">{{ entry.reference }}</div>
+            <div class="mob-entry-desc">{{ entry.description|truncatechars:38 }}</div>
+            <div class="mob-entry-date">{{ entry.date|date:"d M Y" }}</div>
+          </div>
+          <div class="mob-entry-val">{% currency entry.total_debit %}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="mob-empty"><i class="bi bi-journal-x"></i>No journal entries yet.</div>
+      {% endif %}
+    </div>
+
+    {# ── Recent invoices ── #}
+    <div class="mob-section-card">
+      <div class="mob-section-head">
+        <div class="mob-section-title">
+          <i class="bi bi-file-earmark-text"></i> Recent Invoices
+        </div>
+        <a href="{% url 'cargo:invoice_list' %}" class="mob-all-btn">All →</a>
+      </div>
+      {% if recent_invoices %}
+        {% for inv in recent_invoices %}
+        <div class="mob-entry-row">
+          <div style="flex:1;min-width:0;">
+            <div class="mob-entry-ref">{{ inv.number }}</div>
+            <div class="mob-entry-desc">{{ inv.trip.customer.name|truncatechars:30 }}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="mob-entry-val">{% currency inv.amount %}</div>
+            {% if inv.is_paid %}
+            <span class="tlc-badge tlc-badge-green" style="font-size:10px;">Paid</span>
+            {% else %}
+            <span class="tlc-badge tlc-badge-amber" style="font-size:10px;">Unpaid</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="mob-empty"><i class="bi bi-file-earmark-x"></i>No invoices yet.</div>
+      {% endif %}
+    </div>
+
+  </div>{# /mob-body #}
+</div>{# /mob-dash #}
+{% endif %}
+
+
+{# ═══════════════════════════════════════════════════════
+   DESKTOP DASHBOARD  —  unchanged, hidden on mobile
+═══════════════════════════════════════════════════════ #}
+{% if user.is_staff or role == 'admin' or role == 'accountant' %}
+<div class="d-none d-md-block">
+
+<!-- Page header -->
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
         <h5 class="fw-bold text-dark mb-1">{{ business.name }}</h5>
@@ -20,19 +527,8 @@
     <a href="{% url 'core:management_hub' %}" class="btn btn-sm btn-outline-secondary no-print">
         <i class="bi bi-building-gear me-1"></i>Management
     </a>
-    {% elif role == 'petrol_clerk' %}
-    <a href="{% url 'petrol:daily_sale_add' %}" class="btn btn-sm btn-primary no-print">
-        <i class="bi bi-plus-lg me-1"></i>Record Sale
-    </a>
-    {% elif role == 'cargo_clerk' %}
-    <a href="{% url 'cargo:trip_add' %}" class="btn btn-sm btn-primary no-print">
-        <i class="bi bi-plus-lg me-1"></i>New Trip
-    </a>
     {% endif %}
 </div>
-
-
-{% if user.is_staff or role == 'admin' or role == 'accountant' %}
 
 <!-- Financial stat cards -->
 <div class="row g-3 mb-4">
@@ -214,12 +710,23 @@
     </div>
 </div>
 
+</div>{# /d-none d-md-block #}
 {% endif %}{# end admin/accountant #}
 
 
+{# ── Petrol clerk dashboard (mobile + desktop same) ─────── #}
 {% if role == 'petrol_clerk' %}
+<!-- Page header -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold text-dark mb-1">{{ business.name }}</h5>
+        <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>{{ today|date:"l, j F Y" }}</span>
+    </div>
+    <a href="{% url 'petrol:daily_sale_add' %}" class="btn btn-sm btn-primary no-print">
+        <i class="bi bi-plus-lg me-1"></i>Record Sale
+    </a>
+</div>
 
-<!-- Stat cards -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-4">
         <a href="{% url 'petrol:daily_sale_list' %}" class="text-decoration-none">
@@ -251,7 +758,6 @@
     </div>
 </div>
 
-<!-- Tank stock levels -->
 <div class="content-card mb-4">
     <div class="content-card-header">
         <span class="content-card-title">
@@ -267,13 +773,10 @@
         <div class="col-md-4">
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <span class="fw-semibold small">{{ t.obj.fuel_type.name }}</span>
-                <span class="small fw-bold {% if t.pct < 20 %}text-danger{% elif t.pct < 50 %}text-warning{% else %}text-success{% endif %}">
-                    {{ t.pct }}%
-                </span>
+                <span class="small fw-bold {% if t.pct < 20 %}text-danger{% elif t.pct < 50 %}text-warning{% else %}text-success{% endif %}">{{ t.pct }}%</span>
             </div>
             <div class="progress mb-2" style="height:10px;border-radius:6px;">
-                <div class="progress-bar bg-{% if t.pct < 20 %}danger{% elif t.pct < 50 %}warning{% else %}success{% endif %}"
-                     style="width:{{ t.pct }}%;border-radius:6px;"></div>
+                <div class="progress-bar bg-{% if t.pct < 20 %}danger{% elif t.pct < 50 %}warning{% else %}success{% endif %}" style="width:{{ t.pct }}%;border-radius:6px;"></div>
             </div>
             <div class="d-flex justify-content-between">
                 <span class="small text-muted">{{ t.obj.name }}</span>
@@ -287,12 +790,9 @@
     </div>
 </div>
 
-<!-- Today's sales -->
 <div class="content-card">
     <div class="content-card-header">
-        <span class="content-card-title">
-            <i class="bi bi-table me-2 text-primary"></i>Today's Sales
-        </span>
+        <span class="content-card-title"><i class="bi bi-table me-2 text-primary"></i>Today's Sales</span>
         <div class="d-flex gap-2">
             <a href="{% url 'petrol:credit_sale_add' %}" class="btn btn-sm btn-outline-secondary no-print">
                 <i class="bi bi-person-plus me-1"></i>Credit Sale
@@ -304,15 +804,7 @@
     </div>
     <div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th>Fuel Type</th><th>Tank</th>
-                    <th class="text-end">Litres</th>
-                    <th class="text-end">Price/L</th>
-                    <th class="text-end">Total</th>
-                    <th>By</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Fuel Type</th><th>Tank</th><th class="text-end">Litres</th><th class="text-end">Price/L</th><th class="text-end">Total</th><th>By</th></tr></thead>
             <tbody>
             {% for sale in today_sales %}
             <tr>
@@ -328,9 +820,7 @@
                 <td colspan="6" class="text-center py-4 text-muted">
                     <i class="bi bi-fuel-pump" style="font-size:2rem;opacity:0.3;"></i>
                     <p class="mt-2 mb-0">No sales recorded today.</p>
-                    <a href="{% url 'petrol:daily_sale_add' %}" class="btn btn-sm btn-primary mt-2">
-                        <i class="bi bi-plus-lg me-1"></i>Record First Sale
-                    </a>
+                    <a href="{% url 'petrol:daily_sale_add' %}" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg me-1"></i>Record First Sale</a>
                 </td>
             </tr>
             {% endfor %}
@@ -339,22 +829,15 @@
     </div>
 </div>
 
-<!-- Credit customers with balances -->
 {% if outstanding_credit %}
 <div class="content-card mt-4">
     <div class="content-card-header">
-        <span class="content-card-title">
-            <i class="bi bi-person-lines-fill me-2 text-warning"></i>Credit Balances
-        </span>
-        <a href="{% url 'petrol:credit_payment_add' %}" class="btn btn-sm btn-outline-warning no-print">
-            <i class="bi bi-cash me-1"></i>Record Payment
-        </a>
+        <span class="content-card-title"><i class="bi bi-person-lines-fill me-2 text-warning"></i>Credit Balances</span>
+        <a href="{% url 'petrol:credit_payment_add' %}" class="btn btn-sm btn-outline-warning no-print"><i class="bi bi-cash me-1"></i>Record Payment</a>
     </div>
     <div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead>
-                <tr><th>Customer</th><th>Phone</th><th class="text-end">Balance Owed</th></tr>
-            </thead>
+            <thead><tr><th>Customer</th><th>Phone</th><th class="text-end">Balance Owed</th></tr></thead>
             <tbody>
             {% for cust in outstanding_credit %}
             <tr>
@@ -368,13 +851,19 @@
     </div>
 </div>
 {% endif %}
-
 {% endif %}{# end petrol_clerk #}
 
 
+{# ── Cargo clerk dashboard ──────────────────────────────── #}
 {% if role == 'cargo_clerk' %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold text-dark mb-1">{{ business.name }}</h5>
+        <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>{{ today|date:"l, j F Y" }}</span>
+    </div>
+    <a href="{% url 'cargo:trip_add' %}" class="btn btn-sm btn-primary no-print"><i class="bi bi-plus-lg me-1"></i>New Trip</a>
+</div>
 
-<!-- Stat cards -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <a href="{% url 'cargo:trip_list' %}?status=in_progress" class="text-decoration-none">
@@ -383,8 +872,7 @@
             <div class="stat-label">Active Trips</div>
             <div class="stat-value">{{ active_trips }}</div>
             <div class="stat-sub">on the road now</div>
-        </div>
-        </a>
+        </div></a>
     </div>
     <div class="col-6 col-md-3">
         <a href="{% url 'cargo:trip_list' %}?status=planned" class="text-decoration-none">
@@ -393,8 +881,7 @@
             <div class="stat-label">Planned Trips</div>
             <div class="stat-value">{{ planned_count }}</div>
             <div class="stat-sub">awaiting departure</div>
-        </div>
-        </a>
+        </div></a>
     </div>
     <div class="col-6 col-md-3">
         <a href="{% url 'cargo:invoice_list' %}?paid=0" class="text-decoration-none">
@@ -403,8 +890,7 @@
             <div class="stat-label">Outstanding</div>
             <div class="stat-value" style="font-size:1.1rem">{% currency outstanding_amount %}</div>
             <div class="stat-sub">awaiting payment</div>
-        </div>
-        </a>
+        </div></a>
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-card">
@@ -416,27 +902,17 @@
     </div>
 </div>
 
-<!-- Active trips + outstanding invoices -->
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="content-card h-100">
             <div class="content-card-header">
-                <span class="content-card-title">
-                    <i class="bi bi-map me-2 text-primary"></i>Active &amp; Planned Trips
-                </span>
-                <a href="{% url 'cargo:trip_add' %}" class="btn btn-sm btn-primary no-print">
-                    <i class="bi bi-plus-lg me-1"></i>New Trip
-                </a>
+                <span class="content-card-title"><i class="bi bi-map me-2 text-primary"></i>Active &amp; Planned Trips</span>
+                <a href="{% url 'cargo:trip_add' %}" class="btn btn-sm btn-primary no-print"><i class="bi bi-plus-lg me-1"></i>New Trip</a>
             </div>
             {% if pending_trips %}
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Route</th><th>Customer</th><th>Driver</th>
-                            <th>Date</th><th>Status</th><th></th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Route</th><th>Customer</th><th>Driver</th><th>Date</th><th>Status</th><th></th></tr></thead>
                     <tbody>
                     {% for trip in pending_trips %}
                     <tr>
@@ -445,17 +921,10 @@
                         <td class="text-muted small">{{ trip.driver.name|truncatechars:12 }}</td>
                         <td class="text-muted small">{{ trip.date|date:"d M" }}</td>
                         <td>
-                            {% if trip.status == 'planned' %}
-                            <span class="tlc-badge tlc-badge-blue">Planned</span>
-                            {% elif trip.status == 'in_progress' %}
-                            <span class="tlc-badge tlc-badge-amber">On Road</span>
-                            {% endif %}
+                            {% if trip.status == 'planned' %}<span class="tlc-badge tlc-badge-blue">Planned</span>
+                            {% elif trip.status == 'in_progress' %}<span class="tlc-badge tlc-badge-amber">On Road</span>{% endif %}
                         </td>
-                        <td>
-                            <a href="{% url 'cargo:trip_detail' trip.pk %}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                        </td>
+                        <td><a href="{% url 'cargo:trip_detail' trip.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a></td>
                     </tr>
                     {% endfor %}
                     </tbody>
@@ -465,44 +934,28 @@
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-map" style="font-size:2.5rem;opacity:0.4;"></i>
                 <p class="mt-2 mb-0">No active or planned trips.</p>
-                <a href="{% url 'cargo:trip_add' %}" class="btn btn-sm btn-primary mt-2">
-                    <i class="bi bi-plus-lg me-1"></i>Create Trip
-                </a>
+                <a href="{% url 'cargo:trip_add' %}" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg me-1"></i>Create Trip</a>
             </div>
             {% endif %}
         </div>
     </div>
-
     <div class="col-lg-5">
         <div class="content-card h-100">
             <div class="content-card-header">
-                <span class="content-card-title">
-                    <i class="bi bi-hourglass-split me-2 text-warning"></i>Outstanding Invoices
-                </span>
-                <a href="{% url 'cargo:invoice_list' %}?paid=0" class="btn btn-sm btn-outline-warning no-print">
-                    <i class="bi bi-arrow-right me-1"></i>All
-                </a>
+                <span class="content-card-title"><i class="bi bi-hourglass-split me-2 text-warning"></i>Outstanding Invoices</span>
+                <a href="{% url 'cargo:invoice_list' %}?paid=0" class="btn btn-sm btn-outline-warning no-print"><i class="bi bi-arrow-right me-1"></i>All</a>
             </div>
             {% if outstanding_invoices %}
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Invoice</th><th>Customer</th>
-                            <th class="text-end">Amount</th><th></th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Invoice</th><th>Customer</th><th class="text-end">Amount</th><th></th></tr></thead>
                     <tbody>
                     {% for inv in outstanding_invoices %}
                     <tr>
                         <td class="fw-semibold small">{{ inv.number }}</td>
                         <td class="text-muted small">{{ inv.trip.customer.name|truncatechars:16 }}</td>
                         <td class="text-end fw-semibold small text-danger">{% currency inv.amount %}</td>
-                        <td>
-                            <a href="{% url 'cargo:invoice_pay' inv.pk %}" class="btn btn-sm btn-success" title="Record payment">
-                                <i class="bi bi-cash"></i>
-                            </a>
-                        </td>
+                        <td><a href="{% url 'cargo:invoice_pay' inv.pk %}" class="btn btn-sm btn-success" title="Record payment"><i class="bi bi-cash"></i></a></td>
                     </tr>
                     {% endfor %}
                     </tbody>
@@ -517,8 +970,23 @@
         </div>
     </div>
 </div>
-
 {% endif %}{# end cargo_clerk #}
 
 {% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Time-based greeting
+  (function () {
+    const h = new Date().getHours();
+    const el = document.getElementById('mob-greeting');
+    if (el) el.textContent = h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,';
+  })();
+
+  // Collapsible group cards
+  function mobToggle(id) {
+    document.getElementById(id).classList.toggle('mob-open');
+  }
+</script>
 {% endblock %}
