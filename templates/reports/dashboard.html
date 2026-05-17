@@ -9,7 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 @media (max-width: 767px) {
-  /* Reset page layout for mobile dashboard */
+  /* Dashboard has its own full mobile header — suppress the base one */
+  .mob-page-header { display: none !important; }
   .topbar { display: none !important; }
   .page-body { padding: 0 !important; }
 

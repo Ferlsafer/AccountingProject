@@ -16,6 +16,7 @@
     <link rel="icon" type="image/png" href="{% static 'img/gas-station.png' %}">
     <link rel="apple-touch-icon" href="{% static 'img/gas-station.png' %}">
     <!-- Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
@@ -203,7 +204,7 @@
             <button class="btn btn-sm btn-outline-light d-md-none me-2" id="sidebarToggle">
                 <i class="bi bi-list"></i>
             </button>
-            <span class="topbar-title">{% block page_title %}{% endblock %}</span>
+            <span class="topbar-title" id="topbar-title">{% block page_title %}{% endblock %}</span>
             <div class="d-flex align-items-center gap-3 ms-auto">
                 <span class="topbar-user d-none d-sm-inline">
                     <i class="bi bi-person-circle me-1"></i>{{ user.get_full_name|default:user.username }}
@@ -216,6 +217,16 @@
                     </button>
                 </form>
             </div>
+        </div>
+
+        <!-- Mobile page header — dark navy sticky bar for all non-dashboard pages.
+             Dashboard suppresses this via extra_css. -->
+        <div class="mob-page-header d-md-none no-print">
+            <a href="javascript:history.back()" class="mob-page-back" aria-label="Back">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            <span class="mob-page-title-text" id="mob-page-title-text"></span>
+            <div class="mob-page-avatar-sm">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
         </div>
         {% endif %}
 
@@ -298,6 +309,13 @@
         document.getElementById('sidebarToggle')?.addEventListener('click', () => {
             document.getElementById('sidebar').classList.toggle('open');
         });
+
+        // Copy page title into the mobile sticky header
+        (function () {
+            var src = document.getElementById('topbar-title');
+            var dst = document.getElementById('mob-page-title-text');
+            if (src && dst) dst.textContent = src.textContent.trim();
+        })();
 
         const sidebar = document.getElementById('sidebar');
         if (sidebar) {

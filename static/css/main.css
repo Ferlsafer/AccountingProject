@@ -361,20 +361,66 @@ body.auth-page .page-body {
 .mobile-nav-item.active { color: #f4c842; }
 .mobile-nav-item:active { color: #f4c842; background: rgba(255,255,255,0.07); }
 
+/* ── Mobile page header (sticky dark navy bar on all non-dashboard pages) ── */
+.mob-page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: linear-gradient(135deg, #111e52 0%, #2a3f8f 100%);
+    height: 56px;
+    padding: 0 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.22);
+    font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+}
+.mob-page-back {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.05rem;
+    text-decoration: none;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s;
+}
+.mob-page-back:hover, .mob-page-back:active { background: rgba(255,255,255,0.22); color: #fff; }
+.mob-page-title-text {
+    flex: 1;
+    font-size: 16px; font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mob-page-avatar-sm {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.22);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 11px; color: #fff;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+
 /* ── Mobile design — layout and cards ───────────────── */
 @media (max-width: 767px) {
     /* Show bottom nav */
     .mobile-bottom-nav { display: flex; flex-direction: column; }
 
-    /* Tighter page body */
+    /* Hide white topbar — replaced by dark mobile header */
+    .topbar { display: none !important; }
+
+    /* Page body: account for sticky header (56px) + bottom nav (74px) */
     .page-body {
         padding: 14px 12px;
         padding-bottom: calc(74px + env(safe-area-inset-bottom));
     }
-
-    /* Compact topbar */
-    .topbar { padding: 0 14px; }
-    .topbar-title { font-size: 0.92rem; }
 
     /* Touch-friendly tap targets */
     .btn { min-height: 40px; }
