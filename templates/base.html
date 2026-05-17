@@ -218,6 +218,56 @@
                 <span class="topbar-user d-none d-sm-inline">
                     <i class="bi bi-person-circle me-1"></i>{{ user.get_full_name|default:user.username }}
                 </span>
+
+                <!-- Notification bell -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-light position-relative" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                        <i class="bi bi-bell"></i>
+                        {% if notif_unread_count %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              style="font-size:.6rem">{{ notif_unread_count }}</span>
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width:320px;max-width:360px">
+                        <li class="px-3 py-2 d-flex justify-content-between align-items-center border-bottom">
+                            <strong>Notifications</strong>
+                            {% if notif_unread_count %}
+                            <form method="post" action="{% url 'core:notifications_mark_all_read' %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">
+                                    Mark all read
+                                </button>
+                            </form>
+                            {% endif %}
+                        </li>
+                        {% if notif_recent %}
+                            {% for n in notif_recent %}
+                            <li>
+                                <a href="{% if n.link %}{{ n.link }}{% else %}{% url 'core:notification_list' %}{% endif %}"
+                                   class="dropdown-item py-2 {% if not n.is_read %}fw-semibold bg-light{% endif %}">
+                                    <div class="d-flex gap-2 align-items-start">
+                                        <i class="bi bi-bell{% if not n.is_read %}-fill text-primary{% endif %} flex-shrink-0 mt-1" style="font-size:.85rem"></i>
+                                        <div>
+                                            <div style="white-space:normal;font-size:.85rem;line-height:1.3">{{ n.message }}</div>
+                                            <small class="text-muted">{{ n.created_at|date:"d M, H:i" }}</small>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                        <li class="px-3 py-3 text-muted text-center" style="font-size:.85rem">
+                            <i class="bi bi-bell-slash me-1"></i>No notifications
+                        </li>
+                        {% endif %}
+                        <li class="border-top">
+                            <a class="dropdown-item text-center py-2" href="{% url 'core:notification_list' %}"
+                               style="font-size:.85rem">View all</a>
+                        </li>
+                    </ul>
+                </div>
+
                 <form method="post" action="/accounts/logout/" class="m-0">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-outline-light">

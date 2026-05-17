@@ -18,8 +18,24 @@ def _can_approve_purchase(user):
 
 def _is_admin(user):
     return user.is_staff or getattr(user, 'profile', None) and user.profile.role == 'admin'
+from django.contrib.auth.models import User
+from core.models import Notification
 from .models import DailyFuelSale, FuelPurchase, CreditCustomer, CreditSale, CreditPayment, PetrolExpense, Tank, FuelSupplier
 from .forms import DailyFuelSaleForm, FuelPurchaseForm, CreditSaleForm, CreditPaymentForm, PetrolExpenseForm, TankForm, TankEditForm, FuelSupplierForm
+
+
+def _notify_purchase_request(purchase, submitted_by):
+    clerk_name = submitted_by.get_full_name() or submitted_by.username
+    msg = (f"Fuel purchase request: {purchase.litres}L {purchase.tank.fuel_type} "
+           f"from {purchase.supplier} — TZS {purchase.total_amount:,.0f} (by {clerk_name})")
+    link = '/petrol/purchases/'
+    recipients = User.objects.filter(
+        is_active=True, profile__role__in=('admin', 'accountant')
+    ).exclude(pk=submitted_by.pk)
+    Notification.objects.bulk_create([
+        Notification(recipient=u, message=msg, link=link)
+        for u in recipients
+    ])
 
 
 def _date_range(request):
@@ -158,6 +174,7 @@ def purchase_add(request):
             purchase.total_amount = purchase.litres * purchase.unit_price
             purchase.status = 'pending'
             purchase.save()
+            _notify_purchase_request(purchase, request.user)
             messages.success(request, f"Purchase submitted for approval: {purchase.litres}L — TZS {purchase.total_amount:,.0f}")
             return redirect('petrol:purchase_list')
     else:

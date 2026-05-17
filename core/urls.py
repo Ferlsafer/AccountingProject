@@ -23,4 +23,8 @@ urlpatterns = [
     path('settings/',                views.business_settings,  name='business_settings'),
     path('management/',              views.management_hub,     name='management_hub'),
     path('journal/add/',             views.manual_journal_add, name='manual_journal_add'),
+    # Notifications
+    path('notifications/',                        views.notification_list,         name='notification_list'),
+    path('notifications/<int:pk>/read/',           views.notification_mark_read,    name='notification_mark_read'),
+    path('notifications/mark-all-read/',           views.notifications_mark_all_read, name='notifications_mark_all_read'),
 ]

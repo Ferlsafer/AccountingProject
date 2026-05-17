@@ -17,7 +17,7 @@ def csrf_failure(request, reason=''):
     )
     return redirect('/accounts/login/')
 
-from .models import Account, Business, Employee, SalaryPayment, UserProfile, PettyCashTransaction, JournalEntry, JournalLine
+from .models import Account, Business, Employee, SalaryPayment, UserProfile, PettyCashTransaction, JournalEntry, JournalLine, Notification
 from .forms import EmployeeForm, SalaryPaymentForm, UserCreateForm, UserEditForm, PettyCashTransactionForm, AccountForm, BusinessForm
 
 
@@ -455,3 +455,26 @@ def manual_journal_add(request):
         return redirect('reports:journal_ledger')
 
     return render(request, 'core/manual_journal_form.html', {'accounts': accounts, 'today': date.today()})
+
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+
+@login_required
+def notification_list(request):
+    notifs = Notification.objects.filter(recipient=request.user).order_by('-created_at')
+    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return render(request, 'core/notification_list.html', {'notifs': notifs})
+
+
+@login_required
+def notification_mark_read(request, pk):
+    Notification.objects.filter(pk=pk, recipient=request.user).update(is_read=True)
+    next_url = request.GET.get('next') or 'petrol:purchase_list'
+    return redirect(next_url)
+
+
+@login_required
+def notifications_mark_all_read(request):
+    if request.method == 'POST':
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
