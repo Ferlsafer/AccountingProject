@@ -65,20 +65,22 @@
         </div>
     </div>
     <div class="col-6 col-md-3">
+        <a href="?status=in_progress&date_from={{ date_from }}&date_to={{ date_to }}" class="text-decoration-none">
         <div class="stat-card">
             <div class="stat-icon icon-amber"><i class="bi bi-hourglass-split"></i></div>
             <div class="stat-label">In Progress</div>
-            <div class="stat-value">{{ trips|length }}</div>
+            <div class="stat-value">{{ count_in_progress }}</div>
             <div class="stat-sub">active trips</div>
-        </div>
+        </div></a>
     </div>
     <div class="col-6 col-md-3">
+        <a href="?status=completed&date_from={{ date_from }}&date_to={{ date_to }}" class="text-decoration-none">
         <div class="stat-card">
             <div class="stat-icon icon-teal"><i class="bi bi-check2-circle"></i></div>
             <div class="stat-label">Completed</div>
-            <div class="stat-value">—</div>
+            <div class="stat-value">{{ count_completed }}</div>
             <div class="stat-sub">this period</div>
-        </div>
+        </div></a>
     </div>
 </div>
 

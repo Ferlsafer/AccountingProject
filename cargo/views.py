@@ -124,6 +124,7 @@ def trip_list(request):
         qs = qs.filter(status=status_filter)
 
     totals = qs.aggregate(freight=Sum('freight_amount'))
+    base_qs = Trip.objects.filter(date__gte=date_from, date__lte=date_to)
     return render(request, 'cargo/trip_list.html', {
         'trips': qs,
         'totals': totals,
@@ -131,6 +132,8 @@ def trip_list(request):
         'date_to': date_to,
         'status_filter': status_filter,
         'status_choices': Trip.STATUS_CHOICES,
+        'count_in_progress': base_qs.filter(status='in_progress').count(),
+        'count_completed':   base_qs.filter(status='completed').count(),
     })
 
 
