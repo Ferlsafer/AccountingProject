@@ -170,8 +170,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'accounting_system.wsgi.application'
 
 
-# Database — use Vercel Postgres (POSTGRES_URL) in production, SQLite locally
-_POSTGRES_URL = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
+# Database — prefer non-pooling URL (avoids pgbouncer issues with advisory locks)
+_POSTGRES_URL = (
+    os.environ.get('POSTGRES_URL_NON_POOLING')
+    or os.environ.get('DATABASE_URL_UNPOOLED')
+    or os.environ.get('POSTGRES_URL')
+    or os.environ.get('DATABASE_URL')
+)
 if _POSTGRES_URL:
     DATABASES = {
         'default': dj_database_url.parse(
