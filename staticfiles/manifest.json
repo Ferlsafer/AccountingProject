@@ -10,15 +10,21 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/static/img/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/static/img/gas-station.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/static/img/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/static/img/gas-station.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/gas-station.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ]
