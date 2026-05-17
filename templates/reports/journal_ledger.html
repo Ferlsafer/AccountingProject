@@ -11,6 +11,11 @@
         <h5 class="fw-bold mb-1">Journal Ledger</h5>
         <span class="text-muted small"><i class="bi bi-journal-bookmark me-1"></i>All double-entry postings</span>
     </div>
+    {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'accountant' %}
+    <a href="{% url 'core:manual_journal_add' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>Post Manual Entry
+    </a>
+    {% endif %}
 </div>
 
 <!-- Filters -->

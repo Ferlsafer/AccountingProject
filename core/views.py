@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Account, Business, Employee, SalaryPayment, UserProfile, PettyCashTransaction
+from .models import Account, Business, Employee, SalaryPayment, UserProfile, PettyCashTransaction, JournalEntry, JournalLine
 from .forms import EmployeeForm, SalaryPaymentForm, UserCreateForm, UserEditForm, PettyCashTransactionForm, AccountForm, BusinessForm
 
 
@@ -362,3 +362,85 @@ def business_settings(request):
     else:
         form = BusinessForm(instance=business)
     return render(request, 'core/business_form.html', {'form': form, 'business': business})
+
+
+# ── Manual Journal Entry ───────────────────────────────────────────────────────
+
+@login_required
+def manual_journal_add(request):
+    if not _can_manage_accounts(request.user):
+        messages.error(request, "Access denied.")
+        return redirect('home')
+
+    accounts = Account.objects.filter(is_active=True).order_by('code')
+
+    if request.method == 'POST':
+        entry_date = request.POST.get('date', '').strip()
+        description = request.POST.get('description', '').strip()
+        raw_accounts = request.POST.getlist('account')
+        raw_debits   = request.POST.getlist('debit')
+        raw_credits  = request.POST.getlist('credit')
+
+        errors = []
+        if not entry_date:
+            errors.append("Date is required.")
+        if not description:
+            errors.append("Description is required.")
+
+        lines = []
+        total_dr = Decimal('0')
+        total_cr = Decimal('0')
+        for acc_id, dr_str, cr_str in zip(raw_accounts, raw_debits, raw_credits):
+            dr = Decimal(dr_str or '0')
+            cr = Decimal(cr_str or '0')
+            if not acc_id and dr == 0 and cr == 0:
+                continue
+            if not acc_id:
+                errors.append("Every line must have an account selected.")
+                continue
+            if dr > 0 and cr > 0:
+                errors.append("A line cannot have both a debit and a credit.")
+                continue
+            if dr == 0 and cr == 0:
+                continue
+            lines.append({'account_id': int(acc_id), 'debit': dr, 'credit': cr})
+            total_dr += dr
+            total_cr += cr
+
+        if len(lines) < 2:
+            errors.append("A journal entry needs at least two lines.")
+        if total_dr != total_cr:
+            errors.append(f"Entry does not balance — Debits TZS {total_dr:,.0f} ≠ Credits TZS {total_cr:,.0f}.")
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return render(request, 'core/manual_journal_form.html', {
+                'accounts': accounts,
+                'post': request.POST,
+            })
+
+        today = date.today()
+        n = JournalEntry.objects.filter(
+            reference__startswith=f'MJE-{today.strftime("%Y%m%d")}'
+        ).count() + 1
+        reference = f'MJE-{today.strftime("%Y%m%d")}-{n:03d}'
+
+        with transaction.atomic():
+            entry = JournalEntry.objects.create(
+                date=entry_date,
+                reference=reference,
+                description=description,
+                source_type='manual',
+                created_by=request.user,
+            )
+            JournalLine.objects.bulk_create([
+                JournalLine(entry=entry, account_id=l['account_id'],
+                            debit=l['debit'], credit=l['credit'])
+                for l in lines
+            ])
+
+        messages.success(request, f"Journal entry {reference} posted successfully.")
+        return redirect('reports:journal_ledger')
+
+    return render(request, 'core/manual_journal_form.html', {'accounts': accounts, 'today': date.today()})

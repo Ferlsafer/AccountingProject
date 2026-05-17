@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load tlc_tags %}
+
+{% block title %}Manual Journal Entry{% endblock %}
+{% block page_title %}Manual Journal Entry{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Manual Journal Entry</h5>
+        <span class="text-muted small"><i class="bi bi-journal-plus me-1"></i>Post opening balances, corrections, or adjustments</span>
+    </div>
+    <a href="{% url 'reports:journal_ledger' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Ledger
+    </a>
+</div>
+
+<form method="post" id="mje-form">
+{% csrf_token %}
+
+<div class="content-card p-4 mb-4">
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+            <input type="date" name="date" value="{{ post.date|default:today|date:'Y-m-d' }}"
+                   class="form-control" required>
+        </div>
+        <div class="col-md-9">
+            <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+            <input type="text" name="description" value="{{ post.description|default:'' }}"
+                   class="form-control" placeholder="e.g. Opening balances — 17 May 2026" required>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle mb-0" id="mje-lines">
+            <thead class="table-light">
+                <tr>
+                    <th style="width:45%">Account</th>
+                    <th class="text-end" style="width:22%">Debit (TZS)</th>
+                    <th class="text-end" style="width:22%">Credit (TZS)</th>
+                    <th style="width:11%"></th>
+                </tr>
+            </thead>
+            <tbody id="mje-tbody">
+                {% for i in "12345678" %}
+                <tr class="mje-row">
+                    <td>
+                        <select name="account" class="form-select form-select-sm">
+                            <option value="">— select account —</option>
+                            {% for acc in accounts %}
+                            <option value="{{ acc.pk }}">{{ acc }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" name="debit" value="0" min="0" step="1"
+                               class="form-control form-control-sm text-end mje-debit"></td>
+                    <td><input type="number" name="credit" value="0" min="0" step="1"
+                               class="form-control form-control-sm text-end mje-credit"></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger mje-remove"
+                                onclick="removeLine(this)" title="Remove row">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+                <tr class="fw-bold">
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addLine()">
+                            <i class="bi bi-plus me-1"></i>Add Line
+                        </button>
+                    </td>
+                    <td class="text-end" id="total-dr">TZS 0</td>
+                    <td class="text-end" id="total-cr">TZS 0</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="text-center py-2" id="balance-status"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="d-flex gap-2 justify-content-end">
+    <a href="{% url 'reports:journal_ledger' %}" class="btn btn-outline-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg me-1"></i>Post Journal Entry
+    </button>
+</div>
+</form>
+
+<div class="content-card p-4 mt-4">
+    <div class="fw-semibold mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Common opening balance entries</div>
+    <ul class="mb-0 small text-muted">
+        <li><strong>Cash on hand</strong> — Dr 1010 Cash on Hand / Cr 3010 Owner's Capital</li>
+        <li><strong>Bank balance</strong> — Dr 1020 Bank Account / Cr 3010 Owner's Capital</li>
+        <li><strong>Stock on hand</strong> — Dr 1210 Petrol Stock (or 1220 Diesel Stock) / Cr 3010 Owner's Capital</li>
+        <li><strong>Supplier credit owed</strong> — Dr 3010 Owner's Capital / Cr 2020 Fuel Supplier Payable</li>
+    </ul>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const accountOptions = document.querySelector('#mje-tbody tr select').innerHTML;
+
+function addLine() {
+    const tbody = document.getElementById('mje-tbody');
+    const tr = document.createElement('tr');
+    tr.className = 'mje-row';
+    tr.innerHTML = `
+        <td><select name="account" class="form-select form-select-sm">${accountOptions}</select></td>
+        <td><input type="number" name="debit"  value="0" min="0" step="1" class="form-control form-control-sm text-end mje-debit"  oninput="updateTotals()"></td>
+        <td><input type="number" name="credit" value="0" min="0" step="1" class="form-control form-control-sm text-end mje-credit" oninput="updateTotals()"></td>
+        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLine(this)"><i class="bi bi-trash"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+    updateTotals();
+}
+
+function removeLine(btn) {
+    const rows = document.querySelectorAll('.mje-row');
+    if (rows.length <= 2) { return; }
+    btn.closest('tr').remove();
+    updateTotals();
+}
+
+function updateTotals() {
+    let dr = 0, cr = 0;
+    document.querySelectorAll('.mje-debit').forEach(i  => dr += parseFloat(i.value) || 0);
+    document.querySelectorAll('.mje-credit').forEach(i => cr += parseFloat(i.value) || 0);
+    const fmt = n => 'TZS ' + Math.round(n).toLocaleString();
+    document.getElementById('total-dr').textContent = fmt(dr);
+    document.getElementById('total-cr').textContent = fmt(cr);
+    const el = document.getElementById('balance-status');
+    if (dr === 0 && cr === 0) { el.innerHTML = ''; return; }
+    if (Math.abs(dr - cr) < 0.01) {
+        el.innerHTML = '<span class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>Balanced</span>';
+    } else {
+        const diff = Math.abs(dr - cr);
+        el.innerHTML = `<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>Unbalanced by TZS ${Math.round(diff).toLocaleString()}</span>`;
+    }
+}
+
+document.querySelectorAll('.mje-debit, .mje-credit').forEach(i => i.addEventListener('input', updateTotals));
+updateTotals();
+</script>
+{% endblock %}
