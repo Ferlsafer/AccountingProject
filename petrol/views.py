@@ -100,12 +100,18 @@ def daily_sale_add(request):
                 tanks = Tank.objects.filter(is_active=True).select_related('fuel_type')
                 return render(request, 'petrol/daily_sale_form.html', {'form': form, 'tanks': tanks})
             with transaction.atomic():
+                tank = Tank.objects.select_for_update().get(pk=sale.tank_id)
+                if sale.litres_sold > tank.current_stock:
+                    messages.error(request, f"Insufficient stock. {tank} only has {tank.current_stock:,.2f}L available.")
+                    tanks = Tank.objects.filter(is_active=True).select_related('fuel_type')
+                    return render(request, 'petrol/daily_sale_form.html', {'form': form, 'tanks': tanks})
                 sale.recorded_by = request.user
-                sale.unit_price = sale.tank.selling_price
+                sale.unit_price = tank.selling_price
                 sale.total_amount = sale.litres_sold * sale.unit_price
                 sale.save()
-                sale.tank.current_stock -= sale.litres_sold
-                sale.tank.save(update_fields=['current_stock'])
+                tank.current_stock -= sale.litres_sold
+                tank.save(update_fields=['current_stock'])
+                sale.tank = tank
                 sale.post_to_ledger(request.user)
             messages.success(request, f"Sale recorded: {sale.litres_sold}L of {sale.tank.fuel_type} @ TZS {sale.unit_price:,.0f}/L — Total TZS {sale.total_amount:,.0f}")
             return redirect('petrol:daily_sale_list')
@@ -291,12 +297,17 @@ def credit_sale_add(request):
                 messages.error(request, f"No selling price set for {sale.tank}. Ask management to set it first.")
                 return render(request, 'petrol/credit_sale_form.html', {'form': form, 'customer_type': customer_type})
             with transaction.atomic():
+                tank = Tank.objects.select_for_update().get(pk=sale.tank_id)
+                if sale.litres > tank.current_stock:
+                    messages.error(request, f"Insufficient stock. {tank} only has {tank.current_stock:,.2f}L available.")
+                    return render(request, 'petrol/credit_sale_form.html', {'form': form, 'customer_type': customer_type})
                 sale.recorded_by = request.user
-                sale.unit_price = sale.tank.selling_price
+                sale.unit_price = tank.selling_price
                 sale.total_amount = sale.litres * sale.unit_price
                 sale.save()
-                sale.tank.current_stock -= sale.litres
-                sale.tank.save(update_fields=['current_stock'])
+                tank.current_stock -= sale.litres
+                tank.save(update_fields=['current_stock'])
+                sale.tank = tank
                 sale.customer.current_balance += sale.total_amount
                 sale.customer.save(update_fields=['current_balance'])
                 sale.post_to_ledger(request.user)
