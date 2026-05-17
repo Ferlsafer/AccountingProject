@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load tlc_tags %}
 
-{% block title %}Petrol Expenses{% endblock %}
-{% block page_title %}Petrol Expenses{% endblock %}
+{% block title %}Fuel Station Expenses{% endblock %}
+{% block page_title %}Fuel Station Expenses{% endblock %}
 {% block nav_petrol_expenses_active %}active{% endblock %}
 
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
-        <h5 class="fw-bold mb-1">Petrol Station Expenses</h5>
+        <h5 class="fw-bold mb-1">Fuel Station Expenses</h5>
         <span class="text-muted small"><i class="bi bi-receipt me-1"></i>Operational costs at the station</span>
     </div>
     {% if user.profile.role != 'accountant' %}

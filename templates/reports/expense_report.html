@@ -9,7 +9,7 @@
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
         <h5 class="fw-bold mb-1">Expenses by Category</h5>
-        <span class="text-muted small"><i class="bi bi-pie-chart me-1"></i>Petrol, cargo, vehicle and salary costs</span>
+        <span class="text-muted small"><i class="bi bi-pie-chart me-1"></i>Fuel, cargo, vehicle and salary costs</span>
     </div>
     <button onclick="window.print()" class="btn btn-sm btn-outline-secondary no-print">
         <i class="bi bi-printer me-1"></i>Print
@@ -48,7 +48,7 @@
     <div class="col-sm-6 col-md-3">
         <div class="stat-card">
             <div class="stat-icon icon-amber"><i class="bi bi-fuel-pump"></i></div>
-            <div class="stat-label">Petrol Station</div>
+            <div class="stat-label">Fuel Station</div>
             <div class="stat-value" style="font-size:1.1rem">{% currency petrol_total %}</div>
             <div class="stat-sub">station expenses</div>
         </div>
@@ -78,7 +78,7 @@
         <div class="content-card">
             <div class="content-card-header">
                 <span class="content-card-title">
-                    <i class="bi bi-fuel-pump me-2 text-warning"></i>Petrol Station Expenses
+                    <i class="bi bi-fuel-pump me-2 text-warning"></i>Fuel Station Expenses
                 </span>
                 <span class="fw-bold text-danger">{% currency petrol_total %}</span>
             </div>

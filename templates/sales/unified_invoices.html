@@ -8,7 +8,7 @@
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
         <h5 class="fw-bold mb-1">All Invoices</h5>
-        <span class="text-muted small"><i class="bi bi-files me-1"></i>Cargo invoices and petrol credit sales</span>
+        <span class="text-muted small"><i class="bi bi-files me-1"></i>Cargo invoices and fuel credit sales</span>
     </div>
 </div>
 
@@ -28,7 +28,7 @@
             <select name="source" class="form-select form-select-sm">
                 <option value="" {% if not source_filter %}selected{% endif %}>All</option>
                 <option value="cargo" {% if source_filter == 'cargo' %}selected{% endif %}>Cargo</option>
-                <option value="petrol" {% if source_filter == 'petrol' %}selected{% endif %}>Petrol</option>
+                <option value="petrol" {% if source_filter == 'petrol' %}selected{% endif %}>Fuel</option>
             </select>
         </div>
         <div class="col-sm-4 col-md-2">
@@ -79,7 +79,7 @@
                     {% if row.source == 'cargo' %}
                     <span class="badge bg-primary">Cargo</span>
                     {% else %}
-                    <span class="badge bg-warning text-dark">Petrol</span>
+                    <span class="badge bg-warning text-dark">Fuel</span>
                     {% endif %}
                 </td>
                 <td>

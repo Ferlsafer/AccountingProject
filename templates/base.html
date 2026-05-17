@@ -31,7 +31,7 @@
             <div class="sidebar-brand-icon"><i class="bi bi-bar-chart-fill"></i></div>
             <div>
                 <div class="sidebar-brand-text">TBC Management System</div>
-                <div class="sidebar-brand-sub">Petrol &amp; Cargo</div>
+                <div class="sidebar-brand-sub">Fuel &amp; Cargo</div>
             </div>
         </a>
 
@@ -42,7 +42,7 @@
             </a>
 
             {% if user.is_staff or user.profile.role == 'admin' or user.profile.role == 'petrol_clerk' or user.profile.role == 'accountant' %}
-            <div class="sidebar-section-label">Petrol Station</div>
+            <div class="sidebar-section-label">Fuel Station</div>
             <a href="{% url 'petrol:daily_sale_list' %}"
                 class="sidebar-link {% block nav_fuel_sales_active %}{% endblock %}">
                 <i class="bi bi-fuel-pump"></i> Sales Log
@@ -254,7 +254,7 @@
 
         {% if role == 'petrol_clerk' or user.is_staff or role == 'admin' or role == 'accountant' %}
         <a href="{% url 'petrol:daily_sale_list' %}" class="mobile-nav-item" id="mbnav-petrol">
-            <i class="bi bi-fuel-pump"></i><span>Petrol</span>
+            <i class="bi bi-fuel-pump"></i><span>Fuel</span>
         </a>
         {% endif %}
 
