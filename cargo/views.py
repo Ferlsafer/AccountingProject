@@ -3,12 +3,12 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Sum, Q
+from django.shortcuts import render, redirect, get_object_or_404
 
 
 def _can_manage_cargo(user):
     return user.is_staff or getattr(user, 'profile', None) and user.profile.role in ('admin', 'cargo_clerk')
-from django.db.models import Sum, Case, When, DecimalField, Value
-from django.shortcuts import render, redirect, get_object_or_404
 
 from core.models import Business
 from .models import Trip, TripExpense, VehicleExpense, Invoice, Vehicle, Driver, CargoCustomer
@@ -323,11 +323,11 @@ def invoice_list(request):
         qs = qs.filter(is_paid=False)
 
     agg = qs.aggregate(
-        amount=Sum('amount'),
-        paid_total=Sum(Case(When(is_paid=True,  then='amount'), default=Value(0), output_field=DecimalField())),
-        unpaid_total=Sum(Case(When(is_paid=False, then='amount'), default=Value(0), output_field=DecimalField())),
+        total=Sum('amount'),
+        paid_total=Sum('amount', filter=Q(is_paid=True)),
+        unpaid_total=Sum('amount', filter=Q(is_paid=False)),
     )
-    totals       = {'amount': agg['amount']}
+    totals       = {'amount': agg['total']}
     paid_total   = agg['paid_total']   or Decimal('0')
     unpaid_total = agg['unpaid_total'] or Decimal('0')
     return render(request, 'cargo/invoice_list.html', {
