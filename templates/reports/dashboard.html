@@ -283,20 +283,22 @@
       <button type="button" class="mob-logout-btn" data-sidebar-toggle aria-label="Menu">
         <i class="bi bi-list" style="font-size:1.3rem"></i>
       </button>
-      <a href="{% url 'core:notification_list' %}" class="mob-logout-btn position-relative" aria-label="Notifications">
-        <i class="bi bi-bell{% if notif_unread_count %}-fill{% endif %}"></i>
-        {% if notif_unread_count %}
-        <span class="position-absolute bg-danger rounded-pill text-white"
-              style="top:-4px;right:-4px;min-width:16px;height:16px;font-size:.55rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1">
-          {{ notif_unread_count }}</span>
-        {% endif %}
-      </a>
-      <form method="post" action="/accounts/logout/" class="m-0">
-        {% csrf_token %}
-        <button type="submit" class="mob-logout-btn" title="Log out" data-no-loading>
-          <i class="bi bi-box-arrow-right"></i>
-        </button>
-      </form>
+      <div style="display:flex;align-items:center;gap:8px">
+        <a href="{% url 'core:notification_list' %}" class="mob-logout-btn position-relative" aria-label="Notifications">
+          <i class="bi bi-bell{% if notif_unread_count %}-fill{% endif %}"></i>
+          {% if notif_unread_count %}
+          <span class="position-absolute bg-danger rounded-pill text-white"
+                style="top:-4px;right:-4px;min-width:16px;height:16px;font-size:.55rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1">
+            {{ notif_unread_count }}</span>
+          {% endif %}
+        </a>
+        <form method="post" action="/accounts/logout/" class="m-0">
+          {% csrf_token %}
+          <button type="submit" class="mob-logout-btn" title="Log out" data-no-loading>
+            <i class="bi bi-box-arrow-right"></i>
+          </button>
+        </form>
+      </div>
     </div>
     <div class="mob-date-chip">
       <i class="bi bi-calendar3"></i>
@@ -719,15 +721,17 @@
       <button type="button" class="mob-logout-btn" data-sidebar-toggle aria-label="Menu">
         <i class="bi bi-list" style="font-size:1.3rem"></i>
       </button>
-      <a href="{% url 'core:notification_list' %}" class="mob-logout-btn position-relative" aria-label="Notifications">
-        <i class="bi bi-bell{% if notif_unread_count %}-fill{% endif %}"></i>
-        {% if notif_unread_count %}
-        <span class="position-absolute bg-danger rounded-pill text-white"
-              style="top:-4px;right:-4px;min-width:16px;height:16px;font-size:.55rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1">
-          {{ notif_unread_count }}</span>
-        {% endif %}
-      </a>
-      <form method="post" action="{% url 'logout' %}" class="m-0">{% csrf_token %}<button type="submit" class="mob-logout-btn" title="Sign out" data-no-loading><i class="bi bi-box-arrow-right"></i></button></form>
+      <div style="display:flex;align-items:center;gap:8px">
+        <a href="{% url 'core:notification_list' %}" class="mob-logout-btn position-relative" aria-label="Notifications">
+          <i class="bi bi-bell{% if notif_unread_count %}-fill{% endif %}"></i>
+          {% if notif_unread_count %}
+          <span class="position-absolute bg-danger rounded-pill text-white"
+                style="top:-4px;right:-4px;min-width:16px;height:16px;font-size:.55rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1">
+            {{ notif_unread_count }}</span>
+          {% endif %}
+        </a>
+        <form method="post" action="{% url 'logout' %}" class="m-0">{% csrf_token %}<button type="submit" class="mob-logout-btn" title="Sign out" data-no-loading><i class="bi bi-box-arrow-right"></i></button></form>
+      </div>
     </div>
     <div class="mob-date-chip"><i class="bi bi-calendar3"></i>{{ today|date:"l, j F Y" }}</div>
     <div class="mob-greeting" id="mob-greeting-fc">Good morning,</div>

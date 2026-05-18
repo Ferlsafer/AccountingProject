@@ -461,20 +461,32 @@ def manual_journal_add(request):
 
 @login_required
 def notification_list(request):
-    notifs = Notification.objects.filter(recipient=request.user).order_by('-created_at')
-    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    from django.db import OperationalError, ProgrammingError
+    try:
+        notifs = list(Notification.objects.filter(recipient=request.user).order_by('-created_at'))
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    except (OperationalError, ProgrammingError):
+        notifs = []
     return render(request, 'core/notification_list.html', {'notifs': notifs})
 
 
 @login_required
 def notification_mark_read(request, pk):
-    Notification.objects.filter(pk=pk, recipient=request.user).update(is_read=True)
+    from django.db import OperationalError, ProgrammingError
+    try:
+        Notification.objects.filter(pk=pk, recipient=request.user).update(is_read=True)
+    except (OperationalError, ProgrammingError):
+        pass
     next_url = request.GET.get('next') or 'petrol:purchase_list'
     return redirect(next_url)
 
 
 @login_required
 def notifications_mark_all_read(request):
+    from django.db import OperationalError, ProgrammingError
     if request.method == 'POST':
-        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        try:
+            Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        except (OperationalError, ProgrammingError):
+            pass
     return redirect(request.META.get('HTTP_REFERER', 'home'))
