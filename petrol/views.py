@@ -68,18 +68,26 @@ def _notify_purchase_cancelled(purchase, cancelled_by):
 
 
 def _notify_roles(msg, roles, exclude_pk=None):
+    from django.db import OperationalError, ProgrammingError
     link = '/petrol/purchases/'
     qs = User.objects.filter(is_active=True, profile__role__in=roles)
     if exclude_pk:
         qs = qs.exclude(pk=exclude_pk)
-    Notification.objects.bulk_create([
-        Notification(recipient=u, message=msg, link=link) for u in qs
-    ])
+    try:
+        Notification.objects.bulk_create([
+            Notification(recipient=u, message=msg, link=link) for u in qs
+        ])
+    except (OperationalError, ProgrammingError):
+        pass
 
 
 def _notify_user(user, msg, exclude_pk=None):
+    from django.db import OperationalError, ProgrammingError
     if user and (exclude_pk is None or user.pk != exclude_pk):
-        Notification.objects.create(recipient=user, message=msg, link='/petrol/purchases/')
+        try:
+            Notification.objects.create(recipient=user, message=msg, link='/petrol/purchases/')
+        except (OperationalError, ProgrammingError):
+            pass
 
 
 def _date_range(request):
