@@ -24,18 +24,62 @@ from .models import DailyFuelSale, FuelPurchase, CreditCustomer, CreditSale, Cre
 from .forms import DailyFuelSaleForm, FuelPurchaseForm, CreditSaleForm, CreditPaymentForm, PetrolExpenseForm, TankForm, TankEditForm, FuelSupplierForm
 
 
+def _purchase_summary(purchase):
+    return f"{purchase.litres}L {purchase.tank.fuel_type} from {purchase.supplier} — TZS {purchase.total_amount:,.0f}"
+
+
 def _notify_purchase_request(purchase, submitted_by):
-    clerk_name = submitted_by.get_full_name() or submitted_by.username
-    msg = (f"Fuel purchase request: {purchase.litres}L {purchase.tank.fuel_type} "
-           f"from {purchase.supplier} — TZS {purchase.total_amount:,.0f} (by {clerk_name})")
+    name = submitted_by.get_full_name() or submitted_by.username
+    msg = f"New fuel purchase request: {_purchase_summary(purchase)} (by {name})"
+    _notify_roles(msg, roles=('admin', 'accountant'), exclude_pk=submitted_by.pk)
+
+
+def _notify_purchase_resubmit(purchase, submitted_by):
+    name = submitted_by.get_full_name() or submitted_by.username
+    msg = f"Purchase resubmitted for review: {_purchase_summary(purchase)} (by {name})"
+    _notify_roles(msg, roles=('admin', 'accountant'), exclude_pk=submitted_by.pk)
+
+
+def _notify_purchase_approved(purchase, reviewed_by):
+    name = reviewed_by.get_full_name() or reviewed_by.username
+    msg = f"Your purchase was approved: {_purchase_summary(purchase)} (by {name})"
+    _notify_user(purchase.recorded_by, msg, exclude_pk=reviewed_by.pk)
+
+
+def _notify_purchase_returned(purchase, reviewed_by):
+    name = reviewed_by.get_full_name() or reviewed_by.username
+    msg = f"Purchase returned for correction: {_purchase_summary(purchase)} — \"{purchase.review_note}\" (by {name})"
+    _notify_user(purchase.recorded_by, msg, exclude_pk=reviewed_by.pk)
+
+
+def _notify_purchase_cancelled(purchase, cancelled_by):
+    name = cancelled_by.get_full_name() or cancelled_by.username
+    msg = f"Purchase cancelled: {_purchase_summary(purchase)} — \"{purchase.review_note}\" (by {name})"
     link = '/petrol/purchases/'
-    recipients = User.objects.filter(
-        is_active=True, profile__role__in=('admin', 'accountant')
-    ).exclude(pk=submitted_by.pk)
+    recipients = set()
+    if purchase.recorded_by and purchase.recorded_by.pk != cancelled_by.pk:
+        recipients.add(purchase.recorded_by)
+    for u in User.objects.filter(is_active=True, profile__role='accountant').exclude(pk=cancelled_by.pk):
+        recipients.add(u)
+    if recipients:
+        Notification.objects.bulk_create([
+            Notification(recipient=u, message=msg, link=link) for u in recipients
+        ])
+
+
+def _notify_roles(msg, roles, exclude_pk=None):
+    link = '/petrol/purchases/'
+    qs = User.objects.filter(is_active=True, profile__role__in=roles)
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
     Notification.objects.bulk_create([
-        Notification(recipient=u, message=msg, link=link)
-        for u in recipients
+        Notification(recipient=u, message=msg, link=link) for u in qs
     ])
+
+
+def _notify_user(user, msg, exclude_pk=None):
+    if user and (exclude_pk is None or user.pk != exclude_pk):
+        Notification.objects.create(recipient=user, message=msg, link='/petrol/purchases/')
 
 
 def _date_range(request):
@@ -199,6 +243,7 @@ def purchase_edit(request, pk):
             p.status = 'pending'
             p.review_note = ''
             p.save()
+            _notify_purchase_resubmit(p, request.user)
             messages.success(request, "Purchase resubmitted for approval.")
             return redirect('petrol:purchase_list')
     else:
@@ -222,6 +267,7 @@ def purchase_approve(request, pk):
             purchase.tank.last_purchase_price = purchase.unit_price
             purchase.tank.save(update_fields=['current_stock', 'last_purchase_price'])
             purchase.post_to_ledger(request.user)
+        _notify_purchase_approved(purchase, request.user)
         messages.success(request, f"Purchase approved and posted to ledger — {purchase.litres}L from {purchase.supplier}.")
         return redirect('petrol:purchase_list')
     return redirect('petrol:purchase_list')
@@ -243,6 +289,7 @@ def purchase_return(request, pk):
         purchase.reviewed_by = request.user
         purchase.reviewed_at = timezone.now()
         purchase.save()
+        _notify_purchase_returned(purchase, request.user)
         messages.success(request, "Purchase returned to clerk with note.")
         return redirect('petrol:purchase_list')
     return redirect('petrol:purchase_list')
@@ -267,6 +314,7 @@ def purchase_cancel(request, pk):
         purchase.reviewed_by = request.user
         purchase.reviewed_at = timezone.now()
         purchase.save()
+        _notify_purchase_cancelled(purchase, request.user)
         messages.success(request, "Purchase cancelled.")
         return redirect('petrol:purchase_list')
     return redirect('petrol:purchase_list')
